@@ -43,10 +43,10 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User can run with debug flag and see translated command without execution
   3. Script handles empty/missing arguments gracefully
 **E2E Tests**: None yet (test infra built in Phase 2)
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 01-01: TBD
+- [ ] 01-01-PLAN.md - Create gitsl.py with argument parsing and debug mode
 
 ### Phase 2: E2E Test Infrastructure
 **Goal**: Test harness can compare git and gitsl behavior on temp repositories
@@ -201,7 +201,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Script Skeleton | 0/? | Not started | - |
+| 1. Script Skeleton | 0/1 | Planned | - |
 | 2. E2E Test Infrastructure | 0/? | Not started | - |
 | 3. Execution Pipeline | 0/? | Not started | - |
 | 4. Direct Command Mappings | 0/? | Not started | - |
@@ -213,4 +213,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-17 - Added Phase 2 E2E Test Infrastructure, renumbered phases, added E2E test requirements per phase*
+*Last updated: 2026-01-17 - Phase 1 planning complete, 1 plan created*
