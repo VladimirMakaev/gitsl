@@ -1,10 +1,11 @@
 """
-E2E tests for git add command (CMD-02, CMD-08).
+E2E tests for git add command (CMD-02, CMD-08, FLAG-03).
 
 Tests:
 - git add <files> stages files via sl add
 - git add -A stages all changes via sl addremove
 - git add --all works same as -A
+- git add -u stages only tracked files (ignores untracked)
 """
 
 import shutil
@@ -81,3 +82,103 @@ class TestAddAll:
 
         status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
         assert "R README.md" in status.stdout or "! README.md" in status.stdout
+
+
+class TestAddUpdate:
+    """FLAG-03: git add -u stages only tracked files (ignores untracked)."""
+
+    def test_add_u_ignores_untracked(self, sl_repo_with_commit: Path):
+        """git add -u should NOT stage untracked files."""
+        # Create an untracked file
+        untracked = sl_repo_with_commit / "untracked.txt"
+        untracked.write_text("untracked content\n")
+
+        # Modify the tracked README.md
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("# Modified content\n")
+
+        # Run git add -u
+        result = run_gitsl(["add", "-u"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Verify untracked file is still untracked (? status)
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "? untracked.txt" in status.stdout
+        # Modified file is auto-staged by Sapling, so M status
+        assert "M README.md" in status.stdout
+
+    def test_add_u_marks_deleted_for_removal(self, sl_repo_with_commit: Path):
+        """git add -u marks deleted tracked files for removal."""
+        # Delete the tracked README.md
+        readme = sl_repo_with_commit / "README.md"
+        readme.unlink()
+
+        # Verify file shows as deleted (!) in sl status
+        status_before = run_command(["sl", "status", "-d", "-n"], cwd=sl_repo_with_commit)
+        assert "README.md" in status_before.stdout
+
+        # Run git add -u
+        result = run_gitsl(["add", "-u"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Verify file is now marked as R (removed)
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "R README.md" in status.stdout
+
+    def test_add_u_with_pathspec(self, sl_repo_with_commit: Path):
+        """git add -u path/ respects pathspec, only affects files in path."""
+        # Create subdirectory with a tracked file
+        subdir = sl_repo_with_commit / "subdir"
+        subdir.mkdir()
+        subfile = subdir / "tracked.txt"
+        subfile.write_text("subdir content\n")
+        run_command(["sl", "add", "subdir/tracked.txt"], cwd=sl_repo_with_commit)
+        run_command(["sl", "commit", "-m", "Add subdir file"], cwd=sl_repo_with_commit)
+
+        # Delete both files
+        (sl_repo_with_commit / "README.md").unlink()
+        subfile.unlink()
+
+        # Verify both show as deleted
+        status_before = run_command(["sl", "status", "-d", "-n"], cwd=sl_repo_with_commit)
+        assert "README.md" in status_before.stdout
+        assert "subdir/tracked.txt" in status_before.stdout
+
+        # Run git add -u only on subdir/
+        result = run_gitsl(["add", "-u", "subdir/"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Check status
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        # subdir/tracked.txt should be marked R (removed)
+        assert "R subdir/tracked.txt" in status.stdout
+        # README.md should still be deleted (!) not removed
+        assert "! README.md" in status.stdout
+
+    def test_add_u_no_deleted_files(self, sl_repo_with_commit: Path):
+        """git add -u succeeds when there are no deleted files."""
+        # Modify the tracked README.md (no deletion)
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("# Modified content\n")
+
+        # Run git add -u
+        result = run_gitsl(["add", "-u"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Verify modified file is in expected state (Sapling auto-stages)
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "M README.md" in status.stdout
+
+    def test_add_update_long_flag(self, sl_repo_with_commit: Path):
+        """git add --update works the same as -u."""
+        # Delete the tracked README.md
+        readme = sl_repo_with_commit / "README.md"
+        readme.unlink()
+
+        # Run git add --update
+        result = run_gitsl(["add", "--update"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Verify file is now marked as R (removed)
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "R README.md" in status.stdout
