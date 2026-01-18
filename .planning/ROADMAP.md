@@ -26,7 +26,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2: E2E Test Infrastructure** - Golden-master testing framework
 - [x] **Phase 3: Execution Pipeline** - Subprocess handling with proper I/O and exit codes
 - [x] **Phase 4: Direct Command Mappings** - Simple 1:1 git-to-sl translations
-- [ ] **Phase 5: File Operation Commands** - Add, commit, and addremove commands
+- [x] **Phase 5: File Operation Commands** - Add, commit, and addremove commands
 - [ ] **Phase 6: Status Output Emulation** - Porcelain and short format matching
 - [ ] **Phase 7: Log Output Emulation** - Oneline format and -N flag translation
 - [ ] **Phase 8: Add -u Emulation** - Finding and staging modified tracked files
@@ -129,7 +129,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 05-01-PLAN.md - Add and commit handlers with flag translation for -A/--all
+- [x] 05-01-PLAN.md - Add and commit handlers with flag translation for -A/--all
 
 ### Phase 6: Status Output Emulation
 **Goal**: Status output matches git's format exactly for tooling compatibility
@@ -211,7 +211,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 2. E2E Test Infrastructure | 2/2 | Complete | 2026-01-18 |
 | 3. Execution Pipeline | 2/2 | Complete | 2026-01-18 |
 | 4. Direct Command Mappings | 2/2 | Complete | 2026-01-18 |
-| 5. File Operation Commands | 0/1 | Planned | - |
+| 5. File Operation Commands | 1/1 | Complete | 2026-01-18 |
 | 6. Status Output Emulation | 0/? | Not started | - |
 | 7. Log Output Emulation | 0/? | Not started | - |
 | 8. Add -u Emulation | 0/? | Not started | - |
@@ -219,4 +219,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 5 planned (1 plan for file operations)*
+*Last updated: 2026-01-18 - Phase 5 complete (file operation commands)*

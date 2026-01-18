@@ -34,13 +34,13 @@
 ### Command Translation
 
 - [x] **CMD-01**: `git status` translates to `sl status`
-- [ ] **CMD-02**: `git add <files>` translates to `sl add <files>`
-- [ ] **CMD-03**: `git commit -m "msg"` translates to `sl commit -m "msg"`
+- [x] **CMD-02**: `git add <files>` translates to `sl add <files>`
+- [x] **CMD-03**: `git commit -m "msg"` translates to `sl commit -m "msg"`
 - [x] **CMD-04**: `git log` translates to `sl log`
 - [x] **CMD-05**: `git diff` translates to `sl diff`
 - [x] **CMD-06**: `git init` translates to `sl init`
 - [x] **CMD-07**: `git rev-parse --short HEAD` translates to `sl whereami`
-- [ ] **CMD-08**: `git add -A` translates to `sl addremove`
+- [x] **CMD-08**: `git add -A` translates to `sl addremove`
 
 ### Flag Emulation
 
@@ -108,9 +108,9 @@
 | CMD-05 | Phase 4 | Complete |
 | CMD-06 | Phase 4 | Complete |
 | CMD-07 | Phase 4 | Complete |
-| CMD-02 | Phase 5 | Pending |
-| CMD-03 | Phase 5 | Pending |
-| CMD-08 | Phase 5 | Pending |
+| CMD-02 | Phase 5 | Complete |
+| CMD-03 | Phase 5 | Complete |
+| CMD-08 | Phase 5 | Complete |
 | FLAG-01 | Phase 6 | Pending |
 | FLAG-02 | Phase 6 | Pending |
 | FLAG-04 | Phase 7 | Pending |
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 4 requirements marked complete (CMD-01, CMD-04-07)*
+*Last updated: 2026-01-18 - Phase 5 requirements marked complete (CMD-02, CMD-03, CMD-08)*
