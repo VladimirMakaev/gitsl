@@ -5,14 +5,14 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Git commands used by get-shit-done execute correctly against Sapling repos
-**Current focus:** Phase 7 - Log Output Emulation (Complete)
+**Current focus:** Phase 8 - Add -u Emulation
 
 ## Current Position
 
-Phase: 7 of 9 (Log Output Emulation)
-Plan: 1 of 1 in current phase
-Status: Phase complete
-Last activity: 2026-01-18 - Completed 07-01-PLAN.md
+Phase: 8 of 9 (Add -u Emulation)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-01-18 - Phase 7 complete and verified
 
 Progress: [███████...] 77%
 
@@ -79,5 +79,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-01-18
-Stopped at: Completed 07-01-PLAN.md, Phase 7 complete
+Stopped at: Phase 7 complete and verified, ready for Phase 8 planning
 Resume file: None

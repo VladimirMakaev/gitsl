@@ -47,8 +47,8 @@
 - [x] **FLAG-01**: `git status --porcelain` emulates exact git porcelain format
 - [x] **FLAG-02**: `git status --short` emulates git short format
 - [ ] **FLAG-03**: `git add -u` finds modified tracked files and adds them
-- [ ] **FLAG-04**: `git log --oneline` emulates git oneline format via sl template
-- [ ] **FLAG-05**: `git log -N` translates to `sl log -l N`
+- [x] **FLAG-04**: `git log --oneline` emulates git oneline format via sl template
+- [x] **FLAG-05**: `git log -N` translates to `sl log -l N`
 
 ### Unsupported Commands
 
@@ -113,8 +113,8 @@
 | CMD-08 | Phase 5 | Complete |
 | FLAG-01 | Phase 6 | Complete |
 | FLAG-02 | Phase 6 | Complete |
-| FLAG-04 | Phase 7 | Pending |
-| FLAG-05 | Phase 7 | Pending |
+| FLAG-04 | Phase 7 | Complete |
+| FLAG-05 | Phase 7 | Complete |
 | FLAG-03 | Phase 8 | Pending |
 | UNSUP-01 | Phase 9 | Pending |
 | UNSUP-02 | Phase 9 | Pending |
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 6 requirements marked complete (FLAG-01, FLAG-02)*
+*Last updated: 2026-01-18 - Phase 7 requirements marked complete (FLAG-04, FLAG-05)*
