@@ -161,10 +161,10 @@ Plans:
   - Test `--oneline` format matches git (semantic: hash length may differ)
   - Test `-N` limits correctly: create 10 commits, verify `-3` shows 3
   - Test combined flags work together
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 07-01: TBD
+- [ ] 07-01-PLAN.md - Flag translation for --oneline and -N with E2E tests
 
 ### Phase 8: Add -u Emulation
 **Goal**: Stage only modified tracked files (exclude new files)
@@ -213,10 +213,10 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 4. Direct Command Mappings | 2/2 | Complete | 2026-01-18 |
 | 5. File Operation Commands | 1/1 | Complete | 2026-01-18 |
 | 6. Status Output Emulation | 0/? | Not started | - |
-| 7. Log Output Emulation | 0/? | Not started | - |
+| 7. Log Output Emulation | 0/1 | Planned | - |
 | 8. Add -u Emulation | 0/? | Not started | - |
 | 9. Unsupported Command Handling | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 5 complete (file operation commands)*
+*Last updated: 2026-01-18 - Phase 7 planned (log output emulation)*
