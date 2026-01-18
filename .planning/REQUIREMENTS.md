@@ -44,8 +44,8 @@
 
 ### Flag Emulation
 
-- [ ] **FLAG-01**: `git status --porcelain` emulates exact git porcelain format
-- [ ] **FLAG-02**: `git status --short` emulates git short format
+- [x] **FLAG-01**: `git status --porcelain` emulates exact git porcelain format
+- [x] **FLAG-02**: `git status --short` emulates git short format
 - [ ] **FLAG-03**: `git add -u` finds modified tracked files and adds them
 - [ ] **FLAG-04**: `git log --oneline` emulates git oneline format via sl template
 - [ ] **FLAG-05**: `git log -N` translates to `sl log -l N`
@@ -111,8 +111,8 @@
 | CMD-02 | Phase 5 | Complete |
 | CMD-03 | Phase 5 | Complete |
 | CMD-08 | Phase 5 | Complete |
-| FLAG-01 | Phase 6 | Pending |
-| FLAG-02 | Phase 6 | Pending |
+| FLAG-01 | Phase 6 | Complete |
+| FLAG-02 | Phase 6 | Complete |
 | FLAG-04 | Phase 7 | Pending |
 | FLAG-05 | Phase 7 | Pending |
 | FLAG-03 | Phase 8 | Pending |
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 5 requirements marked complete (CMD-02, CMD-03, CMD-08)*
+*Last updated: 2026-01-18 - Phase 6 requirements marked complete (FLAG-01, FLAG-02)*
