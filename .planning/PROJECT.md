@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A Python package that acts as a git CLI shim, intercepting git commands and translating them to equivalent Sapling (sl) commands. Designed to allow tools that expect git (like get-shit-done) to work transparently with Sapling repositories.
+A Python package that acts as a git CLI shim, intercepting git commands and translating them to equivalent Sapling (sl) commands. Allows any tool that expects git to work transparently with Sapling repositories.
 
 **Architecture:**
 - `gitsl.py` — Entry point only (receives argv, dispatches to command handlers)
@@ -11,7 +11,7 @@ A Python package that acts as a git CLI shim, intercepting git commands and tran
 
 ## Core Value
 
-Git commands used by get-shit-done execute correctly against Sapling repos without the calling tool knowing the difference.
+Git commands execute correctly against Sapling repos without the calling tool knowing the difference.
 
 ## Current State
 
@@ -19,6 +19,18 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 **Lines of Code:** 1,984 Python
 **Tests:** 91 passing
 **Requirements:** 32/32 complete
+
+## Current Milestone: v1.1 Polish & Documentation
+
+**Goal:** Make gitsl production-ready with comprehensive documentation, easier testing, CI/CD, and PyPI publishing.
+
+**Target features:**
+- Research and document ~30 common git commands with flag support analysis
+- Improve test runner (`./test` and `./test <command>`)
+- Create polished README with command support status
+- GitHub Actions CI for MacOS/Linux/Windows
+- PyPI publishing (`pip install gitsl`)
+- Remove legacy references to external tools
 
 ## Requirements
 
@@ -42,29 +54,24 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 
 ### Active
 
-(None — ready for next milestone)
+- [ ] Document ~30 common git commands with Sapling equivalents
+- [ ] Research flag support for each command, document unsupported with reasons
+- [ ] Test runner supports `./test` (all) and `./test <command>` (specific)
+- [ ] README.md with command support matrix
+- [ ] GitHub Actions CI for MacOS/Linux/Windows
+- [ ] PyPI package (`pip install gitsl`)
+- [ ] Remove external tool references from codebase
 
 ### Out of Scope
 
 - Matching git diff output format exactly — pass-through is sufficient
-- Porcelain flags for any command — only human-readable flags supported
 - OAuth/authentication handling — Sapling handles this
-- Remote operations (push/pull/fetch) — print to stderr as unsupported
-- Branch operations — print to stderr as unsupported
-- Interactive commands (rebase -i, add -p) — print to stderr as unsupported
+- Remote operations (push/pull/fetch) — Sapling model differs fundamentally
+- Interactive commands (rebase -i, add -p) — require terminal control
 
 ## Context
 
-**Target use case:** The get-shit-done CLI tool (github.com/glittercowboy/get-shit-done) calls git commands internally. By placing this shim earlier in PATH, those git calls get redirected to Sapling.
-
-**Git commands used by get-shit-done:**
-- `git status --short` / `git status --porcelain` — check repo state
-- `git add <files>` / `git add -u` / `git add -A` — stage changes
-- `git commit -m "..."` — create commits (multi-line messages via heredoc)
-- `git log --oneline -N` — view recent commits
-- `git rev-parse --short HEAD` — get current commit hash
-- `git init` — initialize repo
-- `git diff` — not actually used by GSD, but included for completeness
+**Target use case:** Any tool that calls git commands internally can work with Sapling repos by placing this shim earlier in PATH.
 
 **Sapling command mappings:**
 | Git | Sapling | Notes |
@@ -86,21 +93,22 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 ## Constraints
 
 - **Multi-file package**: Entry point in gitsl.py, shared logic in common.py, one file per command
-- **No dependencies**: Standard library only — no pip installs
-- **Python 3**: Assume Python 3.8+ available
+- **No runtime dependencies**: Standard library only for core functionality
+- **Python 3**: Python 3.8+ required
 - **Sapling installed**: Assume `sl` command is available in PATH
+- **Cross-platform**: Must work on MacOS, Linux, Windows
 
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Multi-file architecture | Easier to maintain, one file per command | Adopted 2026-01-18 |
+| Multi-file architecture | Easier to maintain, one file per command | ✓ Good |
 | Exit 0 on unsupported commands | Prevent calling CLI from failing | ✓ Good |
-| Emulate porcelain exactly | GSD may parse this output | ✓ Good |
-| Pass-through diff output | User confirmed no parsing of diff | ✓ Good |
+| Emulate porcelain exactly | Tools may parse this output | ✓ Good |
+| Pass-through diff output | No parsing of diff needed | ✓ Good |
 | Manual argv parsing | argparse doesn't handle git-style subcommands well | ✓ Good |
 | GITSL_DEBUG via env var | Avoid consuming CLI args | ✓ Good |
 | subprocess.run() no PIPE | Real-time I/O passthrough | ✓ Good |
 
 ---
-*Last updated: 2026-01-18 after v1.0 milestone*
+*Last updated: 2026-01-18 after v1.1 milestone start*
