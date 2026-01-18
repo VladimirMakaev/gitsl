@@ -10,18 +10,18 @@ See: .planning/PROJECT.md (updated 2026-01-17)
 ## Current Position
 
 Phase: 4 of 9 (Direct Command Mappings)
-Plan: 0 of ? in current phase
-Status: Ready to plan
-Last activity: 2026-01-18 - Phase 3 complete (execution pipeline verified)
+Plan: 2 of ? in current phase
+Status: In progress
+Last activity: 2026-01-18 - Completed 04-02-PLAN.md (rev-parse handler)
 
-Progress: [███.......] 33%
+Progress: [████......] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5
+- Total plans completed: 7
 - Average duration: 2.4 min
-- Total execution time: 12 min
+- Total execution time: 17 min
 
 **By Phase:**
 
@@ -30,9 +30,10 @@ Progress: [███.......] 33%
 | 01-script-skeleton | 1 | 2 min | 2 min |
 | 02-e2e-test-infrastructure | 2 | 6 min | 3 min |
 | 03-execution-pipeline | 2 | 4 min | 2 min |
+| 04-direct-command-mappings | 2 | 5 min | 2.5 min |
 
 **Recent Trend:**
-- Last 5 plans: 2 min, 4 min, 2 min, 2 min, 2 min
+- Last 5 plans: 4 min, 2 min, 2 min, 2 min, 3 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -56,6 +57,8 @@ Recent decisions affecting current work:
 - **Handler interface:** handle(ParsedCommand) -> int for all command handlers in cmd_*.py
 - **subprocess.run() defaults:** No PIPE, no capture_output - real-time I/O passthrough
 - **sys.executable in tests:** Use sys.executable for portable Python invocation
+- **capture_output pattern:** For commands needing output processing (e.g., rev-parse), use subprocess.run with capture_output=True
+- **sl_repo fixtures:** Added for Sapling-based testing in conftest.py
 
 ### Pending Todos
 
@@ -67,6 +70,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18
-Stopped at: Phase 3 complete, verified, ready for Phase 4
+Last session: 2026-01-18T03:50:13Z
+Stopped at: Completed 04-02-PLAN.md (rev-parse handler)
 Resume file: None
