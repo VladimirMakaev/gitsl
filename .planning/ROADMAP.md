@@ -195,10 +195,10 @@ Plans:
   - Test `git push` (unsupported): verify exit 0, stderr contains message
   - Test `git rebase` (unsupported): same
   - Verify stdout is empty for unsupported commands
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 09-01: TBD
+- [ ] 09-01-PLAN.md - Implement unsupported command handler with E2E tests
 
 ## Progress
 
@@ -215,8 +215,8 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 6. Status Output Emulation | 1/1 | Complete | 2026-01-18 |
 | 7. Log Output Emulation | 1/1 | Complete | 2026-01-18 |
 | 8. Add -u Emulation | 1/1 | Complete | 2026-01-18 |
-| 9. Unsupported Command Handling | 0/? | Not started | - |
+| 9. Unsupported Command Handling | 0/1 | Planned | - |
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 8 complete (add -u emulation)*
+*Last updated: 2026-01-18 - Phase 9 planned (unsupported command handling)*
