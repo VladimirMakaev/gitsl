@@ -1,597 +1,428 @@
-# Stack Research: Git-to-Sapling CLI Shim
+# Stack Research: v1.1 Polish
 
-**Project:** gitsl - Git to Sapling command translator
-**Researched:** 2026-01-17
-**Constraint:** Zero dependencies (stdlib only), single-file script
-
-## Recommended Approach
-
-**Use `sys.argv` directly with manual parsing, `subprocess.run()` for execution, and `os.execvp()` for passthrough mode.**
-
-For a CLI shim that intercepts git commands and translates them to Sapling (`sl`) commands, the architecture should be:
-
-1. **Minimal parsing** - Don't fully parse; extract command name, recognize known commands, pass rest through
-2. **Direct exec when possible** - Use `os.execvp()` to replace the process entirely for simple translations
-3. **Subprocess for transformations** - Use `subprocess.run()` only when output needs modification
-
-This approach is optimal because:
-- Zero parsing overhead for passthrough commands
-- Process replacement via `execvp` eliminates parent process overhead
-- No external dependencies required
-- Maintains signal propagation and TTY behavior
+**Project:** gitsl - Git to Sapling CLI shim
+**Researched:** 2025-01-18
+**Scope:** PyPI publishing, cross-platform CI, test runner patterns
+**Confidence:** HIGH (verified with official documentation)
 
 ---
 
-## Argument Parsing
+## PyPI Publishing
 
-### Recommendation: Direct `sys.argv` Access
+### Recommendation: pyproject.toml with setuptools
 
-**Do NOT use `argparse`.** For a command translator/shim:
+**Use pyproject.toml** - This is the modern standard. The Python Packaging Authority explicitly recommends migrating from setup.py to pyproject.toml.
 
-```python
-import sys
+**Build backend:** setuptools (standard, no extra dependencies)
 
-def main():
-    args = sys.argv[1:]  # Skip script name
+### pyproject.toml Configuration
 
-    if not args:
-        # No command - show help or pass to sl
-        pass
+```toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-    command = args[0]
-    command_args = args[1:]
+[project]
+name = "gitsl"
+dynamic = ["version"]
+description = "Git to Sapling CLI shim - translates git commands to sl equivalents"
+readme = "README.md"
+license = {text = "MIT"}
+requires-python = ">=3.8"
+authors = [
+    {name = "Your Name", email = "your.email@example.com"}
+]
+keywords = ["git", "sapling", "scm", "cli", "shim"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Software Development :: Version Control",
+    "Topic :: Software Development :: Version Control :: Git",
+]
 
-    # Route based on command
-    if command in TRANSLATION_MAP:
-        translate_and_execute(command, command_args)
-    else:
-        passthrough_to_sl(command, command_args)
+[project.scripts]
+gitsl = "gitsl:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/gitsl"
+Repository = "https://github.com/yourusername/gitsl"
+Issues = "https://github.com/yourusername/gitsl/issues"
+
+[tool.setuptools]
+py-modules = ["gitsl", "common", "cmd_status", "cmd_log", "cmd_diff", "cmd_init", "cmd_rev_parse", "cmd_add", "cmd_commit"]
+
+[tool.setuptools.dynamic]
+version = {attr = "common.VERSION"}
 ```
 
-### Why NOT argparse
+### Entry Point Configuration
 
-| Consideration | argparse | sys.argv |
-|---------------|----------|----------|
-| Git-style subcommands | Awkward - requires subparsers | Natural - just extract first arg |
-| Unknown flags | Fails/errors | Passes through unchanged |
-| Complexity | High for this use case | Minimal |
-| Error handling | Automatic but unwanted | Manual but appropriate |
+The `[project.scripts]` section defines CLI entry points:
 
-**Key insight:** A shim should NOT validate arguments. That's the downstream tool's job. Argparse wants to own the argument space, but we just need to intercept and redirect.
-
-### Pattern: Command Extraction
-
-```python
-def parse_git_command(args: list[str]) -> tuple[str | None, list[str], dict[str, str]]:
-    """
-    Extract git command from args.
-
-    Returns:
-        (command, remaining_args, global_options)
-
-    Git pattern: git [global-opts] <command> [command-opts] [args]
-    """
-    global_opts = {}
-    remaining = list(args)
-
-    # Extract global options (ones before command)
-    while remaining:
-        arg = remaining[0]
-        if arg.startswith('-'):
-            if arg in ('-C', '--git-dir', '--work-tree'):
-                # Options that take a value
-                global_opts[arg] = remaining[1] if len(remaining) > 1 else ''
-                remaining = remaining[2:]
-            elif arg.startswith('--'):
-                global_opts[arg] = True
-                remaining = remaining[1:]
-            else:
-                # Unknown flag - might be command
-                break
-        else:
-            # First non-flag is the command
-            break
-
-    command = remaining[0] if remaining else None
-    command_args = remaining[1:] if len(remaining) > 1 else []
-
-    return command, command_args, global_opts
+```toml
+[project.scripts]
+gitsl = "gitsl:main"
 ```
 
-### Confidence: HIGH
+This creates an executable `gitsl` command that calls `main()` from `gitsl.py`.
 
-Source: [Python official subprocess documentation](https://docs.python.org/3.14/library/subprocess.html), [PyMOTW shlex reference](https://pymotw.com/3/shlex/)
+**Key insight:** Because gitsl uses a flat module layout (not a package directory), you must explicitly list modules in `[tool.setuptools].py-modules`. Setuptools auto-discovery works best with package directories.
+
+### Version Management Strategy
+
+**Recommended:** Keep version in `common.py` (single source of truth) and use dynamic version reading.
+
+```toml
+[project]
+dynamic = ["version"]
+
+[tool.setuptools.dynamic]
+version = {attr = "common.VERSION"}
+```
+
+This reads the version from `common.VERSION` at build time, ensuring the installed package and runtime code report the same version.
+
+The current project already has `VERSION = "0.1.0"` in `common.py`, so this pattern works without changes.
+
+### Build and Upload Commands
+
+```bash
+# Build distribution
+python -m pip install build
+python -m build
+
+# Upload to TestPyPI (for testing)
+python -m pip install twine
+python -m twine upload --repository testpypi dist/*
+
+# Upload to PyPI (production)
+python -m twine upload dist/*
+```
 
 ---
 
-## Subprocess Execution
+## GitHub Actions CI
 
-### Recommendation: Three-Tier Strategy
+### Workflow Structure
 
-Use different execution strategies based on the translation type:
+Create two workflows:
+- `.github/workflows/ci.yml` - Testing on push/PR
+- `.github/workflows/publish.yml` - PyPI publishing on release
 
-#### Tier 1: Process Replacement (`os.execvp`)
+### CI Workflow: Test Matrix
 
-**For 1:1 command translations where no output transformation is needed.**
+```yaml
+name: CI
 
-```python
-import os
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
 
-def passthrough_to_sl(command: str, args: list[str]) -> None:
-    """Replace current process with sl command."""
-    sl_command = COMMAND_MAP.get(command, command)
-    os.execvp('sl', ['sl', sl_command] + args)
-    # Never returns - process is replaced
+jobs:
+  test:
+    name: Test (Python ${{ matrix.python-version }} on ${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python-version: ["3.8", "3.9", "3.10", "3.11", "3.12", "3.13"]
+        exclude:
+          # Reduce matrix size - Windows builds are slow
+          - os: windows-latest
+            python-version: "3.8"
+          - os: windows-latest
+            python-version: "3.9"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Sapling (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          curl -LO https://github.com/facebook/sapling/releases/latest/download/sapling_0.2.20240718-145624+f4e9df48_amd64.Ubuntu22.04.deb
+          sudo dpkg -i *.deb || sudo apt-get install -f -y
+
+      - name: Install Sapling (macOS)
+        if: runner.os == 'macOS'
+        run: brew install sapling
+
+      - name: Install Sapling (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/facebook/sapling/releases/latest"
+          $asset = $release.assets | Where-Object { $_.name -like "*windows*.zip" }
+          Invoke-WebRequest -Uri $asset.browser_download_url -OutFile sapling.zip
+          Expand-Archive -Path sapling.zip -DestinationPath $env:USERPROFILE\sapling
+          echo "$env:USERPROFILE\sapling" | Out-File -FilePath $env:GITHUB_PATH -Append
+
+      - name: Install test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pytest
+
+      - name: Run tests
+        run: pytest tests/ -v
+
+      - name: Verify CLI entry point
+        run: python gitsl.py --version
 ```
 
-**Advantages:**
-- Zero overhead - no parent process waiting
-- Signals pass through naturally (Ctrl+C works)
-- TTY/terminal behavior preserved
-- Exit code propagates automatically
+### Sapling Installation Notes
 
-**Use when:**
-- `git status` -> `sl status`
-- `git diff` -> `sl diff`
-- `git log` -> `sl log`
+| Platform | Method | Notes |
+|----------|--------|-------|
+| macOS | `brew install sapling` | Straightforward, ~30 seconds |
+| Linux (Ubuntu) | Download .deb from releases | ~15 seconds, needs version pinning |
+| Windows | Download ZIP from releases | Requires PATH manipulation |
 
-#### Tier 2: Simple Subprocess (`subprocess.run`)
-
-**For commands needing argument transformation but not output transformation.**
-
-```python
-import subprocess
-import sys
-
-def run_translated(sl_args: list[str]) -> int:
-    """Run sl with translated arguments, return exit code."""
-    result = subprocess.run(
-        ['sl'] + sl_args,
-        # Don't capture - let output flow to terminal
-    )
-    return result.returncode
-
-# Usage
-sys.exit(run_translated(['push', '--to', branch_name]))
+**Alternative for Linux using Homebrew:**
+```yaml
+- name: Install Sapling (Ubuntu via Homebrew)
+  if: runner.os == 'Linux'
+  run: |
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
+    brew install sapling
+    echo "/home/linuxbrew/.linuxbrew/bin" >> $GITHUB_PATH
 ```
 
-**Use when:**
-- `git push origin main` -> `sl push --to main`
-- `git fetch origin` -> `sl pull`
-- Arguments need transformation, output does not
+This adds ~2-3 minutes but keeps installation consistent across platforms.
 
-#### Tier 3: Captured Subprocess
+### Publish Workflow: Trusted Publishing
 
-**For commands needing output transformation.**
+```yaml
+name: Publish to PyPI
 
-```python
-import subprocess
-import sys
+on:
+  release:
+    types: [published]
 
-def run_and_transform(sl_args: list[str], transform_fn) -> int:
-    """Run sl, capture output, transform, print."""
-    result = subprocess.run(
-        ['sl'] + sl_args,
-        capture_output=True,
-        text=True,
-    )
+jobs:
+  build:
+    name: Build distribution
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-    # Transform output
-    transformed = transform_fn(result.stdout)
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.x"
 
-    # Write to appropriate streams
-    sys.stdout.write(transformed)
-    if result.stderr:
-        sys.stderr.write(result.stderr)
+      - name: Install build tools
+        run: python -m pip install build
 
-    return result.returncode
+      - name: Build package
+        run: python -m build
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+  publish-to-pypi:
+    name: Publish to PyPI
+    needs: [build]
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gitsl
+    permissions:
+      id-token: write  # Required for trusted publishing
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: python-package-distributions
+          path: dist/
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
 ```
 
-**Use when:**
-- Output needs to reference "git" terminology for compatibility
-- Commit hashes need reformatting
-- Status output needs translation
+**Trusted Publishing:** Configure at PyPI.org under project settings. This eliminates API tokens - GitHub Actions authenticates via OIDC.
 
-### Streaming Output (for long-running commands)
-
-When output must be transformed but you need real-time streaming:
-
-```python
-import subprocess
-import sys
-
-def run_streaming(sl_args: list[str], line_transform) -> int:
-    """Run with real-time line-by-line output transformation."""
-    process = subprocess.Popen(
-        ['sl'] + sl_args,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        text=True,
-        bufsize=1,  # Line buffered
-    )
-
-    # Read stdout line by line
-    for line in process.stdout:
-        transformed = line_transform(line)
-        sys.stdout.write(transformed)
-        sys.stdout.flush()
-
-    # Wait for completion and get stderr
-    _, stderr = process.communicate()
-    if stderr:
-        sys.stderr.write(stderr)
-
-    return process.returncode
-```
-
-### Confidence: HIGH
-
-Source: [Python subprocess documentation](https://docs.python.org/3.14/library/subprocess.html), [subprocess streaming gist](https://gist.github.com/almoore/c6fd2d041ad4f4bf2719a89c9b454f7e)
+**Setup steps for Trusted Publishing:**
+1. Create account on pypi.org
+2. Create project or reserve name
+3. Go to project settings > Publishing
+4. Add GitHub Actions as trusted publisher (owner, repo, workflow filename)
 
 ---
 
-## Output Handling
+## Test Runner
 
-### Recommendation: Minimal Transformation with Smart Passthrough
+### Current Pattern
 
-**Default to passthrough. Only transform when necessary.**
+The project already uses pytest with a good structure:
+- `pytest.ini` configures test paths
+- `tests/conftest.py` provides fixtures for git/sl repos
+- `tests/helpers/` contains shared test utilities
 
-```python
-import sys
+### Wrapper Script Pattern
 
-def output_passthrough():
-    """Most commands: let output flow directly to terminal."""
-    # Don't capture stdout/stderr - subprocess inherits terminal
-    subprocess.run(['sl'] + args)
+Create `./test` script for convenience:
 
-def output_with_exit_code():
-    """When we need the exit code but not output."""
-    result = subprocess.run(['sl'] + args)
-    sys.exit(result.returncode)
+```bash
+#!/bin/bash
+# ./test - Run gitsl tests
+#
+# Usage:
+#   ./test              Run all tests
+#   ./test status       Run tests for cmd_status
+#   ./test log diff     Run tests for cmd_log and cmd_diff
+#   ./test -v           Pass flags to pytest
 
-def output_captured_and_transformed():
-    """When output needs modification."""
-    result = subprocess.run(['sl'] + args, capture_output=True, text=True)
-    # Transform...
-    sys.stdout.write(transformed)
-    sys.exit(result.returncode)
+set -e
+
+# Change to script directory
+cd "$(dirname "$0")"
+
+if [ $# -eq 0 ]; then
+    # No arguments - run all tests
+    python -m pytest tests/ -v
+elif [[ "$1" == -* ]]; then
+    # Flags passed directly to pytest
+    python -m pytest tests/ "$@"
+else
+    # Command names - map to test files
+    TEST_FILES=()
+    for cmd in "$@"; do
+        if [[ "$cmd" == -* ]]; then
+            # It's a flag, pass through
+            TEST_FILES+=("$cmd")
+        elif [ -f "tests/test_cmd_$cmd.py" ]; then
+            TEST_FILES+=("tests/test_cmd_$cmd.py")
+        elif [ -f "tests/test_$cmd.py" ]; then
+            TEST_FILES+=("tests/test_$cmd.py")
+        else
+            echo "Warning: No test file found for '$cmd'"
+        fi
+    done
+
+    if [ ${#TEST_FILES[@]} -gt 0 ]; then
+        python -m pytest "${TEST_FILES[@]}" -v
+    else
+        echo "No matching test files found"
+        exit 1
+    fi
+fi
 ```
 
-### Text Mode
+**Usage:**
+- `./test` - Run all tests
+- `./test status` - Run `tests/test_cmd_status.py`
+- `./test log diff` - Run tests for both commands
+- `./test -k "porcelain"` - Pass pytest filters
 
-Always use `text=True` (or `encoding='utf-8'`) when capturing:
+### pytest Configuration Update
 
-```python
-# Good - returns strings
-result = subprocess.run(['sl', 'status'], capture_output=True, text=True)
-print(result.stdout)  # String
+Consider updating `pytest.ini` for better defaults:
 
-# Also good - explicit encoding
-result = subprocess.run(['sl', 'status'], capture_output=True, encoding='utf-8')
-
-# Avoid - returns bytes, must decode
-result = subprocess.run(['sl', 'status'], capture_output=True)
-print(result.stdout.decode('utf-8'))  # Extra step
+```ini
+[pytest]
+pythonpath = .
+testpaths = tests
+addopts = -v --tb=short
+filterwarnings =
+    ignore::DeprecationWarning
 ```
 
-### Exit Code Propagation
-
-**Critical for scripts that check git exit codes:**
-
-```python
-import sys
-import subprocess
-
-def main():
-    # ... translation logic ...
-    result = subprocess.run(['sl'] + translated_args)
-    sys.exit(result.returncode)
-
-# Or with execvp (automatic - exit code propagates naturally)
-os.execvp('sl', ['sl'] + translated_args)
+Current `pytest.ini` is minimal but functional:
+```ini
+[pytest]
+pythonpath = tests
+testpaths = tests
 ```
-
-### Stderr Handling
-
-Keep stderr separate unless there's a specific reason to merge:
-
-```python
-# Default: separate stderr (recommended)
-result = subprocess.run(['sl', 'status'], capture_output=True, text=True)
-if result.stderr:
-    sys.stderr.write(result.stderr)
-
-# Merged: only when needed for specific parsing
-result = subprocess.run(
-    ['sl', 'status'],
-    stdout=subprocess.PIPE,
-    stderr=subprocess.STDOUT,  # Merge stderr into stdout
-    text=True
-)
-```
-
-### Confidence: HIGH
-
-Source: [Python subprocess documentation](https://docs.python.org/3.14/library/subprocess.html)
 
 ---
 
-## Finding the Real Executable
+## Recommendations Summary
 
-### Recommendation: `shutil.which()` with PATH Filtering
+### PyPI Publishing
 
-The shim must find `sl` (and possibly the real `git` for fallback) while avoiding itself.
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Config format | pyproject.toml | Modern standard, setup.py deprecated |
+| Build backend | setuptools | No extra deps, stdlib-only project |
+| Entry point | `[project.scripts]` | Creates `gitsl` command |
+| Module listing | Explicit `py-modules` | Flat layout requires explicit list |
+| Version source | `common.VERSION` via dynamic | Single source of truth, already exists |
 
-```python
-import shutil
-import os
+### GitHub Actions
 
-def find_sl() -> str:
-    """Find sl executable."""
-    sl_path = shutil.which('sl')
-    if not sl_path:
-        raise RuntimeError("Sapling (sl) not found in PATH")
-    return sl_path
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Python versions | 3.8-3.13 | Match `requires-python = ">=3.8"` |
+| OS matrix | ubuntu, macos, windows | Full cross-platform coverage |
+| Sapling install (mac) | Homebrew | Official, fast |
+| Sapling install (linux) | .deb package | Faster than Homebrew on Linux |
+| Sapling install (windows) | ZIP from releases | Official distribution |
+| Publishing trigger | GitHub Release | Clean separation of CI and release |
+| Auth method | Trusted Publishing (OIDC) | No secrets to manage |
 
-def find_real_git(script_path: str) -> str | None:
-    """
-    Find the real git, excluding our shim.
+### Test Runner
 
-    Args:
-        script_path: Absolute path to this script (to exclude from search)
-    """
-    # Get our directory to exclude
-    shim_dir = os.path.dirname(os.path.abspath(script_path))
-
-    # Search PATH manually, skipping our directory
-    path_dirs = os.environ.get('PATH', '').split(os.pathsep)
-
-    for dir_path in path_dirs:
-        if os.path.abspath(dir_path) == shim_dir:
-            continue  # Skip our own directory
-
-        git_path = os.path.join(dir_path, 'git')
-        if os.path.isfile(git_path) and os.access(git_path, os.X_OK):
-            return git_path
-
-    return None
-```
-
-### Confidence: HIGH
-
-Source: [GeeksforGeeks shutil.which documentation](https://www.geeksforgeeks.org/python/shutil-module-in-python/)
+| Decision | Choice | Rationale |
+|----------|--------|-----------|
+| Framework | pytest (existing) | Already in use, good fixture pattern |
+| Wrapper script | `./test` shell script | Convenient command-specific testing |
+| CI integration | `pytest tests/ -v` | Simple, reliable |
 
 ---
 
-## Script Structure
+## Required Files to Create
 
-### Recommendation: Single-File with Shebang
-
-```python
-#!/usr/bin/env python3
-"""
-gitsl - Git to Sapling command translator.
-
-Place in PATH before real git to intercept git commands.
-"""
-from __future__ import annotations
-
-import os
-import subprocess
-import sys
-from typing import NoReturn
-
-
-# =============================================================================
-# COMMAND MAPPING
-# =============================================================================
-
-# Direct 1:1 translations (use execvp)
-DIRECT_MAP: dict[str, str] = {
-    'status': 'status',
-    'diff': 'diff',
-    'log': 'log',
-    'add': 'add',
-    'commit': 'commit',
-    'blame': 'blame',
-    # ...
-}
-
-# Commands needing argument transformation
-TRANSFORM_MAP: dict[str, callable] = {
-    'push': translate_push,
-    'pull': translate_pull,
-    'checkout': translate_checkout,
-    # ...
-}
-
-
-# =============================================================================
-# EXECUTION
-# =============================================================================
-
-def exec_sl(args: list[str]) -> NoReturn:
-    """Replace process with sl."""
-    os.execvp('sl', ['sl'] + args)
-
-
-def run_sl(args: list[str]) -> int:
-    """Run sl as subprocess, return exit code."""
-    return subprocess.run(['sl'] + args).returncode
-
-
-# =============================================================================
-# MAIN
-# =============================================================================
-
-def main() -> int:
-    args = sys.argv[1:]
-
-    if not args:
-        exec_sl([])  # Let sl handle no-args
-
-    command = args[0]
-    command_args = args[1:]
-
-    if command in DIRECT_MAP:
-        exec_sl([DIRECT_MAP[command]] + command_args)
-    elif command in TRANSFORM_MAP:
-        translated = TRANSFORM_MAP[command](command_args)
-        return run_sl(translated)
-    else:
-        # Unknown command - pass through
-        exec_sl(args)
-
-
-if __name__ == '__main__':
-    sys.exit(main())
-```
-
-### Shebang
-
-Use `#!/usr/bin/env python3` for portability across systems:
-
-```python
-#!/usr/bin/env python3
-```
-
-This finds python3 in PATH rather than hardcoding a path like `/usr/bin/python3`.
-
-### Confidence: HIGH
-
-Source: [Python shebang best practices](https://docs.kanaries.net/topics/Python/python-shebang)
+| File | Purpose | Priority |
+|------|---------|----------|
+| `pyproject.toml` | Package configuration | Required for PyPI |
+| `.github/workflows/ci.yml` | Test matrix on push/PR | Required for CI |
+| `.github/workflows/publish.yml` | PyPI publishing on release | Required for PyPI |
+| `./test` (executable) | Test runner wrapper | Nice to have |
+| `README.md` | Required by pyproject.toml | Required for PyPI |
+| `LICENSE` | Required for PyPI | Required for PyPI |
 
 ---
 
-## Stdlib Modules Summary
+## Roadmap Implications
 
-| Module | Purpose | Usage |
-|--------|---------|-------|
-| `sys` | Arguments, exit, streams | `sys.argv`, `sys.exit()`, `sys.stdout`, `sys.stderr` |
-| `os` | Process replacement, env, paths | `os.execvp()`, `os.environ`, `os.path.*` |
-| `subprocess` | Running commands | `subprocess.run()`, `subprocess.Popen()` |
-| `shutil` | Finding executables | `shutil.which()` |
-| `shlex` | Shell-style parsing (if needed) | `shlex.split()`, `shlex.quote()` |
-| `typing` | Type hints | `NoReturn`, `Optional` |
-| `re` | Regex (if pattern matching needed) | Pattern matching in output |
+Based on this research, v1.1 phases should include:
 
-### Modules to AVOID
+1. **Packaging Phase** - Create pyproject.toml, verify `pip install -e .` works, test entry point
+2. **CI Phase** - Create GitHub Actions workflows, verify Sapling installation works on all platforms
+3. **Documentation Phase** - Create README.md with installation and usage instructions
+4. **Release Phase** - Configure PyPI trusted publishing, create first release
 
-| Module | Why Avoid |
-|--------|-----------|
-| `argparse` | Over-engineered for shim use case; fights against passthrough |
-| `click`/`typer` | External dependencies |
-| `pty` | Complexity overkill; `execvp` handles TTY naturally |
-
----
-
-## Alternatives Considered
-
-### Alternative 1: argparse with Subparsers
-
-**Considered:** Using argparse with subparsers for each git command.
-
-**Rejected because:**
-- Requires defining every possible argument for every command
-- Unknown flags cause errors instead of passing through
-- Adds overhead without benefit - we're not validating, just routing
-- Git's argument style (global flags before command) awkward to model
-
-### Alternative 2: Full PTY Passthrough
-
-**Considered:** Using `pty.spawn()` for full terminal emulation.
-
-```python
-import pty
-pty.spawn(['sl'] + args)
-```
-
-**Rejected because:**
-- `os.execvp()` is simpler and sufficient for most cases
-- PTY adds complexity without clear benefit
-- Terminal behavior preserved naturally with execvp
-- Only needed if intercepting/modifying interactive sessions
-
-### Alternative 3: Always Subprocess (no execvp)
-
-**Considered:** Using `subprocess.run()` for everything.
-
-**Rejected because:**
-- Extra process overhead for every command
-- Must manually handle signals, exit codes
-- TTY behavior can be disrupted
-- `execvp` is cleaner for pure passthrough
-
-### Alternative 4: External CLI Framework (Click, Typer)
-
-**Considered:** Using Click or Typer for nicer CLI building.
-
-**Rejected because:**
-- Zero-dependency constraint
-- These frameworks assume you're defining the CLI, not wrapping another
-- Over-engineered for shim use case
-
----
-
-## Git-to-Sapling Command Reference
-
-Based on [Sapling's Git cheat sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/):
-
-### Direct Translations (same semantics)
-
-| Git | Sapling |
-|-----|---------|
-| `git clone` | `sl clone` |
-| `git status` | `sl status` |
-| `git diff` | `sl diff` |
-| `git log` | `sl log` |
-| `git add FILE` | `sl add FILE` |
-| `git rm FILE` | `sl rm FILE` |
-| `git mv` | `sl mv` |
-| `git commit -a` | `sl commit` |
-| `git commit --amend` | `sl amend` |
-| `git show` | `sl show` |
-| `git blame FILE` | `sl blame FILE` |
-| `git stash` | `sl shelve` |
-| `git stash pop` | `sl unshelve` |
-| `git revert COMMIT` | `sl backout COMMIT` |
-| `git cherry-pick COMMIT` | `sl graft COMMIT` |
-| `git rebase -i` | `sl histedit` |
-| `git clean -f` | `sl clean` |
-| `git branch` | `sl bookmark` |
-
-### Argument-Transformed Commands
-
-| Git | Sapling | Notes |
-|-----|---------|-------|
-| `git fetch` | `sl pull` | Different semantics |
-| `git pull --rebase` | `sl pull --rebase` | Same |
-| `git push HEAD:BRANCH` | `sl push --to BRANCH` | Argument rewrite |
-| `git checkout COMMIT` | `sl goto COMMIT` | Command rename |
-| `git checkout -- FILE` | `sl revert FILE` | Different command! |
-| `git reset --hard` | `sl revert --all` | Different command |
-| `git reset --soft HEAD^` | `sl uncommit` | Different command |
-| `git branch NAME` | `sl book NAME` | Abbreviation |
-| `git branch -d NAME` | `sl book -d NAME` | Same flags |
-| `git rm --cached FILE` | `sl forget FILE` | Different command |
-| `git rebase main` | `sl rebase -d main` | Flag difference |
-
-### Reference Translations
-
-| Git | Sapling |
-|-----|---------|
-| `HEAD` | `.` |
-| `HEAD^` | `.^` |
-| `Y..X` (range) | `X % Y` |
+**Key dependency:** README.md must exist before pyproject.toml can use `readme = "README.md"`.
 
 ---
 
 ## Sources
 
-- [Python subprocess documentation](https://docs.python.org/3.14/library/subprocess.html) - Official subprocess API reference
-- [Sapling Git cheat sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - Command mapping reference
-- [PyMOTW shlex](https://pymotw.com/3/shlex/) - Shell-style parsing
-- [Real Python Command Line Arguments](https://realpython.com/python-command-line-arguments/) - Argument parsing approaches
-- [Subprocess streaming patterns](https://gist.github.com/almoore/c6fd2d041ad4f4bf2719a89c9b454f7e) - Real-time output handling
-- [os.execvp usage](https://iditect.com/faq/python/replace-current-process-with-invocation-of-subprocess-in-python.html) - Process replacement patterns
-- [Python shebang best practices](https://docs.kanaries.net/topics/Python/python-shebang) - Executable script setup
+- [Python Packaging User Guide - Modernize setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/)
+- [Setuptools pyproject.toml Configuration](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
+- [GitHub Docs - Building and Testing Python](https://docs.github.com/en/actions/tutorials/build-and-test-code/python)
+- [PyPI Publishing with GitHub Actions](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/)
+- [Sapling Installation Guide](https://sapling-scm.com/docs/introduction/installation)
+- [GitHub Actions Matrix Strategy](https://codefresh.io/learn/github-actions/github-actions-matrix/)
+- [Xebia - Setuptools and pyproject.toml Guide](https://xebia.com/blog/an-updated-guide-to-setuptools-and-pyproject-toml/)

@@ -1,681 +1,802 @@
-# Pitfalls Research: CLI Shim/Command Translation
+# Pitfalls Research: v1.1 Polish (Packaging & CI/CD)
 
-**Domain:** Git-to-Sapling CLI translation shim
-**Researched:** 2026-01-17
-**Confidence:** HIGH (verified against Python docs and official sources)
+**Domain:** Python CLI package publishing and cross-platform CI
+**Researched:** 2026-01-18
+**Confidence:** HIGH (verified against PyPI docs, GitHub Actions docs, and Python Packaging Guide)
 
 ---
 
-## Critical Pitfalls
+## PyPI Publishing Pitfalls
 
-Mistakes that cause rewrites, data corruption, or complete failure of the shim.
+### Pitfall 1: Version Already Exists (Immutable Releases)
 
-### Pitfall 1: Subprocess Deadlock with Pipe Buffering
+**What goes wrong:** Attempting to upload a version that already exists on PyPI fails with "File already exists" error.
 
-**What goes wrong:** Using `wait()` or direct `.stdout.read()` with `stdout=PIPE` causes the program to hang indefinitely.
-
-**Why it happens:** OS pipe buffers have limited capacity (typically 64KB on Linux). When a child process writes more output than the buffer can hold, it blocks waiting for the parent to read. But if the parent is blocked in `wait()` or reading from the wrong stream first, neither can proceed.
+**Why it happens:** PyPI does not allow overwriting releases. Once version 1.0.0 is uploaded, it cannot be replaced or deleted (even if yanked, the version number remains reserved).
 
 **Consequences:**
-- Shim hangs forever on any command producing significant output
-- `git log`, `git diff`, `git status` on large repos will freeze
-- No error message - just unresponsive process
+- Failed CI releases require version bump to fix
+- Accidental premature release blocks that version number forever
+- Testing on TestPyPI then real PyPI can cause version conflicts
+
+**Prevention:**
+```yaml
+# Test on TestPyPI first with .dev versions
+# pyproject.toml
+version = "1.0.0.dev1"  # For testing
+
+# Only tag and release final versions after TestPyPI validation
+# Use semantic versioning: 1.0.0, 1.0.1, 1.1.0
+```
+
+**Warning signs:** CI publishing step fails with 400 error mentioning "file already exists"
+
+**Which phase should address:** Phase 1 (Release Workflow Setup). Establish versioning discipline before first release.
+
+**Source:** [PyPI Docs](https://docs.pypi.org/) - HIGH confidence
+
+---
+
+### Pitfall 2: Missing Trusted Publisher Configuration
+
+**What goes wrong:** GitHub Actions workflow fails with 403 Forbidden when attempting to publish to PyPI.
+
+**Why it happens:** Trusted Publishing requires explicit configuration on PyPI before the first publish. The workflow, repository, and environment must all match exactly.
+
+**Consequences:**
+- First release attempt fails
+- Must manually configure PyPI project settings
+- Environment name mismatch silently fails
+
+**Prevention:**
+```yaml
+# 1. Configure on PyPI BEFORE first release:
+#    pypi.org/manage/account/publishing/
+#    - Repository: owner/repo
+#    - Workflow: release.yml (exact filename)
+#    - Environment: pypi (if using environments)
+
+# 2. Workflow must have id-token permission:
+jobs:
+  publish:
+    permissions:
+      id-token: write  # MANDATORY for trusted publishing
+
+    # 3. Environment must match PyPI configuration
+    environment:
+      name: pypi
+      url: https://pypi.org/p/gitsl
+```
+
+**Warning signs:** 403 errors mentioning "token" or "authentication" despite using trusted publishing
+
+**Which phase should address:** Phase 1 (Release Workflow Setup). Configure before first release attempt.
+
+**Source:** [PyPI Trusted Publishers Docs](https://docs.pypi.org/trusted-publishers/) - HIGH confidence
+
+---
+
+### Pitfall 3: TestPyPI vs PyPI Account Confusion
+
+**What goes wrong:** Credentials work on TestPyPI but not PyPI, or vice versa.
+
+**Why it happens:** TestPyPI and PyPI are completely separate systems with independent:
+- User accounts
+- API tokens
+- Trusted publisher configurations
+- Package namespaces
+
+**Consequences:**
+- Package name available on TestPyPI but taken on real PyPI
+- Trusted publisher must be configured on BOTH separately
+- Different tokens/credentials needed for each
+
+**Prevention:**
+```yaml
+# Configure trusted publishing on BOTH:
+# 1. test.pypi.org/manage/account/publishing/
+# 2. pypi.org/manage/account/publishing/
+
+# Use separate workflow jobs or conditions:
+jobs:
+  publish-testpypi:
+    if: github.event_name == 'push'  # Every push
+    uses: pypa/gh-action-pypi-publish@release/v1
+    with:
+      repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi:
+    if: startsWith(github.ref, 'refs/tags/')  # Only tags
+    uses: pypa/gh-action-pypi-publish@release/v1
+```
+
+**Warning signs:** Works on test, fails on production (or reverse)
+
+**Which phase should address:** Phase 1 (Release Workflow). Check package name availability on real PyPI first.
+
+**Source:** [Using TestPyPI - Python Packaging Guide](https://packaging.python.org/en/latest/guides/using-testpypi/) - HIGH confidence
+
+---
+
+### Pitfall 4: pypa/gh-action-pypi-publish is Linux-Only
+
+**What goes wrong:** Publish job fails when using Windows or macOS runner.
+
+**Why it happens:** The official PyPI publish action is Docker-based and only runs on Linux runners.
+
+**Consequences:**
+- Build on Windows/macOS, but MUST publish from Linux job
+- Requires separate build and publish jobs with artifact transfer
+
+**Prevention:**
+```yaml
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: python -m build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist-${{ matrix.os }}
+          path: dist/
+
+  publish:
+    needs: build
+    runs-on: ubuntu-latest  # MUST be Linux
+    steps:
+      - uses: actions/download-artifact@v4
+      - uses: pypa/gh-action-pypi-publish@release/v1
+```
+
+**Warning signs:** "Cannot run Docker-based action on this runner"
+
+**Which phase should address:** Phase 2 (CI Pipeline). Design job structure with Linux publish job.
+
+**Source:** [gh-action-pypi-publish README](https://github.com/pypa/gh-action-pypi-publish) - HIGH confidence
+
+---
+
+### Pitfall 5: Build Artifacts Not in dist/ Directory
+
+**What goes wrong:** Publish action finds no files to upload.
+
+**Why it happens:**
+- Build output in wrong location
+- Artifact download doesn't preserve directory structure
+- `python -m build` outputs to `dist/` but action looks elsewhere
+
+**Consequences:**
+- Empty release
+- "No files to upload" error
+
+**Prevention:**
+```yaml
+# Ensure build creates dist/
+- run: python -m build
+  # Creates: dist/package-1.0.0.tar.gz and dist/package-1.0.0-py3-none-any.whl
+
+# When downloading artifacts, merge into single dist/
+- uses: actions/download-artifact@v4
+  with:
+    path: dist/
+    merge-multiple: true  # Combine all artifacts
+    pattern: dist-*
+
+# Verify before publish
+- run: ls -la dist/
+```
+
+**Warning signs:** Publish step completes instantly with no files uploaded
+
+**Which phase should address:** Phase 2 (CI Pipeline). Test artifact flow locally first.
+
+**Source:** [Python Packaging Guide - Publishing with GitHub Actions](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/) - HIGH confidence
+
+---
+
+## Cross-Platform CI Pitfalls
+
+### Pitfall 6: Windows PowerShell `sl` Alias Conflict
+
+**What goes wrong:** `sl` command in Windows CI runs PowerShell's `Set-Location` instead of Sapling.
+
+**Why it happens:** PowerShell has a built-in alias `sl` for `Set-Location` (equivalent to `cd`). This alias takes precedence over the Sapling binary.
+
+**Consequences:**
+- Tests using `sl` commands fail mysteriously on Windows
+- Error messages about invalid paths instead of Sapling errors
+- Works locally if user removed alias, fails in CI
+
+**Prevention:**
+```powershell
+# Option 1: Remove the alias in workflow
+Remove-Alias -Name sl -Force -ErrorAction SilentlyContinue
+
+# Option 2: Use full path
+C:\Program Files\Sapling\sl.exe status
+
+# Option 3: In Python tests, always use full path on Windows
+import shutil
+sl_path = shutil.which('sl') or r'C:\Program Files\Sapling\sl.exe'
+```
+
+**Warning signs:** Windows tests fail with path-related errors, Linux/macOS pass
+
+**Which phase should address:** Phase 2 (CI Pipeline). Add alias removal to Windows setup.
+
+**Source:** [Sapling Installation Docs](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
+
+---
+
+### Pitfall 7: Path Separator Differences
+
+**What goes wrong:** File paths in tests or output use wrong separator for platform.
+
+**Why it happens:**
+- Windows uses `\`, Unix uses `/`
+- Hardcoded paths break cross-platform
+- Git/Sapling output may normalize to `/` even on Windows
+
+**Consequences:**
+- Path comparisons fail
+- File operations fail
+- Tests pass on one OS, fail on others
 
 **Prevention:**
 ```python
-# WRONG - will deadlock on large output
-proc = subprocess.Popen(["sl", "log"], stdout=PIPE, stderr=PIPE)
-proc.wait()  # DEADLOCK
-output = proc.stdout.read()
+# WRONG - hardcoded separator
+expected = "src/gitsl/main.py"
 
-# CORRECT - use communicate() which handles buffering safely
-proc = subprocess.Popen(["sl", "log"], stdout=PIPE, stderr=PIPE)
-stdout, stderr = proc.communicate()
+# CORRECT - use pathlib or os.path
+from pathlib import Path
+expected = Path("src/gitsl/main.py")  # Handles separators
+
+# For comparing git output (which uses /), normalize:
+output_path = output.replace('\\', '/')
 ```
 
-**Detection:** Test with commands that produce more than 64KB output.
+**Warning signs:** String comparison failures in tests involving paths
 
-**Which phase should address:** Core subprocess handling layer (Phase 1). This is foundational - get it wrong and nothing works.
+**Which phase should address:** Phase 2 (CI Pipeline). Review all path handling in tests.
 
 **Source:** [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
 
 ---
 
-### Pitfall 2: Exit Code Loss
+### Pitfall 8: Line Ending Differences (CRLF vs LF)
 
-**What goes wrong:** Wrapper exits with code 0 even when the underlying command failed.
+**What goes wrong:** Tests comparing file contents or command output fail due to line endings.
 
 **Why it happens:**
-- Forgetting to propagate `returncode` from subprocess
-- Using `call()` or `run()` without checking return value
-- Exception handling that masks the original exit code
+- Windows defaults to CRLF (`\r\n`)
+- Unix uses LF (`\n`)
+- Git can auto-convert line endings
+- Text mode file reads may not preserve original endings
 
 **Consequences:**
-- CI/CD pipelines pass when they should fail
-- Scripts depending on git exit codes break silently
-- `git commit` appearing to succeed when it failed
+- String comparisons fail
+- Hash/checksum differences
+- Diff output shows entire file changed
 
 **Prevention:**
 ```python
-# WRONG - swallows exit code
+# Normalize line endings in comparisons
+def normalize_newlines(text):
+    return text.replace('\r\n', '\n').replace('\r', '\n')
+
+# Configure git to handle line endings
+# .gitattributes
+* text=auto eol=lf
+
+# In subprocess, use text=True for automatic handling
+result = subprocess.run(cmd, capture_output=True, text=True)
+```
+
+**Warning signs:** Tests fail only on Windows with output comparison errors
+
+**Which phase should address:** Phase 2 (CI Pipeline). Add .gitattributes and normalize in tests.
+
+**Source:** General cross-platform patterns - HIGH confidence
+
+---
+
+### Pitfall 9: GitHub Actions Cache Key Mismatch Across OS
+
+**What goes wrong:** Cache restored from wrong OS, causing failures or wasted time.
+
+**Why it happens:** Same cache key used across different operating systems. A cache saved on Linux cannot be used on Windows due to:
+- Different paths
+- Different compression
+- Binary incompatibility
+
+**Consequences:**
+- Cache restores but contents unusable
+- Subtle failures from wrong binaries
+- No cache benefit if key doesn't include OS
+
+**Prevention:**
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: ~/.cache/pip
+    # MUST include runner.os in key
+    key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+    restore-keys: |
+      ${{ runner.os }}-pip-
+```
+
+**Warning signs:** Cache hit but installation still runs, or strange import errors
+
+**Which phase should address:** Phase 2 (CI Pipeline). Always include OS in cache keys.
+
+**Source:** [GitHub Actions Cache Documentation](https://github.com/actions/cache) - HIGH confidence
+
+---
+
+### Pitfall 10: Matrix Strategy fail-fast Behavior
+
+**What goes wrong:** One failing OS/Python combination cancels all other matrix jobs.
+
+**Why it happens:** `fail-fast: true` is the default. When one job fails, GitHub cancels pending and running jobs in the same matrix.
+
+**Consequences:**
+- Cannot see which platforms actually work
+- Intermittent failures cancel valid tests
+- Hard to debug platform-specific issues
+
+**Prevention:**
+```yaml
+strategy:
+  fail-fast: false  # Let all jobs complete
+  matrix:
+    os: [ubuntu-latest, windows-latest, macos-latest]
+    python-version: ['3.9', '3.10', '3.11', '3.12']
+```
+
+**Warning signs:** Jobs showing as "cancelled" rather than failed/passed
+
+**Which phase should address:** Phase 2 (CI Pipeline). Set fail-fast: false for test matrices.
+
+**Source:** [GitHub Actions Matrix Documentation](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) - HIGH confidence
+
+---
+
+## Sapling Installation in CI
+
+### Pitfall 11: No Official Sapling GitHub Action
+
+**What goes wrong:** Searching for `sapling-scm/setup-sapling` action finds nothing.
+
+**Why it happens:** Unlike many tools, Sapling doesn't provide an official GitHub Action for installation. Manual installation required.
+
+**Consequences:**
+- Must write custom installation steps
+- Different installation for each OS
+- Version pinning is manual
+
+**Prevention:**
+```yaml
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Install Sapling (Ubuntu)
+        if: runner.os == 'Linux'
+        run: |
+          RELEASE="0.2.20250521-115337+25ed6ac4"
+          curl -L -o sapling.deb \
+            "https://github.com/facebook/sapling/releases/download/${RELEASE}/sapling_${RELEASE}_amd64.Ubuntu22.04.deb"
+          sudo dpkg -i sapling.deb
+
+      - name: Install Sapling (macOS)
+        if: runner.os == 'macOS'
+        run: brew install sapling
+
+      - name: Install Sapling (Windows)
+        if: runner.os == 'Windows'
+        run: |
+          # Download and extract Windows build
+          # Add to PATH
+```
+
+**Warning signs:** "sl: command not found" in CI
+
+**Which phase should address:** Phase 2 (CI Pipeline). Create reusable installation steps.
+
+**Source:** [Sapling Releases](https://github.com/facebook/sapling/releases) - HIGH confidence
+
+---
+
+### Pitfall 12: Sapling Version Not Pinned
+
+**What goes wrong:** CI suddenly breaks when Sapling releases new version with breaking changes.
+
+**Why it happens:**
+- `brew install sapling` gets latest version
+- Releases may change command behavior
+- No version constraint in workflow
+
+**Consequences:**
+- Flaky CI (works sometimes, fails others)
+- Hard to reproduce failures locally
+- Unexpected behavior changes
+
+**Prevention:**
+```yaml
+# Pin to specific release version
+- name: Install Sapling (Ubuntu)
+  run: |
+    VERSION="0.2.20250521-115337+25ed6ac4"
+    curl -L -o sapling.deb \
+      "https://github.com/facebook/sapling/releases/download/${VERSION}/..."
+    sudo dpkg -i sapling.deb
+
+# For Homebrew, pin if possible
+- name: Install Sapling (macOS)
+  run: |
+    brew tap facebook/fb
+    brew install facebook/fb/sapling@0.2  # If available
+```
+
+**Warning signs:** CI fails on date X but passed before, no code changes
+
+**Which phase should address:** Phase 2 (CI Pipeline). Pin versions from the start.
+
+**Source:** [Sapling Releases](https://github.com/facebook/sapling/releases) - MEDIUM confidence
+
+---
+
+### Pitfall 13: Missing Git Dependency for Sapling
+
+**What goes wrong:** Sapling commands fail in CI even though sl is installed.
+
+**Why it happens:** When using Sapling in git-compatible mode (working with .git repos), it requires git to be installed for certain operations.
+
+**Consequences:**
+- Tests fail with cryptic errors
+- Works locally where git is always present
+- Partial test failures
+
+**Prevention:**
+```yaml
+# Ensure git is installed (usually is by default, but verify)
+- name: Setup dependencies
+  run: |
+    git --version
+    sl --version
+```
+
+**Warning signs:** Some Sapling operations fail with "git not found" in logs
+
+**Which phase should address:** Phase 2 (CI Pipeline). Verify git presence in setup.
+
+**Source:** [Sapling Getting Started](https://sapling-scm.com/docs/introduction/getting-started/) - MEDIUM confidence
+
+---
+
+### Pitfall 14: Windows Sapling PATH Not Set
+
+**What goes wrong:** Sapling installed on Windows but `sl` not found.
+
+**Why it happens:** Windows Sapling installer adds to PATH but:
+- GitHub Actions may not pick up PATH changes mid-job
+- Installer may require shell restart
+- PATH modification may not persist between steps
+
+**Consequences:**
+- Install succeeds, tests fail
+- Manual PATH addition required
+
+**Prevention:**
+```yaml
+- name: Install Sapling (Windows)
+  run: |
+    # Download and install
+    Invoke-WebRequest -Uri $URL -OutFile sapling.zip
+    Expand-Archive sapling.zip -DestinationPath C:\sapling
+
+    # Explicitly add to PATH for subsequent steps
+    echo "C:\sapling" >> $env:GITHUB_PATH
+```
+
+**Warning signs:** Windows install step passes, next step fails with "sl not found"
+
+**Which phase should address:** Phase 2 (CI Pipeline). Explicitly add to GITHUB_PATH.
+
+**Source:** [Sapling Installation Docs](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
+
+---
+
+## Package Structure Pitfalls
+
+### Pitfall 15: Missing [build-system] Table
+
+**What goes wrong:** `pip install .` fails or uses legacy behavior with deprecation warnings.
+
+**Why it happens:** pyproject.toml without `[build-system]` table is treated as legacy. Modern pip requires explicit build system declaration.
+
+**Consequences:**
+- "No build backend configured" errors
+- Falls back to deprecated setup.py behavior
+- Installation may silently work differently than expected
+
+**Prevention:**
+```toml
+# pyproject.toml - ALWAYS include this
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "gitsl"
+version = "1.0.0"
+# ...
+```
+
+**Warning signs:** DeprecationWarning about build backend during install
+
+**Which phase should address:** Phase 1 (Package Structure). Add from the start.
+
+**Source:** [Python Packaging Guide - Modernizing setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/) - HIGH confidence
+
+---
+
+### Pitfall 16: Console Scripts Not Working After Install
+
+**What goes wrong:** `pip install .` succeeds but `gitsl` command not found.
+
+**Why it happens:**
+- `[project.scripts]` entry point syntax wrong
+- Module path doesn't match actual package structure
+- Function doesn't exist or has wrong signature
+
+**Consequences:**
+- Package installs but command unavailable
+- Command exists but fails immediately on import
+
+**Prevention:**
+```toml
+# pyproject.toml
+[project.scripts]
+gitsl = "gitsl:main"  # module:function
+
+# Verify:
+# 1. gitsl.py exists in package root OR gitsl/__init__.py
+# 2. main() function exists and is importable
+# 3. main() accepts no required arguments
+
+# Test locally:
+pip install -e .
+which gitsl  # Should show path
+gitsl --version  # Should work
+```
+
+**Warning signs:** "command not found" after successful install
+
+**Which phase should address:** Phase 1 (Package Structure). Test entry points before release.
+
+**Source:** [Setuptools Entry Points Documentation](https://setuptools.pypa.io/en/latest/userguide/entry_point.html) - HIGH confidence
+
+---
+
+### Pitfall 17: Version String Duplication
+
+**What goes wrong:** Version in pyproject.toml doesn't match version in code, causing confusion.
+
+**Why it happens:**
+- Version hardcoded in multiple places
+- Forgot to update one when bumping version
+- `--version` flag shows different version than pip
+
+**Consequences:**
+- User confusion about actual version
+- Bug reports reference wrong version
+- Debugging nightmare
+
+**Prevention:**
+```toml
+# Option 1: Single source in pyproject.toml (simplest for small packages)
+[project]
+version = "1.0.0"
+
+# Access at runtime:
+from importlib.metadata import version
+VERSION = version("gitsl")
+```
+
+```python
+# common.py - get version from package metadata
 try:
-    result = subprocess.run(["sl", "commit"])
+    from importlib.metadata import version
+    VERSION = version("gitsl")
 except Exception:
-    pass  # Loses the exit code
-
-# CORRECT - always propagate
-result = subprocess.run(["sl", "commit"])
-sys.exit(result.returncode)
+    VERSION = "0.0.0-dev"  # Fallback for development
 ```
 
-**Detection:** Test with intentionally failing commands and verify exit codes.
+**Warning signs:** `--version` shows different version than `pip show`
 
-**Which phase should address:** Core subprocess handling (Phase 1). Must be baked into the fundamental execution pattern.
+**Which phase should address:** Phase 1 (Package Structure). Establish single source of truth.
 
-**Source:** General subprocess patterns - HIGH confidence
+**Source:** [Python Packaging Guide - Version Management](https://betterstack.com/community/guides/scaling-python/pyproject-explained/) - HIGH confidence
 
 ---
 
-### Pitfall 3: Infinite Recursion via PATH
+### Pitfall 18: Package Not Including All Necessary Files
 
-**What goes wrong:** Shim named `git` calls `git`, which resolves to itself, creating infinite recursion.
-
-**Why it happens:** If the shim is installed in PATH as `git`, and it tries to shell out to the real `git` for unsupported commands, it calls itself.
-
-**Consequences:**
-- Stack overflow or fork bomb
-- System resource exhaustion
-- Appears to hang, then crashes
-
-**Prevention:**
-```python
-# WRONG - may call self
-subprocess.run(["git", "unsupported-command"])
-
-# CORRECT - use absolute path to real command OR delegate to sl
-REAL_GIT = "/usr/bin/git"  # Configured at install time
-subprocess.run([REAL_GIT, "unsupported-command"])
-
-# BETTER - just use sl for everything, translate or pass through
-subprocess.run(["sl"] + translated_args)
-```
-
-**Detection:** Test shim installed as `git` in PATH, ensure no recursion.
-
-**Which phase should address:** Architecture design (Phase 1). Decide early: does shim ever call git, or only sl?
-
-**Source:** Common CLI wrapper pattern - HIGH confidence
-
----
-
-### Pitfall 4: Signal Handling Breaks Ctrl+C
-
-**What goes wrong:** Pressing Ctrl+C during a long operation doesn't cleanly terminate the subprocess.
+**What goes wrong:** Installed package missing files that exist in source tree.
 
 **Why it happens:**
-- SIGINT reaches the wrapper but not the child (or reaches both incorrectly)
-- Wrapper exits but child process continues running
-- `preexec_fn` signal handling is Unix-only
+- Setuptools auto-discovery misses files
+- Non-.py files (configs, data) not included
+- Files outside package directory excluded
 
 **Consequences:**
-- Orphaned sl processes
-- Corrupted repository state if interrupted mid-operation
-- User frustration - Ctrl+C doesn't work
+- ImportError for missing modules
+- FileNotFoundError for data files
+- Works in dev, fails when installed
 
 **Prevention:**
-```python
-import signal
+```toml
+# pyproject.toml - be explicit about package structure
+[tool.setuptools]
+packages = ["gitsl"]  # Or use find:
 
-# Ensure child receives signals
-proc = subprocess.Popen(["sl", "pull"])
+# For flat layout (files in root):
+[tool.setuptools]
+py-modules = ["gitsl", "common", "cmd_status", "cmd_log", "cmd_diff",
+              "cmd_init", "cmd_rev_parse", "cmd_add", "cmd_commit"]
 
-try:
-    proc.wait()
-except KeyboardInterrupt:
-    proc.terminate()
-    proc.wait()
-    sys.exit(128 + signal.SIGINT)  # Standard exit code for SIGINT
+# Include non-Python files:
+[tool.setuptools.package-data]
+gitsl = ["*.json", "*.txt"]
 ```
 
-**Detection:** Test Ctrl+C during long operations like `git clone` or `git pull`.
+**Warning signs:** "ModuleNotFoundError" after pip install
 
-**Which phase should address:** Subprocess execution layer (Phase 1). Cross-platform signal handling is tricky.
+**Which phase should address:** Phase 1 (Package Structure). List modules explicitly.
 
-**Source:** [SIGINT subprocess handling](https://www.iditect.com/faq/python/making-sure-a-python-script-with-subprocesses-dies-on-sigint.html) - MEDIUM confidence
+**Source:** [Python Packaging Guide](https://www.pyopensci.org/python-package-guide/package-structure-code/pyproject-toml-python-package-metadata.html) - HIGH confidence
 
 ---
 
-## Argument Parsing Pitfalls
+### Pitfall 19: requires-python Not Set
 
-### Pitfall 5: Dash-Prefixed Option Arguments
+**What goes wrong:** Package installed on unsupported Python version, then crashes with syntax errors.
 
-**What goes wrong:** `git commit -m "-WIP-"` fails because argparse interprets `-WIP-` as an unknown option.
-
-**Why it happens:** Argparse performs preliminary classification of all arguments, marking anything starting with `-` as an option before considering context. This is a known, unfixable architectural issue (closed as "wont fix" in 2021).
+**Why it happens:** Without `requires-python`, pip allows installation on any Python version. Modern syntax (f-strings, walrus operator, etc.) then fails on older Python.
 
 **Consequences:**
-- Common patterns like negative commit references fail
-- Users forced to use `=` syntax: `-m=-WIP-`
-- Inconsistent behavior compared to real git
+- SyntaxError on older Python
+- Confusing error messages
+- Users blame package, not their Python version
 
 **Prevention:**
-```python
-# Option 1: Use parse_known_args and handle manually
-args, remaining = parser.parse_known_args()
+```toml
+[project]
+name = "gitsl"
+requires-python = ">=3.9"
 
-# Option 2: Don't use argparse for git-style parsing
-# Roll custom parser or use shlex + manual parsing
-
-# Option 3: Accept = syntax and document
-# git commit -m="message starting with dash"
+# Also add classifiers for clarity (informational only)
+classifiers = [
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
 ```
 
-**Detection:** Test with messages/refs starting with dashes.
+**Warning signs:** Issues from users on old Python with syntax errors
 
-**Which phase should address:** Argument parsing layer (Phase 1). Choose parsing strategy early.
+**Which phase should address:** Phase 1 (Package Structure). Set minimum version explicitly.
 
-**Source:** [Python argparse issue 9334](https://bugs.python.org/issue9334) - HIGH confidence
-
----
-
-### Pitfall 6: Subparser Abbreviation Ambiguity
-
-**What goes wrong:** Using argparse subparsers with abbreviated options causes false "ambiguous option" errors.
-
-**Why it happens:** When main parser has `--foo1` and `--foo2`, and subparser has `--foo`, argparse incorrectly reports ambiguity even though the subparser option should take precedence in that context.
-
-**Consequences:**
-- Valid commands rejected
-- Users can't use option abbreviations they expect from git
-
-**Prevention:**
-- Don't use argparse's subparser feature for git-style command dispatch
-- Use simpler two-phase parsing: identify subcommand first, then parse its args
-
-```python
-# PROBLEMATIC - argparse subparsers
-parser = argparse.ArgumentParser()
-subparsers = parser.add_subparsers()
-
-# BETTER - manual dispatch
-command = sys.argv[1] if len(sys.argv) > 1 else "help"
-command_args = sys.argv[2:]
-handler = COMMAND_MAP.get(command, handle_unknown)
-handler(command_args)
-```
-
-**Detection:** Test abbreviated options with subcommands.
-
-**Which phase should address:** Command dispatch architecture (Phase 1).
-
-**Source:** [Python argparse issue 14365](https://bugs.python.org/issue14365) - HIGH confidence
+**Source:** [Writing pyproject.toml - Python Packaging Guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) - HIGH confidence
 
 ---
 
-### Pitfall 7: Scientific Notation as Negative Numbers
+### Pitfall 20: Flat Layout Without Explicit Module List
 
-**What goes wrong:** Arguments like `-3e12` or `-1e-5` are rejected as unknown options instead of being parsed as values.
-
-**Why it happens:** Argparse's negative number regex only matches simple integers and decimals, not scientific notation.
-
-**Consequences:**
-- Edge case, but surprising failures for users passing numeric values
-
-**Prevention:**
-- For a git shim, this is unlikely to occur often
-- If needed, preprocess arguments to quote scientific notation values
-
-**Detection:** Test with numeric values in scientific notation.
-
-**Which phase should address:** Low priority, but note during argument parsing design.
-
-**Source:** [Python cpython issue 105712](https://github.com/python/cpython/issues/105712) - HIGH confidence
-
----
-
-### Pitfall 8: Unknown Arguments with Spaces
-
-**What goes wrong:** `--option="value with spaces"` is misinterpreted when passed through.
-
-**Why it happens:** `parse_known_args` can incorrectly classify spaced values as positional arguments.
-
-**Consequences:**
-- Arguments split incorrectly
-- Commands fail with confusing errors
-
-**Prevention:**
-- Preserve original sys.argv for passthrough
-- Don't re-quote or re-split already-parsed arguments
-
-```python
-# WRONG - loses quoting
-args_string = " ".join(sys.argv[1:])
-subprocess.run(f"sl {args_string}", shell=True)
-
-# CORRECT - pass argv directly
-subprocess.run(["sl"] + sys.argv[1:])
-```
-
-**Detection:** Test with arguments containing spaces, quotes, special characters.
-
-**Which phase should address:** Argument passthrough (Phase 1).
-
-**Source:** [Python argparse issue 22433](https://bugs.python.org/issue22433) - HIGH confidence
-
----
-
-## Subprocess Pitfalls
-
-### Pitfall 9: shell=True Security and Quoting Chaos
-
-**What goes wrong:** Using `shell=True` with user-provided arguments enables injection or breaks on special characters.
+**What goes wrong:** gitsl uses flat layout (modules in repo root), but setuptools doesn't find all modules.
 
 **Why it happens:**
-- Shell interprets metacharacters: `$`, `;`, `|`, `>`, etc.
-- User-provided branch names or file paths with special chars break
-- Security: malicious input can execute arbitrary commands
+- Setuptools' auto-discovery is designed for src/ layout or package directories
+- Flat layout with multiple .py files in root needs explicit configuration
+- `find:` doesn't work well for flat layouts
 
 **Consequences:**
-- Command injection vulnerabilities
-- Branch name `feature;rm -rf /` causes disaster with shell=True
-- Inconsistent behavior across shells
+- Only some modules included in wheel
+- ImportError for "helper" modules
+- Works locally (all files present), fails after install
 
 **Prevention:**
-```python
-# NEVER use shell=True with user input
-# WRONG
-subprocess.run(f"sl log {branch_name}", shell=True)
+```toml
+# For gitsl's flat layout, be EXPLICIT:
+[tool.setuptools]
+py-modules = [
+    "gitsl",
+    "common",
+    "cmd_status",
+    "cmd_log",
+    "cmd_diff",
+    "cmd_init",
+    "cmd_rev_parse",
+    "cmd_add",
+    "cmd_commit"
+]
 
-# CORRECT - pass as list, no shell
-subprocess.run(["sl", "log", branch_name])
+# Test with:
+pip install . && python -c "import common; print('OK')"
 ```
 
-**Detection:** Test with branch/file names containing `;`, `$`, `|`, spaces, quotes.
+**Warning signs:** `pip show -f gitsl` shows fewer files than expected
 
-**Which phase should address:** Core subprocess execution (Phase 1). Never use shell=True.
+**Which phase should address:** Phase 1 (Package Structure). Critical for gitsl's layout.
 
-**Source:** [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
-
----
-
-### Pitfall 10: Timeout Without Cleanup
-
-**What goes wrong:** Setting a timeout but not killing the child process on timeout.
-
-**Why it happens:** `TimeoutExpired` is raised, but child continues running in background.
-
-**Consequences:**
-- Orphaned processes
-- Resource leaks
-- Incomplete operations still running
-
-**Prevention:**
-```python
-proc = subprocess.Popen(["sl", "clone", url])
-try:
-    proc.communicate(timeout=300)
-except subprocess.TimeoutExpired:
-    proc.kill()
-    proc.communicate()  # Finish cleanup
-    raise
-```
-
-**Detection:** Test with artificially low timeouts.
-
-**Which phase should address:** Subprocess execution layer (Phase 1).
-
-**Source:** [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
-
----
-
-### Pitfall 11: Encoding Mismatches
-
-**What goes wrong:** Output with non-ASCII characters (branch names, commit messages, file paths) gets garbled or crashes.
-
-**Why it happens:**
-- Subprocess returns bytes, not strings
-- Decoding with wrong encoding (ASCII instead of UTF-8)
-- Locale not propagated to child process
-
-**Consequences:**
-- UnicodeDecodeError crashes
-- Garbled output for international users
-- File operations fail on Unicode paths
-
-**Prevention:**
-```python
-# Specify encoding explicitly
-result = subprocess.run(
-    ["sl", "log"],
-    capture_output=True,
-    text=True,
-    encoding="utf-8",
-    errors="replace"  # Don't crash on bad bytes
-)
-
-# Or handle bytes manually
-result = subprocess.run(["sl", "log"], capture_output=True)
-output = result.stdout.decode("utf-8", errors="replace")
-```
-
-**Detection:** Test with non-ASCII branch names, commit messages, file paths.
-
-**Which phase should address:** Output handling (Phase 1).
-
-**Source:** General Python encoding patterns - HIGH confidence
-
----
-
-## Output Transformation Pitfalls
-
-### Pitfall 12: Color/ANSI Code Handling
-
-**What goes wrong:** Colored output from sl is stripped or corrupted when passed through shim.
-
-**Why it happens:**
-- Programs detect `isatty()` and disable colors when piped
-- ANSI codes may not survive subprocess piping
-- Windows requires special handling for ANSI
-
-**Consequences:**
-- Loss of syntax highlighting and visual feedback
-- Output looks different through shim vs direct sl
-
-**Prevention:**
-```python
-# Option 1: Use pty to preserve TTY
-import pty
-import os
-
-master, slave = pty.openpty()
-proc = subprocess.Popen(["sl", "log"], stdout=slave, stderr=slave)
-
-# Option 2: Pass through flags that force color
-subprocess.run(["sl", "log", "--color=always"])
-
-# Option 3: Don't capture output if passing through
-subprocess.run(["sl", "log"])  # No stdout=PIPE, goes directly to terminal
-```
-
-**Detection:** Compare shim output colors vs direct sl invocation.
-
-**Which phase should address:** Output handling (Phase 2). Consider whether to transform or pass through.
-
-**Source:** [Python discuss - subprocess color codes](https://discuss.python.org/t/subprocess-output-with-color-codes/36241) - MEDIUM confidence
-
----
-
-### Pitfall 13: Git Porcelain vs Human Output Confusion
-
-**What goes wrong:** Parsing human-readable output that changes between versions/locales.
-
-**Why it happens:**
-- Human output is not stable: whitespace, wording, order can change
-- Localized output (different languages) breaks parsing
-- Version updates change formatting
-
-**Consequences:**
-- Regex-based parsing breaks mysteriously
-- Different behavior on different systems
-
-**Prevention:**
-```python
-# For git output you need to parse, use porcelain formats
-subprocess.run(["git", "status", "--porcelain=v2"])
-subprocess.run(["git", "log", "--format=%H %s"])
-
-# For sapling, check equivalent machine-readable options
-subprocess.run(["sl", "log", "-T", "{node} {desc}\\n"])
-```
-
-**Detection:** Test parsing with different locales (LANG=de_DE, etc.)
-
-**Which phase should address:** Output parsing phase. Only parse when transformation needed.
-
-**Source:** General CLI patterns - HIGH confidence
-
----
-
-### Pitfall 14: Reference Syntax Translation Errors
-
-**What goes wrong:** Git reference syntax like `HEAD^`, `master..feature`, `@{-1}` translated incorrectly.
-
-**Why it happens:**
-- Git uses `HEAD` and `^` for parent; Sapling uses `.` and `^`
-- Range syntax differs: Git `Y..X` vs Sapling `X % Y`
-- Special refs like `@{-1}` may not have equivalents
-
-**Consequences:**
-- Commands silently operate on wrong commits
-- Data loss from operations on unintended commits
-- Confusing errors
-
-**Prevention:**
-```python
-# Build explicit translation table
-REFERENCE_MAP = {
-    "HEAD": ".",
-    "HEAD^": ".^",
-    "HEAD~1": ".~1",
-    # ... comprehensive mapping
-}
-
-def translate_ref(git_ref):
-    # Handle complex patterns like HEAD~N, master..feature
-    # Test extensively
-```
-
-**Detection:** Test all git reference formats documented in gitrevisions(7).
-
-**Which phase should address:** Dedicated reference translation phase. High complexity, needs thorough testing.
-
-**Source:** [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - HIGH confidence
-
----
-
-## Edge Cases
-
-### Pitfall 15: Empty/Missing Arguments
-
-**What goes wrong:** Commands like `git commit -m ""` or `git log --author=` break.
-
-**Why it happens:**
-- Empty strings handled inconsistently
-- Some parsers skip empty args
-- Subprocess list may filter empty strings
-
-**Consequences:**
-- Commands interpreted differently than intended
-- Empty commit messages when user wanted to abort
-
-**Prevention:**
-```python
-# Preserve empty strings
-args = ["sl", "commit", "-m", ""]  # Empty string preserved
-subprocess.run(args)
-
-# Watch for filter() removing empty strings
-# WRONG
-args = list(filter(None, args))  # Removes empty strings!
-```
-
-**Detection:** Test with empty string arguments, empty files, no-op commands.
-
-**Which phase should address:** Argument handling (Phase 1).
-
----
-
-### Pitfall 16: Environment Variable Propagation
-
-**What goes wrong:** Git environment variables not passed to sl, causing unexpected behavior.
-
-**Why it happens:**
-- `GIT_DIR`, `GIT_WORK_TREE`, `GIT_INDEX_FILE` affect git behavior
-- Subprocess may not inherit environment
-- Sapling has equivalent variables that need translation
-
-**Consequences:**
-- Operations in wrong repository
-- Hooks fail
-- Editor/pager not invoked
-
-**Prevention:**
-```python
-# Pass through environment
-env = os.environ.copy()
-
-# Consider translating git env vars to sapling equivalents
-# or stripping git-specific vars that confuse sl
-
-result = subprocess.run(["sl", "log"], env=env)
-```
-
-**Detection:** Test with GIT_DIR set, GIT_WORK_TREE set, inside git hooks.
-
-**Which phase should address:** Environment handling (Phase 1).
-
-**Source:** [Git Environment Variables](https://git-scm.com/book/uz/v2/Git-Internals-Environment-Variables) - HIGH confidence
-
----
-
-### Pitfall 17: Windows-Specific Batch File Vulnerability
-
-**What goes wrong:** On Windows, even without shell=True, batch files invoke cmd.exe.
-
-**Why it happens:** Windows shell association runs .bat/.cmd files through cmd.exe regardless of how they're invoked.
-
-**Consequences:**
-- Shell injection via batch file arguments
-- Security vulnerability on Windows
-
-**Prevention:**
-```python
-# On Windows, if invoking batch files with untrusted args,
-# consider shell=True to get proper escaping
-# Or avoid batch files entirely
-```
-
-**Detection:** Windows-specific testing with special characters in args.
-
-**Which phase should address:** Note for Windows compatibility (if targeted).
-
-**Source:** [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
-
----
-
-### Pitfall 18: Command-Specific Flag Differences
-
-**What goes wrong:** Flag that exists in git has different meaning in sl, or doesn't exist.
-
-**Why it happens:**
-- `git fetch` vs `sl pull` (fetch = pull in sapling)
-- `git push HEAD:branch` vs `sl push --to branch`
-- Short flags may conflict
-
-**Consequences:**
-- Silent wrong behavior (flag ignored or means something else)
-- Errors that don't explain the translation issue
-
-**Prevention:**
-```python
-# Maintain per-command translation tables
-COMMAND_TRANSLATIONS = {
-    "fetch": {
-        "sl_command": "pull",
-        "flag_map": {
-            "--all": None,  # Different in sl
-            "-p": "--prune",  # Example mapping
-        }
-    }
-}
-
-# Log/warn when a flag can't be translated
-```
-
-**Detection:** Test each supported command with all common flags.
-
-**Which phase should address:** Per-command translation (Phase 2+). Each command needs its own translation logic.
-
-**Source:** [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - HIGH confidence
-
----
-
-### Pitfall 19: Interactive Command Handling
-
-**What goes wrong:** Commands requiring user input (rebase -i, merge conflicts, credential prompts) fail.
-
-**Why it happens:**
-- stdin not connected to terminal
-- PTY not established
-- Interactive editors don't launch
-
-**Consequences:**
-- Interactive rebase impossible
-- Credential prompts hang
-- Merge conflict resolution broken
-
-**Prevention:**
-```python
-# For interactive commands, don't capture stdio
-# Let them connect directly to terminal
-subprocess.run(["sl", "histedit"])  # No capture, direct terminal access
-
-# Or use pty for full terminal emulation
-import pty
-pty.spawn(["sl", "histedit"])
-```
-
-**Detection:** Test interactive commands: histedit, merge with conflicts, clone requiring credentials.
-
-**Which phase should address:** Interactive command handling (Phase 2+). May need special cases.
-
----
-
-### Pitfall 20: Git Alias Expansion
-
-**What goes wrong:** User has git aliases that the shim doesn't understand.
-
-**Why it happens:**
-- Git aliases defined in ~/.gitconfig
-- Shim receives alias as command, not expansion
-- User expects `git st` to work (alias for status)
-
-**Consequences:**
-- "Unknown command: st"
-- Users must re-configure aliases
-
-**Prevention:**
-- Document that git aliases don't work (simplest)
-- Read and parse git config to understand aliases (complex)
-- Support common aliases out of box
-
-**Detection:** Test with common aliases configured.
-
-**Which phase should address:** Either document limitation or add alias support (later phase).
+**Source:** [Setuptools Package Discovery](https://setuptools.pypa.io/en/latest/userguide/package_discovery.html) - HIGH confidence
 
 ---
 
 ## Phase-Specific Warning Summary
 
-| Phase Topic | Likely Pitfall | Mitigation |
-|-------------|---------------|------------|
-| Subprocess execution | Deadlock, exit codes, signals | Use communicate(), propagate returncode, handle SIGINT |
-| Argument parsing | Dash-prefixed values, spaces | Avoid argparse quirks, preserve original argv |
-| Command translation | Flag differences, ref syntax | Per-command tables, comprehensive testing |
-| Output handling | Colors, encoding | PTY or force-color, explicit UTF-8 |
-| Interactive commands | stdin/PTY issues | Don't capture, use pty.spawn |
-| Passthrough/fallback | Infinite recursion | Absolute paths or delegate everything to sl |
+| Phase | Topic | Critical Pitfalls | Prevention |
+|-------|-------|-------------------|------------|
+| Phase 1 | Package Structure | #15 (build-system), #16 (entry points), #18 (module list), #20 (flat layout) | Explicit pyproject.toml, test install early |
+| Phase 1 | Versioning | #1 (immutable), #17 (duplication) | Single source of truth, test on TestPyPI |
+| Phase 1 | PyPI Setup | #2 (trusted publisher), #3 (TestPyPI separation) | Configure both registries before first release |
+| Phase 2 | CI Matrix | #6 (sl alias), #7 (paths), #8 (line endings), #10 (fail-fast) | OS-specific handling, normalization |
+| Phase 2 | Sapling Install | #11 (no action), #12 (version pin), #14 (Windows PATH) | Custom install steps, pin versions |
+| Phase 2 | Publishing | #4 (Linux only), #5 (artifacts) | Separate build/publish jobs, artifact transfer |
+
+---
+
+## Recommended Workflow Structure
+
+Based on pitfalls research, the CI/CD workflow should follow this structure:
+
+```
+1. Test Job (matrix: OS x Python)
+   - Install Sapling (OS-specific)
+   - Install package in editable mode
+   - Run tests
+   - fail-fast: false
+
+2. Build Job (single Linux runner)
+   - Build sdist and wheel
+   - Upload as artifact
+   - Runs after test job passes
+
+3. Publish-TestPyPI Job (optional, Linux only)
+   - Download artifact
+   - Publish to test.pypi.org
+   - Runs on push to main
+
+4. Publish-PyPI Job (Linux only)
+   - Download artifact
+   - Publish to pypi.org
+   - Runs only on version tags
+   - Requires environment approval
+```
 
 ---
 
 ## Sources
 
-- [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - Official, authoritative
-- [Python argparse issue 9334 - Dash-prefixed arguments](https://bugs.python.org/issue9334) - Official Python tracker
-- [Python argparse issue 14365 - Subparser ambiguity](https://bugs.python.org/issue14365) - Official Python tracker
-- [Python argparse issue 22433 - Spaces in unknown args](https://bugs.python.org/issue22433) - Official Python tracker
-- [Python cpython issue 105712 - Scientific notation](https://github.com/python/cpython/issues/105712) - Official CPython repo
-- [Python subprocess wait() deadlock issue 1606](https://bugs.python.org/issue1606) - Official Python tracker
-- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - Official Sapling docs
-- [Git Environment Variables](https://git-scm.com/book/uz/v2/Git-Internals-Environment-Variables) - Official Git docs
-- [Python discuss - subprocess color codes](https://discuss.python.org/t/subprocess-output-with-color-codes/36241) - Community discussion
+- [PyPI Trusted Publishers Documentation](https://docs.pypi.org/trusted-publishers/) - HIGH confidence
+- [Python Packaging Guide - Publishing with GitHub Actions](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/) - HIGH confidence
+- [Using TestPyPI](https://packaging.python.org/en/latest/guides/using-testpypi/) - HIGH confidence
+- [gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) - HIGH confidence
+- [GitHub Actions Cache](https://github.com/actions/cache) - HIGH confidence
+- [GitHub Actions Matrix Strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) - HIGH confidence
+- [Sapling Installation](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
+- [Sapling Releases](https://github.com/facebook/sapling/releases) - HIGH confidence
+- [Python Packaging Guide - Modernizing setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/) - HIGH confidence
+- [Setuptools Entry Points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html) - HIGH confidence
+- [Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) - HIGH confidence
+- [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence

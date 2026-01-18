@@ -1,389 +1,400 @@
-# Features Research: Git-to-Sapling CLI Shim
+# Features Research: v1.1 Polish & Documentation
 
-**Domain:** CLI shim/wrapper for version control command translation
-**Researched:** 2026-01-17
-**Confidence:** MEDIUM-HIGH (based on Sapling official docs + git wrapper patterns)
+**Domain:** CLI shim packaging and documentation
+**Researched:** 2026-01-18
+**Research Mode:** Features dimension for v1.1 milestone
+**Confidence:** MEDIUM-HIGH
+
+---
 
 ## Executive Summary
 
-A git-to-Sapling shim needs to translate commands and flags between two VCS tools with similar but distinct interfaces. The core challenge is that Sapling intentionally differs from git in philosophy (no staging area, different undo model) while maintaining conceptual similarity. The shim must bridge these differences transparently for tools expecting git output.
+v1.1 focuses on making gitsl production-ready through comprehensive documentation, improved developer experience, and proper packaging. This research identifies what features and documentation patterns are expected for a well-polished CLI translation tool. The emphasis is on **documentation completeness** and **ease of adoption** rather than new command implementations.
 
 ---
 
 ## Table Stakes
 
-Essential features without which the shim would not function for its intended purpose.
+Features every well-documented CLI package must have. Missing these makes the project feel incomplete or amateur.
 
-### 1. Command Routing
+### 1. README Structure
 
-| Feature | Why Essential | Implementation Notes |
-|---------|---------------|---------------------|
-| **Subcommand dispatch** | Must route `git status` to appropriate handler | Parse first non-flag argument as subcommand |
-| **Unknown command passthrough** | Tools may call git commands we haven't mapped | Either error gracefully or pass to `sl` directly |
-| **Exit code preservation** | Calling tools check exit codes for success/failure | Return subprocess exit code unchanged |
+| Element | Why Essential | Example |
+|---------|---------------|---------|
+| **One-liner description** | Instant understanding of purpose | "Git CLI shim that translates commands to Sapling" |
+| **Installation instructions** | Users can't use what they can't install | `pip install gitsl` + PATH setup |
+| **Quick start example** | First success in < 30 seconds | `git status` works in Sapling repo |
+| **Command support matrix** | Know what works before trying | Table showing supported commands |
+| **License** | Legal clarity | MIT/Apache 2.0 |
 
-**Source:** Hub wrapper pattern - "your normal git commands will all work" requires transparent routing.
+**Source:** [GitHub README guide](https://www.markepear.dev/blog/github-readme-guide), [GitHub CLI patterns](https://cli.github.com/manual/gh)
 
-### 2. Core Command Mapping
+### 2. Command Support Matrix
 
-The project specifies these commands must work:
+A table showing what git commands are supported and their translation status.
 
-| Git Command | Sapling Equivalent | Notes |
-|-------------|-------------------|-------|
-| `git status` | `sl status` | Nearly identical, but flag differences exist |
-| `git add` | `sl add` | Similar behavior, Sapling has no staging area concept |
-| `git commit` | `sl commit` | `-a` flag behavior differs (Sapling always commits all) |
-| `git log` | `sl log` | `--oneline` must be emulated via `--template` |
-| `git diff` | `sl diff` | Similar flags available |
-| `git rev-parse` | `sl whereami` / custom | Sapling has `whereami` for HEAD, but not full rev-parse |
-| `git init` | `sl init` | Similar behavior |
+**Required columns:**
+| Column | Purpose |
+|--------|---------|
+| Git Command | What user types |
+| Status | Supported / Partial / Unsupported |
+| Sapling Equivalent | What gets executed |
+| Notes | Flags supported, limitations |
 
-**Source:** [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/)
+**Example format:**
+```markdown
+| Git Command | Status | Sapling Equivalent | Notes |
+|-------------|--------|-------------------|-------|
+| `git status` | Full | `sl status` | --porcelain, --short emulated |
+| `git add` | Full | `sl add` | -u emulated, -A supported |
+| `git commit` | Full | `sl commit` | -m supported |
+| `git push` | None | - | Unsupported: different model |
+```
 
-### 3. Flag Translation
+### 3. Flag Support Documentation
 
-Flags that must work because tools commonly use them:
+For each supported command, document which flags work:
 
-| Git Flag | Context | Sapling Handling | Priority |
-|----------|---------|------------------|----------|
-| `--porcelain` | `status` | **MUST EMULATE** - Sapling has no equivalent | CRITICAL |
-| `--short` | `status` | **MUST EMULATE** - Sapling uses `-n/--no-status` differently | CRITICAL |
-| `-u` / `--untracked-files` | `status` | Maps to `-u/--unknown` in Sapling | HIGH |
-| `--oneline` | `log` | **MUST EMULATE** via `--template` | CRITICAL |
-| `-n` / `--max-count` | `log` | Maps to `-l/--limit` in Sapling | HIGH |
-| `-m` | `commit` | Direct equivalent exists | HIGH |
+**Format per command:**
+```markdown
+### git status
 
-**Source:** [Sapling status docs](https://sapling-scm.com/docs/commands/status/), [Sapling log docs](https://sapling-scm.com/docs/commands/log/)
+**Sapling equivalent:** `sl status`
 
-### 4. Output Format Emulation
+| Flag | Support | Notes |
+|------|---------|-------|
+| `--porcelain` | Emulated | Output reformatted to git format |
+| `--short`, `-s` | Emulated | Same as --porcelain |
+| `-u`, `--untracked-files` | Pass-through | Maps to sl -u |
+| `--ignored` | Unsupported | Sapling has no equivalent |
+```
 
-When Sapling output differs from git, the shim must transform it:
+### 4. Installation Documentation
 
-| Scenario | Git Output | Sapling Output | Transformation Needed |
-|----------|------------|----------------|----------------------|
-| `status --porcelain` | `XY PATH` (2-char code + path) | Status letter differs | Capture and reformat |
-| `status --short` | `XY PATH` | Similar to porcelain | May need reformatting |
-| `log --oneline` | `<hash7> <subject>` | No equivalent flag | Use `--template '{node|short} {desc|firstline}\n'` |
-| `rev-parse HEAD` | Full SHA | `sl whereami` returns hash | Likely compatible |
-| `rev-parse --show-toplevel` | Repo root path | No direct equivalent | Must implement |
+Multiple installation methods for different users:
 
-**Source:** [Git status porcelain format](https://git-scm.com/docs/git-status)
+| Method | Audience | Required |
+|--------|----------|----------|
+| `pip install gitsl` | Python users | YES (primary) |
+| Manual PATH setup | Power users | YES (documented) |
+| Prerequisites (Python 3.8+, Sapling) | All users | YES |
 
-### 5. Standard I/O Handling
+### 5. Error Messages & Help
 
 | Feature | Why Essential |
 |---------|---------------|
-| **stdout passthrough** | Calling tools parse stdout |
-| **stderr passthrough** | Error messages must propagate |
-| **stdin passthrough** | Interactive commands need input (e.g., commit message editor) |
-| **TTY detection** | Some flags change behavior based on TTY |
+| `--help` output | Standard CLI expectation |
+| `--version` output | Debugging, issue reporting |
+| Clear error on unsupported command | User knows what to do next |
+
+**Current status:** v1.0 already has basic --help and --version. Unsupported commands print to stderr and exit 0.
 
 ---
 
-## Nice-to-Have
+## Documentation Patterns
 
-Would improve robustness and user experience but not strictly required for MVP.
+### README Section Structure
 
-### 1. Enhanced Compatibility
+Based on best practices from [GitHub README guide](https://www.markepear.dev/blog/github-readme-guide) and [gh cli manual](https://cli.github.com/manual/gh):
 
-| Feature | Benefit | Complexity |
-|---------|---------|------------|
-| **`parse_known_args` pattern** | Handle unknown flags gracefully | LOW |
-| **Flag aliasing** | Map `-s` to `--short`, `-p` to `--porcelain` | LOW |
-| **Environment variable passthrough** | `GIT_DIR`, `GIT_WORK_TREE` handling | MEDIUM |
-| **Config file support** | Custom mappings per-repository | HIGH |
+```markdown
+# gitsl
 
-### 2. Diagnostic Features
+> Git CLI shim that translates commands to Sapling
 
-| Feature | Benefit | Complexity |
-|---------|---------|------------|
-| **`--debug` flag** | Show what command would be executed | LOW |
-| **`--dry-run`** | Preview without execution | LOW |
-| **Verbose mode** | Log translation decisions | LOW |
-| **Version reporting** | `git --version` returns shim version + sl version | LOW |
+[Badges: version, tests, license]
 
-### 3. Graceful Degradation
+## What is this?
 
-| Feature | Benefit | Complexity |
-|---------|---------|------------|
-| **Unsupported command warnings** | Tell user what's not implemented | LOW |
-| **Fallback to `sl git`** | Sapling's built-in git translation | LOW |
-| **Command suggestions** | "Did you mean `sl goto`?" | MEDIUM |
+[1-2 paragraph explanation]
 
-### 4. Extended Command Support
+## Installation
 
-Beyond the MVP commands, these would be useful:
+[pip install + PATH setup]
 
-| Command | Use Case | Mapping Complexity |
-|---------|----------|-------------------|
-| `git push` | `sl push` | LOW (direct mapping) |
-| `git pull` | `sl pull` | LOW (direct mapping) |
-| `git fetch` | `sl pull` | LOW (note: different semantics) |
-| `git checkout` | `sl goto` / `sl revert` | MEDIUM (context-dependent) |
-| `git branch` | `sl bookmark` | MEDIUM (different model) |
-| `git stash` | `sl shelve` | LOW (direct mapping) |
-| `git show` | `sl show` | LOW (direct mapping) |
+## Quick Start
 
-**Source:** [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/)
+[3-step example showing it works]
+
+## Supported Commands
+
+[Command support matrix table]
+
+## Command Reference
+
+[Detailed per-command documentation]
+
+## How It Works
+
+[Brief architecture explanation]
+
+## Development
+
+[How to run tests, contribute]
+
+## License
+
+[MIT]
+```
+
+### Command Reference Format
+
+For detailed documentation, use hierarchical structure like gh cli:
+
+```markdown
+## Command Reference
+
+### git status
+
+Translates to `sl status` with output format emulation.
+
+**Supported flags:**
+- `--porcelain` - Machine-readable output (emulated)
+- `--short`, `-s` - Short format (emulated)
+- `-u`, `--untracked-files` - Include untracked files
+
+**Examples:**
+    git status --porcelain
+    git status -s
+
+**Notes:**
+- Porcelain output reformats Sapling status codes to git format
+- Sapling has no staging area, so index column is always empty
+```
+
+### Badges to Include
+
+| Badge | Purpose | Provider |
+|-------|---------|----------|
+| Version | Current release | PyPI / shields.io |
+| Tests | CI status | GitHub Actions |
+| License | Legal clarity | shields.io |
+| Python version | Compatibility | shields.io |
+
+---
+
+## Git Command Coverage
+
+Based on [common git commands research](https://www.upgrad.com/blog/git-commands-for-developers/) and [GeeksforGeeks command list](https://www.geeksforgeeks.org/git/all-git-commands-you-should-know/), here are ~30 common commands to document:
+
+### Tier 1: Currently Implemented (v1.0)
+
+| # | Command | v1.0 Status | Notes |
+|---|---------|-------------|-------|
+| 1 | `git status` | Full | --porcelain, --short emulated |
+| 2 | `git add` | Full | -u emulated, -A supported |
+| 3 | `git commit` | Full | -m supported |
+| 4 | `git log` | Full | --oneline emulated, -N supported |
+| 5 | `git diff` | Pass-through | Direct mapping |
+| 6 | `git init` | Full | Direct mapping |
+| 7 | `git rev-parse` | Partial | --short HEAD, basic support |
+
+### Tier 2: High Priority for Documentation (common, likely translatable)
+
+| # | Command | Sapling Equivalent | Translation Notes |
+|---|---------|-------------------|-------------------|
+| 8 | `git clone` | `sl clone` | Direct mapping |
+| 9 | `git pull` | `sl pull` | Direct mapping |
+| 10 | `git push` | `sl push` | Direct mapping, may have differences |
+| 11 | `git fetch` | `sl pull` | Semantics differ (Sapling pull = git fetch+merge) |
+| 12 | `git checkout` | `sl goto` / `sl revert` | Context-dependent |
+| 13 | `git switch` | `sl goto` | Modern checkout replacement |
+| 14 | `git restore` | `sl revert` | Modern checkout replacement |
+| 15 | `git branch` | `sl bookmark` | Different branching model |
+| 16 | `git merge` | `sl merge` | Direct mapping |
+| 17 | `git rebase` | `sl rebase` | Direct mapping |
+| 18 | `git stash` | `sl shelve` | Direct mapping |
+| 19 | `git show` | `sl show` | Direct mapping |
+| 20 | `git blame` | `sl annotate` | Alias exists: sl blame |
+| 21 | `git reset` | `sl uncommit` / `sl revert` | Context-dependent |
+
+### Tier 3: Medium Priority (less common but used)
+
+| # | Command | Sapling Equivalent | Translation Notes |
+|---|---------|-------------------|-------------------|
+| 22 | `git tag` | `sl bookmark` | Tags are bookmarks in Sapling |
+| 23 | `git cherry-pick` | `sl graft` | Direct mapping |
+| 24 | `git rm` | `sl remove` | Direct mapping |
+| 25 | `git mv` | `sl move` | Direct mapping |
+| 26 | `git clean` | `sl clean` | Direct mapping |
+| 27 | `git config` | `sl config` | Direct mapping |
+
+### Tier 4: Low Priority / Out of Scope
+
+| # | Command | Why Out of Scope |
+|---|---------|-----------------|
+| 28 | `git rebase -i` | Interactive mode requires terminal control |
+| 29 | `git add -p` | Interactive mode requires terminal control |
+| 30 | `git bisect` | Complex workflow, Sapling equivalent unclear |
+| 31 | `git worktree` | `sl worktree` exists but different model |
+| 32 | `git submodule` | Sapling has different approach |
+| 33 | `git filter-branch` | History rewriting, use native Sapling tools |
+| 34 | `git reflog` | Sapling uses `sl journal` |
+
+### Documentation Scope for v1.1
+
+**Document ALL 34 commands** with status:
+- **Implemented**: Full documentation with flag support
+- **Planned**: Sapling equivalent documented, marked for future
+- **Out of Scope**: Reason documented, Sapling alternative suggested
+
+This gives users a complete picture of what works now and what to expect.
+
+**Source:** [Sapling commands](https://sapling-scm.com/docs/category/commands/), [Git-Sapling differences](https://sapling-scm.com/docs/introduction/differences-git/)
+
+---
+
+## Differentiators
+
+What makes a CLI shim excellent beyond table stakes.
+
+### 1. Transparent Operation
+
+| Feature | Value |
+|---------|-------|
+| **Zero config** | Works immediately after PATH setup |
+| **Invisible translation** | Tools don't know they're using Sapling |
+| **Exact output format** | Porcelain output byte-for-byte identical to git |
+
+**Current status:** v1.0 already achieves this for supported commands.
+
+### 2. Excellent Debug Mode
+
+| Feature | Value |
+|---------|-------|
+| `GITSL_DEBUG=1` shows translation | Users understand what happens |
+| Clear unsupported command messages | No silent failures |
+| Version includes both gitsl and sl versions | Issue reporting easier |
+
+**Current status:** GITSL_DEBUG exists. Could enhance version output.
+
+### 3. Comprehensive Command Matrix
+
+Most CLI shims have incomplete documentation. A complete matrix covering:
+- Every common git command
+- Each command's flags
+- Explicit "unsupported" status with reasons
+- Sapling alternative suggestions
+
+**This is v1.1's main differentiator.**
+
+### 4. Test Runner UX
+
+| Feature | Value |
+|---------|-------|
+| `./test` runs all tests | Simple CI-like experience |
+| `./test status` runs specific command tests | Fast iteration |
+| Clear output | Easy to understand results |
+
+**Current status:** Uses pytest. v1.1 should add convenient wrappers.
+
+### 5. Cross-Platform CI
+
+| Feature | Value |
+|---------|-------|
+| GitHub Actions for macOS/Linux/Windows | Trust it works everywhere |
+| Badges showing status | Visual confidence |
 
 ---
 
 ## Anti-Features
 
-Things to deliberately NOT build. Over-engineering traps for a simple shim.
+Things to explicitly avoid in v1.1.
 
-### 1. Full Git Compatibility Layer
+### 1. Implementing More Commands
 
-**Why avoid:** Git has hundreds of commands and thousands of flag combinations. Attempting full compatibility would be:
-- Massive scope creep
-- Impossible to maintain
-- Defeat the purpose (just use git)
+**Why avoid:** v1.1 is about polish, not expansion.
 
-**Instead:** Support the specific commands and flags needed for the target use case. Document what's supported.
+- v1.0 covers the essential commands
+- Adding commands increases maintenance burden
+- Documentation is the priority
 
-### 2. Output Caching
+**Instead:** Document what's supported, planned, and out of scope.
 
-**Why avoid:**
-- Stale data is worse than slow data for VCS
-- Adds complexity for minimal benefit
-- Cache invalidation is hard
-
-**Instead:** Pass through to Sapling every time.
-
-### 3. Git Repository Detection/Switching
+### 2. Complex Installation Methods
 
 **Why avoid:**
-- The shim should be used in Sapling repos only
-- Auto-detecting and switching between git/Sapling adds failure modes
-- Confusing behavior when mixed repos exist
+- Homebrew tap requires maintenance
+- Conda package adds complexity
+- Shell scripts are fragile
 
-**Instead:** Assume Sapling. Fail clearly if not a Sapling repo.
+**Instead:** Focus on `pip install` and clear manual PATH instructions.
 
-### 4. Custom Argument Parsing Library
-
-**Why avoid:**
-- Python's `argparse` or `sys.argv` parsing is sufficient
-- Third-party deps violate single-file requirement
-- Complex parsers add overhead for simple translation
-
-**Instead:** Minimal parsing, maximum passthrough.
-
-### 5. Interactive Mode Emulation
+### 3. Automatic Updates
 
 **Why avoid:**
-- `git add -i`, `git rebase -i` are complex interactive workflows
-- Sapling has different interactive models (`sl commit -i`)
-- Screen/terminal handling is fragile
+- Adds network calls
+- Security concerns
+- Complexity for minimal value
 
-**Instead:** Either pass through or document as unsupported.
+**Instead:** Document version checking with `pip list --outdated`.
 
-### 6. Configuration File System
+### 4. Extensive Configuration
 
 **Why avoid:**
-- Adds file I/O complexity
-- Needs config file location logic
 - Users expect git config, not custom config
+- Configuration files add complexity
+- Per-repo configuration is maintenance burden
 
-**Instead:** Hardcode translations. If customization needed, use environment variables.
+**Instead:** Environment variables for the few settings needed (GITSL_DEBUG).
 
-### 7. Plugin/Extension System
+### 5. GUI/TUI Components
 
 **Why avoid:**
-- Single-file constraint
-- Adds import complexity
-- Maintenance burden
+- Violates CLI-only scope
+- Dependency on terminal libraries
+- Complexity for edge case
 
-**Instead:** Keep it simple. Fork for custom needs.
+**Instead:** Focus on command-line excellence.
 
----
+### 6. Logo/Branding Investment
 
-## Flag Emulation Strategies
+**Why avoid for v1.1:**
+- Time spent on logos is time not spent on documentation
+- Project is functional, not a product needing marketing
 
-How other tools handle flag translation when target tool lacks equivalent flags.
-
-### Strategy 1: Output Transformation
-
-**Pattern:** Run target command, capture output, transform to expected format.
-
-```python
-# Example: Emulating git status --porcelain
-output = subprocess.run(['sl', 'status'], capture_output=True)
-transformed = transform_to_porcelain(output.stdout)
-print(transformed)
-```
-
-**When to use:** Target command produces similar data in different format.
-
-**Used by:** Many git wrappers for format standardization.
-
-### Strategy 2: Template/Format Flags
-
-**Pattern:** Use target tool's formatting options to approximate source format.
-
-```python
-# Example: Emulating git log --oneline
-# Sapling has --template for custom output
-subprocess.run(['sl', 'log', '--template', '{node|short} {desc|firstline}\n'])
-```
-
-**When to use:** Target tool has flexible output formatting.
-
-**Sapling supports:** `--template` for log, which is powerful enough to emulate most git log formats.
-
-**Source:** [Sapling log docs](https://sapling-scm.com/docs/commands/log/)
-
-### Strategy 3: Direct Flag Mapping
-
-**Pattern:** Translate flag name but preserve semantics.
-
-```python
-# Example: -u in git status -> -u in sl status (both mean untracked)
-flag_map = {'-u': '-u', '--untracked-files': '-u'}
-```
-
-**When to use:** Same concept, different flag name.
-
-### Strategy 4: Semantic Translation
-
-**Pattern:** Translate intent, not syntax. May require multiple commands.
-
-```python
-# Example: git checkout can mean goto OR revert
-# Need to detect which based on arguments
-if is_file_path(args):
-    run(['sl', 'revert', args])
-else:
-    run(['sl', 'goto', args])
-```
-
-**When to use:** Source command overloaded, target commands are specific.
-
-**Source:** [Sapling differences from Git](https://sapling-scm.com/docs/introduction/differences-git/)
-
-### Strategy 5: Stub/No-Op Handling
-
-**Pattern:** Accept flag but ignore it (with optional warning).
-
-```python
-# Example: --color=always (Sapling may handle color differently)
-if '--color=always' in args:
-    args.remove('--color=always')  # Sapling handles color automatically
-```
-
-**When to use:** Flag is cosmetic or has sensible default in target tool.
-
-### Strategy 6: Error with Guidance
-
-**Pattern:** Fail with helpful message for unsupported flags.
-
-```python
-if '--interactive' in args:
-    print("Error: git add --interactive not supported. Use 'sl commit -i' instead.",
-          file=sys.stderr)
-    sys.exit(1)
-```
-
-**When to use:** Feature genuinely unsupported, user needs guidance.
+**Instead:** Simple text README with clear documentation.
 
 ---
 
-## Specific Translation Requirements
+## v1.1 Feature Prioritization
 
-Based on the project context, here are detailed translation requirements.
+### P0 - Must Have (Core Deliverables)
 
-### `git status --porcelain`
+| Feature | Rationale |
+|---------|-----------|
+| **Command support matrix in README** | Primary user need |
+| **Per-command flag documentation** | Users need to know what works |
+| **PyPI package** | `pip install gitsl` |
+| **Test runner convenience** | `./test` and `./test <cmd>` |
+| **GitHub Actions CI** | Build trust, catch regressions |
 
-**Git format:**
-```
-XY PATH
-XY ORIG -> PATH  (for renames)
-```
-Where XY is a 2-character status code (index status + worktree status).
+### P1 - Should Have
 
-**Sapling format:**
-```
-X PATH
-```
-Single character status code.
-
-**Translation needed:**
-- Sapling has no staging area, so "index status" is always empty/clean
-- Map: `M` (Sapling) -> ` M` or `M ` (git, depending on whether staged)
-- Map: `A` (Sapling) -> `A ` (git, newly added file)
-- Map: `?` (Sapling) -> `??` (git, untracked)
-- Map: `!` (Sapling, missing) -> ` D` (git, deleted in worktree)
-
-**Source:** [Git status porcelain](https://git-scm.com/docs/git-status), [Sapling status](https://sapling-scm.com/docs/commands/status/)
-
-### `git log --oneline`
-
-**Git format:**
-```
-a1b2c3d Subject line here
-```
-(7-char hash + subject)
-
-**Sapling approach:**
-```bash
-sl log --template '{node|short} {desc|firstline}\n'
-```
-
-**Notes:**
-- `{node|short}` gives 12-char hash by default; may need truncation
-- `{desc|firstline}` gives first line of commit message
-
-### `git rev-parse HEAD`
-
-**Git behavior:** Returns full SHA of HEAD.
-
-**Sapling equivalent:** `sl whereami` returns commit hash.
-
-**Potential gaps:**
-- `rev-parse --show-toplevel` (repo root path) - needs custom handling
-- `rev-parse --git-dir` (git directory) - needs custom handling
-- `rev-parse --is-inside-work-tree` - needs custom handling
-
----
-
-## MVP Feature Prioritization
-
-Based on project context "needs to handle: status, add, commit, log, diff, rev-parse, init":
-
-### P0 - Must Work
-
-1. **`git status`** - with `--porcelain`, `--short`, `-u` emulation
-2. **`git add`** - direct passthrough with file arguments
-3. **`git commit`** - with `-m` flag support
-4. **`git log`** - with `--oneline` emulation
-5. **`git diff`** - direct passthrough
-6. **`git rev-parse HEAD`** - via `sl whereami`
-7. **`git init`** - direct passthrough
-
-### P1 - Should Work
-
-1. **Exit code preservation** for all commands
-2. **stderr passthrough** for error visibility
-3. **Unknown flag passthrough** for flags we don't recognize
+| Feature | Rationale |
+|---------|-----------|
+| **Badges in README** | Visual trust signals |
+| **Contributing guide** | Community growth |
+| **Architecture section** | Developer onboarding |
+| **Installation troubleshooting** | Common issues documented |
 
 ### P2 - Nice to Have
 
-1. **`git rev-parse --show-toplevel`** - repo root detection
-2. **Debug mode** for troubleshooting
-3. **Additional log format flags** (`-n`, `--pretty`)
+| Feature | Rationale |
+|---------|-----------|
+| **GIF demo in README** | Visual quick-start |
+| **Changelog** | Track versions |
+| **Comparison with alternatives** | Why gitsl vs git-to-sl |
 
 ---
 
 ## Sources
 
-- [Sapling Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/)
-- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/)
-- [Sapling status command](https://sapling-scm.com/docs/commands/status/)
-- [Sapling log command](https://sapling-scm.com/docs/commands/log/)
-- [Sapling diff command](https://sapling-scm.com/docs/commands/diff/)
-- [Sapling commit command](https://sapling-scm.com/docs/commands/commit/)
-- [Sapling add command](https://sapling-scm.com/docs/commands/add/)
-- [Sapling init command](https://sapling-scm.com/docs/commands/init/)
-- [Git status porcelain format](https://git-scm.com/docs/git-status)
-- [Git wrapper topic on GitHub](https://github.com/topics/git-wrapper)
-- [g wrapper architecture](https://dev.to/pcdevil/g-a-wrapper-around-git-with-additional-feature-extension-3m11)
-- [git-wrapper PyPI](https://pypi.org/project/git-wrapper/)
+- [GitHub README guide](https://www.markepear.dev/blog/github-readme-guide) - README structure patterns
+- [gh CLI manual](https://cli.github.com/manual/gh) - Command documentation format
+- [Top 28 Git Commands](https://www.upgrad.com/blog/git-commands-for-developers/) - Common command list
+- [All Git Commands](https://www.geeksforgeeks.org/git/all-git-commands-you-should-know/) - Categorized command reference
+- [Sapling commands](https://sapling-scm.com/docs/category/commands/) - Sapling command reference
+- [Sapling basic commands](https://sapling-scm.com/docs/overview/basic-commands/) - Core Sapling operations
+- [Sapling differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) - Translation guidance
+- [GitHub CLI topics](https://github.com/topics/cli-tool) - CLI documentation patterns

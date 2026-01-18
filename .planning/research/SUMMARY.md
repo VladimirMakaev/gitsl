@@ -1,160 +1,210 @@
 # Project Research Summary
 
-**Project:** gitsl - Git to Sapling CLI Shim
-**Domain:** CLI Command Translation / VCS Wrapper
-**Researched:** 2026-01-17
+**Project:** gitsl v1.1 Polish & Documentation
+**Domain:** CLI Packaging / PyPI Publishing / CI/CD
+**Researched:** 2026-01-18
 **Confidence:** HIGH
 
 ## Executive Summary
 
-The gitsl project is a CLI shim that intercepts git commands and translates them to Sapling (sl) equivalents. This is a well-understood pattern in the CLI wrapper domain. The optimal approach uses Python stdlib exclusively (subprocess, sys, os), with a pipeline architecture: Parse -> Translate -> Execute -> Transform. The key insight is to use `os.execvp()` for simple passthrough commands (zero overhead, natural signal handling) and `subprocess.run()` only when output transformation is needed.
+gitsl v1.1 is a polish and documentation release that transforms the existing CLI shim from a working prototype into a properly packaged, documented, and continuously tested product. The research confirms that Python's modern packaging ecosystem (pyproject.toml with setuptools) provides a straightforward path to PyPI publishing, and GitHub Actions offers robust cross-platform CI capabilities. The key challenge is gitsl's flat module layout, which requires explicit module listing rather than relying on setuptools auto-discovery.
 
-The recommended stack is minimal: direct `sys.argv` access for argument extraction, dictionary dispatch for command routing, and subprocess for execution. Argparse is explicitly rejected because it fights against passthrough semantics and fails on unknown flags. The architecture should support three execution tiers: process replacement (execvp) for 1:1 translations, simple subprocess for argument transformation, and captured subprocess for output transformation.
+The recommended approach prioritizes package structure first, then CI/CD, followed by documentation and finally the release workflow. This order ensures that each phase builds on a stable foundation: you cannot test what you cannot install, you cannot document what you have not verified works, and you cannot release what is not thoroughly tested. The existing codebase is well-structured for this transition, with clear module boundaries and established test patterns.
 
-The primary risk is subprocess handling pitfalls: deadlock from pipe buffering, lost exit codes, and broken Ctrl+C. These must be addressed in Phase 1 or nothing else works. Secondary risks include git reference syntax translation (`HEAD^` vs `.^`) and output format emulation (porcelain mode). The zero-dependency, single-file constraint is well-suited to this problem domain.
+The primary risks are (1) the PowerShell `sl` alias conflict on Windows that will cause mysterious test failures, (2) PyPI's immutable releases meaning any premature release permanently consumes that version number, and (3) the need to configure trusted publishing on PyPI before the first release attempt. All three are preventable with proper planning and testing on TestPyPI first.
 
 ## Key Findings
 
 ### Recommended Stack
 
-Python stdlib only, with a clear execution hierarchy:
+The v1.1 stack is primarily about tooling and configuration rather than new dependencies. All recommendations use mature, well-documented components.
 
 **Core technologies:**
-- **sys.argv**: Direct argument access without argparse overhead or unknown-flag errors
-- **os.execvp()**: Process replacement for passthrough commands, natural signal/TTY handling
-- **subprocess.run()**: For commands needing transformation, with explicit exit code propagation
-- **shutil.which()**: Finding sl executable (and optionally real git for fallback)
+- **pyproject.toml + setuptools**: Modern packaging standard, no extra dependencies, handles entry points cleanly
+- **GitHub Actions**: Native CI/CD, free for open source, excellent matrix support for cross-platform testing
+- **Trusted Publishing (OIDC)**: PyPI authentication without managing secrets, recommended by Python Packaging Authority
+- **pytest**: Already in use, add `./test` wrapper script for command-specific testing convenience
 
-Argparse was explicitly rejected due to: failing on unknown flags, awkward git-style subcommand handling, and unnecessary validation overhead. The shim should not validate arguments.
+**Key configuration decisions:**
+- Use explicit `py-modules` list in pyproject.toml (flat layout requires this)
+- Version should remain in `common.py` with dynamic reading at build time
+- Python support: 3.8-3.13 to maximize compatibility
 
 ### Expected Features
 
 **Must have (table stakes):**
-- Command routing with subcommand dispatch
-- Core commands: status, add, commit, log, diff, rev-parse, init
-- Exit code preservation for CI/CD compatibility
-- `--porcelain` emulation for status (CRITICAL for tooling)
-- `--oneline` emulation for log via Sapling's `--template`
-- Unknown command passthrough to sl
+- README with one-liner description, installation instructions, quick start example
+- Command support matrix showing what git commands are supported
+- Per-command flag documentation
+- `pip install gitsl` entry point works
+- `--help` and `--version` work correctly
+- LICENSE file (MIT)
 
-**Should have (competitive):**
-- Flag translation tables per command
-- Environment variable propagation
-- Debug mode (`--debug` to show translated command)
-- stderr passthrough for error visibility
+**Should have (differentiators):**
+- Comprehensive command matrix covering ~34 git commands with status (implemented/planned/out-of-scope)
+- Badges showing CI status, Python versions, PyPI version
+- Cross-platform CI (Ubuntu, macOS, Windows)
+- `./test` and `./test <command>` convenience scripts
+- Architecture section explaining how translation works
 
 **Defer (v2+):**
-- Full git compatibility layer (hundreds of commands)
-- Git alias support
-- Interactive mode emulation (add -i, rebase -i)
-- Configuration file system
+- GIF/video demos in README
+- Homebrew tap or other package managers
+- Additional git command implementations
+- GUI/TUI components
+- Extensive configuration options
 
 ### Architecture Approach
 
-Pipeline architecture with four stages: Parse, Translate, Execute, Transform. Dictionary dispatch for O(1) command lookup. Single-file organization with clear section boundaries using comment headers. Dataclasses for structured data flow (ParsedCommand, TranslatedCommand, ExecutionResult).
+The research supports two viable package structures: maintaining the current flat layout with explicit module listing, or migrating to src layout. **Recommendation: keep flat layout for v1.1** to minimize disruption and testing burden. The flat layout works fine with explicit `py-modules` configuration.
 
 **Major components:**
-1. **Translation Tables** - DIRECT_COMMAND_MAP for 1:1 commands, COMPLEX_COMMANDS for handlers
-2. **Parser** - Extract command name and args from sys.argv, minimal processing
-3. **Executor** - Three-tier: execvp for passthrough, run() for transformations
-4. **Output Transformer** - Only when git output format must be matched (porcelain, oneline)
+1. **pyproject.toml** - Package metadata, entry points, build configuration
+2. **GitHub workflows** - `ci.yml` for testing, `publish.yml` for PyPI release
+3. **Test infrastructure** - Existing pytest + new `./test` wrapper script
+4. **Documentation** - README.md structured per best practices
+
+**Entry point configuration:**
+```toml
+[project.scripts]
+gitsl = "gitsl:main"
+```
+
+This creates the `gitsl` command that calls `main()` from `gitsl.py`.
 
 ### Critical Pitfalls
 
-1. **Subprocess deadlock** - Using wait() with PIPE causes hangs on large output. Always use communicate() or avoid capturing entirely.
+1. **PowerShell `sl` alias conflict (Windows)** - PowerShell has built-in `sl` alias for `Set-Location`. Must remove alias in CI workflow: `Remove-Alias -Name sl -Force -ErrorAction SilentlyContinue`
 
-2. **Exit code loss** - Forgetting to propagate returncode breaks CI pipelines. Every path must end with sys.exit(result.returncode).
+2. **PyPI immutable releases** - Cannot overwrite or delete released versions. Test on TestPyPI first. Use `.dev` versions for testing.
 
-3. **Infinite recursion** - If shim is named `git` and shells out to `git`, it calls itself. Solution: always delegate to `sl`, never to git.
+3. **Missing trusted publisher config** - Must configure on PyPI.org AND test.pypi.org BEFORE first release attempt. Workflow, repo, and environment names must match exactly.
 
-4. **Signal handling (Ctrl+C)** - SIGINT must cleanly terminate subprocess. Use try/except KeyboardInterrupt with proc.terminate().
+4. **Flat layout module discovery** - Setuptools auto-discovery fails for flat layout. Must explicitly list all modules in `py-modules`.
 
-5. **shell=True injection** - Never use shell=True with user input. Pass args as list to subprocess.
+5. **pypa/gh-action-pypi-publish is Linux-only** - Docker-based action only runs on Linux. Build can happen on any OS, but publish job MUST use ubuntu-latest.
+
+6. **Windows PATH for Sapling** - Sapling installer may not persist PATH changes. Explicitly add to `$GITHUB_PATH` in workflow.
+
+7. **Matrix fail-fast default** - GitHub Actions cancels all matrix jobs when one fails. Set `fail-fast: false` to see which platforms actually work.
 
 ## Implications for Roadmap
 
 Based on research, suggested phase structure:
 
-### Phase 1: Core Execution Pipeline
-**Rationale:** Subprocess handling and exit codes must be correct from the start; all other features depend on this foundation.
-**Delivers:** Working shim that can route commands to sl and preserve exit codes.
-**Addresses:** Command routing, exit code preservation, unknown command passthrough
-**Avoids:** Deadlock, exit code loss, infinite recursion, Ctrl+C issues
+### Phase 1: Package Configuration
+**Rationale:** Foundation for all other phases. Cannot test installation without pyproject.toml.
+**Delivers:** Working `pip install -e .` and `pip install gitsl` (local)
+**Addresses:** pyproject.toml, entry points, version management
+**Avoids:** Pitfalls #4 (flat layout), #15-20 (package structure issues)
 
-### Phase 2: Command Translation Tables
-**Rationale:** Once execution works, add the translation layer for direct command mappings.
-**Delivers:** Direct 1:1 translations (status, diff, log, add, commit, etc.)
-**Uses:** Dictionary dispatch from STACK.md
-**Implements:** Translation Tables component from architecture
+Key tasks:
+- Create pyproject.toml with explicit py-modules list
+- Verify `pip install -e .` works
+- Verify `gitsl` command works after install
+- Verify `--version` shows correct version
 
-### Phase 3: Flag Translation
-**Rationale:** Commands work but flags need translation (git -a vs Sapling default behavior, --oneline emulation).
-**Delivers:** Flag handling for complex commands, --oneline via --template
-**Addresses:** Flag translation tables, per-command handlers
-**Avoids:** Flag differences pitfall
+### Phase 2: CI Pipeline
+**Rationale:** Must have automated testing before documentation (ensures accuracy) and before release (prevents broken releases).
+**Delivers:** Green CI badge, cross-platform test matrix
+**Uses:** GitHub Actions, pytest
+**Avoids:** Pitfalls #6 (sl alias), #7 (paths), #8 (line endings), #10 (fail-fast), #11-14 (Sapling install)
 
-### Phase 4: Output Transformation
-**Rationale:** Some tools depend on git's exact output format (porcelain mode).
-**Delivers:** --porcelain emulation for status, output format matching
-**Addresses:** Table stakes output format features
-**Avoids:** Porcelain vs human output confusion
+Key tasks:
+- Create `.github/workflows/ci.yml`
+- Install Sapling on Ubuntu, macOS, Windows
+- Handle PowerShell `sl` alias on Windows
+- Test matrix: Python 3.8-3.13 x 3 OSes (with exclusions)
+- Set `fail-fast: false`
 
-### Phase 5: Edge Cases and Polish
-**Rationale:** Handle remaining edge cases, improve error messages, add debug mode.
-**Delivers:** Environment variable handling, debug output, better error messages
-**Addresses:** Nice-to-have features
-**Avoids:** Encoding mismatches, empty argument handling
+### Phase 3: Test Runner Improvements
+**Rationale:** Developer experience improvement. Should happen alongside CI to ensure `./test` works the same locally and in CI.
+**Delivers:** `./test` and `./test <command>` convenience scripts
+**Addresses:** Test runner UX from FEATURES.md
+
+Key tasks:
+- Create `./test` shell script
+- Support `./test status`, `./test log`, etc.
+- Ensure pytest.ini alignment with CI
+
+### Phase 4: Documentation
+**Rationale:** Documentation comes after CI is green so we can add accurate status badges and know exactly what works.
+**Delivers:** Complete README.md, LICENSE file
+**Addresses:** All table stakes from FEATURES.md
+
+Key tasks:
+- Write README.md with required sections
+- Add command support matrix (34 commands)
+- Add flag documentation for implemented commands
+- Add CI status badge
+- Ensure LICENSE file exists
+
+### Phase 5: Release Workflow
+**Rationale:** Final phase after everything else is stable and documented.
+**Delivers:** PyPI package, release automation
+**Avoids:** Pitfalls #1 (immutable), #2 (trusted publisher), #3 (TestPyPI), #4 (Linux-only), #5 (artifacts)
+
+Key tasks:
+- Configure trusted publisher on test.pypi.org
+- Test release to TestPyPI
+- Configure trusted publisher on pypi.org
+- Create `.github/workflows/publish.yml`
+- Test full release flow
 
 ### Phase Ordering Rationale
 
-- Phase 1 first because all other phases depend on correct subprocess handling
-- Phases 2-3 build the translation layer incrementally (simple commands first, then flags)
-- Phase 4 separated because output transformation is optional for many commands
-- Phase 5 last because edge cases are polish, not core functionality
+- **Package before CI**: Cannot run `pip install -e .` in CI without pyproject.toml
+- **CI before Documentation**: Need accurate CI status before adding badges
+- **Test runner alongside CI**: Both use pytest, should stay synchronized
+- **Documentation before Release**: README.md required for PyPI page
+- **Release last**: All quality checks must pass first
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 4:** Output transformation for --porcelain requires mapping Sapling status codes to git's 2-character format
-- **Phase 3:** Flag translation for checkout (maps to goto OR revert depending on context)
+- **Phase 2 (CI):** Sapling installation steps may change with new releases. Pin specific version and test.
+- **Phase 5 (Release):** Trusted publishing configuration is repository-specific. Verify exact steps when ready.
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1:** subprocess.run/execvp patterns well-documented
-- **Phase 2:** Dictionary dispatch is a standard Python pattern
-- **Phase 5:** Standard error handling patterns
+- **Phase 1 (Package):** pyproject.toml is well-documented, patterns are established
+- **Phase 3 (Test Runner):** Simple shell script, no research needed
+- **Phase 4 (Documentation):** README patterns are established, just execution
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Python subprocess and stdlib well-documented, patterns verified |
-| Features | MEDIUM-HIGH | Based on Sapling official docs, some flag behaviors need validation |
-| Architecture | HIGH | Pipeline pattern well-established for CLI translation |
-| Pitfalls | HIGH | All verified against Python official docs and issue trackers |
+| Stack | HIGH | Official Python Packaging Guide, setuptools docs |
+| Features | MEDIUM-HIGH | Based on CLI best practices, may need user feedback |
+| Architecture | HIGH | Standard patterns, no novel approaches |
+| Pitfalls | HIGH | Verified against official docs, specific to this project |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **rev-parse --show-toplevel**: No direct Sapling equivalent documented; may need custom implementation
-- **Status code mapping**: Exact translation from Sapling single-char to git two-char format needs testing
-- **Reference syntax**: Translation of complex ref ranges (Y..X to X % Y) needs comprehensive testing
-- **Interactive commands**: histedit vs rebase -i may have workflow differences
+- **Sapling Windows installation**: Documentation is sparse. May need to experiment in CI to find reliable approach.
+- **Package name availability**: Have not verified "gitsl" is available on PyPI. Check before first release.
+- **macOS Sapling Homebrew stability**: `brew install sapling` works but version pinning options unclear.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - Execution patterns
-- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - Command mappings
-- [Python argparse issues](https://bugs.python.org/issue9334) - Known limitations
+- [Python Packaging User Guide - Modernize setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/)
+- [Setuptools pyproject.toml Configuration](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
+- [PyPI Trusted Publishers Documentation](https://docs.pypi.org/trusted-publishers/)
+- [GitHub Actions Matrix Strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs)
+- [gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish)
 
 ### Secondary (MEDIUM confidence)
-- [Sapling command docs](https://sapling-scm.com/docs/commands/) - Individual command flags
-- [Git status porcelain format](https://git-scm.com/docs/git-status) - Output format requirements
+- [GitHub README guide](https://www.markepear.dev/blog/github-readme-guide) - README structure patterns
+- [gh CLI manual](https://cli.github.com/manual/gh) - Command documentation format
+- [Sapling Installation Guide](https://sapling-scm.com/docs/introduction/getting-started/)
+- [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
 
 ### Tertiary (LOW confidence)
-- Community wrapper patterns - General architecture inspiration
+- Sapling Windows installation specifics - May need validation during CI implementation
 
 ---
-*Research completed: 2026-01-17*
+*Research completed: 2026-01-18*
 *Ready for roadmap: yes*

@@ -1,597 +1,485 @@
-# Architecture Research: Git-to-Sapling CLI Shim
+# Architecture Research: v1.1 Polish
 
-**Domain:** CLI Command Translation / VCS Wrapper
-**Researched:** 2026-01-17
-**Confidence:** HIGH (patterns well-established in CLI/subprocess domains)
+**Domain:** Python CLI Packaging for PyPI
+**Researched:** 2026-01-18
+**Confidence:** HIGH (well-established Python packaging patterns)
 
 ## Executive Summary
 
-A git-to-Sapling CLI shim follows a **pipeline architecture** with four distinct stages: Parse, Translate, Execute, Transform. Within a single-file constraint, this maps to clearly separated functions organized by responsibility. The dictionary dispatch pattern is ideal for command translation, providing O(1) lookup and maintainable command mappings.
+For v1.1, gitsl needs to transition from a flat collection of Python files to a proper installable package. The recommended approach uses **src layout** with **setuptools** as the build backend. This structure enables `pip install gitsl` to create the `gitsl` command via console script entry points, while maintaining backward compatibility with the existing module organization.
 
 ---
 
-## Component Structure
+## Package Layout
 
-Given the single-file constraint, organize the script into logical sections using comments and function groupings.
+### Recommended Directory Structure
 
-### Recommended File Layout
+Transform the current flat layout into a src layout package:
+
+```
+gitsl/
+├── pyproject.toml          # Package metadata and build config
+├── README.md               # Package description for PyPI
+├── LICENSE                 # License file
+├── pytest.ini              # Test configuration (unchanged)
+├── src/
+│   └── gitsl/              # Main package
+│       ├── __init__.py     # Package initialization, exports VERSION
+│       ├── __main__.py     # Enable `python -m gitsl`
+│       ├── cli.py          # Main entry point (from gitsl.py)
+│       ├── common.py       # Shared utilities
+│       ├── cmd_status.py   # Command handlers
+│       ├── cmd_log.py
+│       ├── cmd_diff.py
+│       ├── cmd_init.py
+│       ├── cmd_rev_parse.py
+│       ├── cmd_add.py
+│       └── cmd_commit.py
+└── tests/
+    ├── __init__.py
+    ├── conftest.py         # Fixtures
+    ├── helpers/
+    │   ├── __init__.py
+    │   ├── commands.py
+    │   └── comparison.py
+    ├── test_cmd_status.py  # Renamed from test_status_porcelain.py
+    ├── test_cmd_log.py
+    ├── test_cmd_diff.py
+    ├── test_cmd_init.py
+    ├── test_cmd_rev_parse.py
+    ├── test_cmd_add.py
+    ├── test_cmd_commit.py
+    └── test_unsupported.py
+```
+
+### Why src Layout
+
+**Benefits over flat layout:**
+
+1. **Prevents accidental imports** - Cannot accidentally import uninstalled code
+2. **Enforces proper installation** - Tests run against installed package, catching packaging errors
+3. **Clear separation** - Source code isolated from project metadata
+
+**Source:** [Python Packaging User Guide - src layout vs flat layout](https://daobook.github.io/packaging.python.org/discussions/src-layout-vs-flat-layout.html)
+
+### Migration from Current Structure
+
+| Current Location | New Location |
+|-----------------|--------------|
+| `gitsl.py` | `src/gitsl/cli.py` |
+| `common.py` | `src/gitsl/common.py` |
+| `cmd_*.py` | `src/gitsl/cmd_*.py` |
+| `tests/` | `tests/` (unchanged) |
+
+---
+
+## Entry Points
+
+### Console Script Configuration
+
+The `gitsl` command is installed via entry points in `pyproject.toml`:
+
+```toml
+[project.scripts]
+gitsl = "gitsl.cli:main"
+```
+
+When users run `pip install gitsl`, this creates a `gitsl` executable that calls the `main()` function from `gitsl.cli` module.
+
+### Supporting `python -m gitsl`
+
+Create `src/gitsl/__main__.py`:
 
 ```python
-#!/usr/bin/env python3
-"""
-Git-to-Sapling CLI Shim
-Translates git commands to their Sapling (sl) equivalents.
-"""
-
-# ============================================================
-# SECTION 1: IMPORTS AND CONSTANTS
-# ============================================================
-
+"""Enable running gitsl as a module: python -m gitsl"""
+from gitsl.cli import main
 import sys
-import subprocess
-import shlex
-from dataclasses import dataclass
-from typing import Optional, List, Dict, Callable
-
-# ============================================================
-# SECTION 2: DATA STRUCTURES
-# ============================================================
-
-@dataclass
-class ParsedCommand:
-    """Parsed representation of a git command."""
-    command: str              # e.g., "commit", "push", "status"
-    subcommand: Optional[str] # e.g., for "git remote add"
-    flags: Dict[str, str]     # e.g., {"--message": "msg", "-a": None}
-    positional_args: List[str]
-    raw_args: List[str]       # original argv for passthrough
-
-@dataclass
-class TranslatedCommand:
-    """Translated Sapling command ready for execution."""
-    executable: str           # "sl"
-    command: str              # e.g., "commit", "goto", "amend"
-    args: List[str]           # all arguments
-    needs_output_transform: bool
-    transform_type: Optional[str]
-
-@dataclass
-class ExecutionResult:
-    """Result from executing a command."""
-    exit_code: int
-    stdout: str
-    stderr: str
-
-# ============================================================
-# SECTION 3: COMMAND TRANSLATION TABLES
-# ============================================================
-
-# Direct 1:1 command mappings
-DIRECT_COMMAND_MAP: Dict[str, str] = {
-    "clone": "clone",
-    "status": "status",
-    "diff": "diff",
-    "log": "log",
-    "add": "add",
-    "rm": "rm",
-    "mv": "mv",
-    "blame": "blame",
-    "show": "show",
-    # ... more mappings
-}
-
-# Commands requiring special translation logic
-COMPLEX_COMMANDS: Dict[str, Callable] = {
-    "commit": translate_commit,
-    "push": translate_push,
-    "pull": translate_pull,
-    "checkout": translate_checkout,
-    "reset": translate_reset,
-    "rebase": translate_rebase,
-    "stash": translate_stash,
-    "branch": translate_branch,
-    # ... more complex handlers
-}
-
-# Flag translation per command
-FLAG_TRANSLATIONS: Dict[str, Dict[str, str]] = {
-    "commit": {
-        "-m": "-m",
-        "--message": "-m",
-        "-a": "",  # Sapling commits all by default
-        "--amend": "",  # handled specially
-    },
-    # ... more flag mappings
-}
-
-# ============================================================
-# SECTION 4: PARSING FUNCTIONS
-# ============================================================
-
-def parse_argv(argv: List[str]) -> ParsedCommand: ...
-def extract_command(args: List[str]) -> tuple[str, List[str]]: ...
-def parse_flags(args: List[str]) -> tuple[Dict[str, str], List[str]]: ...
-
-# ============================================================
-# SECTION 5: TRANSLATION FUNCTIONS
-# ============================================================
-
-def translate_command(parsed: ParsedCommand) -> TranslatedCommand: ...
-def translate_commit(parsed: ParsedCommand) -> TranslatedCommand: ...
-def translate_push(parsed: ParsedCommand) -> TranslatedCommand: ...
-def translate_checkout(parsed: ParsedCommand) -> TranslatedCommand: ...
-# ... other complex translators
-
-# ============================================================
-# SECTION 6: EXECUTION FUNCTIONS
-# ============================================================
-
-def execute_command(translated: TranslatedCommand) -> ExecutionResult: ...
-def run_sl_command(args: List[str]) -> ExecutionResult: ...
-
-# ============================================================
-# SECTION 7: OUTPUT TRANSFORMATION
-# ============================================================
-
-def transform_output(result: ExecutionResult, transform_type: str) -> str: ...
-def transform_branch_output(output: str) -> str: ...
-def transform_log_output(output: str) -> str: ...
-
-# ============================================================
-# SECTION 8: ERROR HANDLING
-# ============================================================
-
-def handle_unknown_command(command: str, args: List[str]) -> int: ...
-def handle_execution_error(result: ExecutionResult) -> int: ...
-
-# ============================================================
-# SECTION 9: MAIN ENTRY POINT
-# ============================================================
-
-def main(argv: List[str] = None) -> int: ...
 
 if __name__ == "__main__":
-    sys.exit(main(sys.argv[1:]))
+    sys.exit(main())
 ```
 
-### Component Responsibilities
+### Package Initialization
 
-| Component | Responsibility | Dependencies |
-|-----------|---------------|--------------|
-| **Data Structures** | Define ParsedCommand, TranslatedCommand, ExecutionResult | None |
-| **Translation Tables** | Map git commands/flags to Sapling equivalents | Data Structures |
-| **Parsing Functions** | Convert argv into ParsedCommand | Data Structures |
-| **Translation Functions** | Convert ParsedCommand to TranslatedCommand | Tables, Data Structures |
-| **Execution Functions** | Run Sapling commands via subprocess | TranslatedCommand |
-| **Output Transformation** | Convert Sapling output to git-like format | ExecutionResult |
-| **Error Handling** | Graceful degradation, helpful messages | All |
-| **Main** | Orchestrate pipeline | All |
+Create `src/gitsl/__init__.py`:
+
+```python
+"""gitsl - Git to Sapling CLI shim."""
+from gitsl.common import VERSION
+
+__version__ = VERSION
+__all__ = ["VERSION", "__version__"]
+```
 
 ---
 
-## Data Flow
+## pyproject.toml Configuration
 
-### High-Level Pipeline
+### Complete Configuration
 
-```
-sys.argv
-    |
-    v
-+-------------------+
-|   parse_argv()    |  Stage 1: PARSE
-|                   |  - Extract command name
-|                   |  - Parse flags and arguments
-|                   |  - Return ParsedCommand
-+-------------------+
-    |
-    v
-+-------------------+
-| translate_command |  Stage 2: TRANSLATE
-|                   |  - Lookup command in tables
-|                   |  - Apply flag translations
-|                   |  - Handle complex commands
-|                   |  - Return TranslatedCommand
-+-------------------+
-    |
-    v
-+-------------------+
-| execute_command() |  Stage 3: EXECUTE
-|                   |  - Build sl command line
-|                   |  - Run subprocess
-|                   |  - Capture output
-|                   |  - Return ExecutionResult
-+-------------------+
-    |
-    v
-+-------------------+
-| transform_output()|  Stage 4: TRANSFORM (optional)
-|                   |  - Convert Sapling output
-|                   |  - Match git output format
-|                   |  - Print to stdout/stderr
-+-------------------+
-    |
-    v
-sys.exit(code)
-```
+```toml
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
 
-### Detailed Data Flow Example
+[project]
+name = "gitsl"
+version = "1.1.0"
+description = "Git to Sapling CLI translation shim"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+authors = [
+    {name = "Your Name", email = "your@email.com"}
+]
+keywords = ["git", "sapling", "vcs", "cli", "shim"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Version Control",
+]
 
-**Input:** `git commit -am "Fix bug"`
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.1.0",
+]
 
-```
-1. PARSE
-   argv = ["commit", "-am", "Fix bug"]
+[project.scripts]
+gitsl = "gitsl.cli:main"
 
-   ParsedCommand(
-       command="commit",
-       subcommand=None,
-       flags={"-a": None, "-m": "Fix bug"},
-       positional_args=[],
-       raw_args=["commit", "-am", "Fix bug"]
-   )
+[project.urls]
+Homepage = "https://github.com/youruser/gitsl"
+Repository = "https://github.com/youruser/gitsl"
+Issues = "https://github.com/youruser/gitsl/issues"
 
-2. TRANSLATE
-   - "commit" found in COMPLEX_COMMANDS
-   - translate_commit() called
-   - Sapling commits all tracked changes by default (no -a needed)
-   - -m maps to -m
-   - "--amend" not present, so use "commit" not "amend"
+[tool.setuptools.packages.find]
+where = ["src"]
 
-   TranslatedCommand(
-       executable="sl",
-       command="commit",
-       args=["-m", "Fix bug"],
-       needs_output_transform=False,
-       transform_type=None
-   )
-
-3. EXECUTE
-   subprocess.run(["sl", "commit", "-m", "Fix bug"], ...)
-
-   ExecutionResult(
-       exit_code=0,
-       stdout="",
-       stderr=""
-   )
-
-4. OUTPUT (passthrough - no transformation needed)
-   Print stdout/stderr as-is
-   Exit with code 0
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
 ```
 
-### Decision Points in Pipeline
+### Key Configuration Points
+
+| Section | Purpose |
+|---------|---------|
+| `[build-system]` | Declares setuptools as build backend |
+| `[project]` | Standard metadata (name, version, description) |
+| `[project.scripts]` | Creates `gitsl` CLI command |
+| `[tool.setuptools.packages.find]` | Tells setuptools to find packages in `src/` |
+| `[tool.pytest.ini_options]` | Configures pytest to find src and tests |
+
+**Source:** [Python Packaging User Guide - Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+
+---
+
+## Test Organization
+
+### Command-Specific Test Pattern
+
+Tests are already organized by command. Maintain this pattern:
 
 ```
-                    Is command known?
-                          |
-              +-----------+-----------+
-              |                       |
-             YES                      NO
-              |                       |
-     Is it in DIRECT_MAP?      Passthrough to sl?
-              |                       |
-      +-------+-------+        +------+------+
-      |               |        |             |
-     YES              NO      YES            NO
-      |               |        |             |
-  Simple map    Complex     Execute      Error msg
-  to Sapling    handler     `sl <cmd>`   + exit 1
+tests/
+├── test_cmd_status.py      # All status command tests
+├── test_cmd_log.py         # All log command tests
+├── test_cmd_diff.py        # All diff command tests
+└── ...
 ```
+
+### Running Tests for Specific Commands
+
+With pytest, filter by command using `-k`:
+
+```bash
+# Run all status tests
+pytest -k status
+
+# Run all log tests
+pytest -k log
+
+# Run specific test class
+pytest -k "TestLogOneline"
+
+# Run tests matching pattern
+pytest -k "test_cmd_log and oneline"
+```
+
+### Wrapper Script for `./test <command>`
+
+Create a test runner script for the `./test <command>` pattern:
+
+```bash
+#!/bin/bash
+# test - Run tests for a specific command or all tests
+
+if [ -z "$1" ]; then
+    # No argument - run all tests
+    pytest tests/ -v
+else
+    # Filter by command name
+    pytest tests/ -k "$1" -v
+fi
+```
+
+Usage:
+```bash
+./test              # All tests
+./test status       # Status command tests
+./test log          # Log command tests
+./test "log and oneline"  # More specific filter
+```
+
+### Test Discovery After Restructure
+
+Update `pytest.ini` or use `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+```
+
+**Important:** With src layout, you must either:
+1. Install the package in editable mode: `pip install -e .`
+2. OR configure `pythonpath` in pytest config
+
+**Source:** [Pytest with Eric - Organizing Tests](https://pytest-with-eric.com/pytest-best-practices/pytest-organize-tests/)
+
+---
+
+## CI Workflow Integration
+
+### GitHub Actions Workflow
+
+Create `.github/workflows/test.yml`:
+
+```yaml
+name: Tests
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9", "3.10", "3.11", "3.12"]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Sapling
+        run: |
+          # Install Sapling for E2E tests
+          # Note: Sapling may need specific installation steps
+          # This is a placeholder - verify actual installation method
+          echo "Sapling installation step"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+
+      - name: Run tests
+        run: pytest -v --tb=short
+
+      - name: Run linter
+        run: ruff check src/ tests/
+```
+
+### Key CI Considerations
+
+1. **Sapling Dependency** - E2E tests require Sapling (`sl`). CI needs to install it.
+2. **Editable Install** - Use `pip install -e .` so tests run against the actual package.
+3. **Matrix Testing** - Test across Python 3.9-3.12 for compatibility.
+4. **Linting** - Add ruff for code quality checks.
+
+**Source:** [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
 
 ---
 
 ## Build Order
 
-### Phase 1: Core Pipeline (MVP)
+### Phase 1: Package Restructure
 
-Implement the minimal viable pipeline first.
+**Goal:** Reorganize files into src layout.
 
-**Order:**
-1. **Data structures** - Define the dataclasses
-2. **Main entry point skeleton** - Basic argv handling
-3. **Simple command table** - DIRECT_COMMAND_MAP with 5-10 common commands
-4. **Basic parser** - Extract command name, pass remaining args
-5. **Basic executor** - subprocess.run with output capture
-6. **Passthrough for unknowns** - Forward unknown commands to sl
+**Steps:**
+1. Create `src/gitsl/` directory structure
+2. Move source files with updated imports
+3. Create `__init__.py` and `__main__.py`
+4. Update all internal imports (e.g., `from common import` -> `from gitsl.common import`)
 
-**Result:** Working shim for simple commands like `git status`, `git diff`, `git log`
+**Dependencies:** None
 
-### Phase 2: Flag Translation
+### Phase 2: pyproject.toml
 
-Add flag handling for commands that need it.
+**Goal:** Create package configuration.
 
-**Order:**
-1. **Flag parsing** - Parse `-x`, `--flag`, `--flag=value`
-2. **Flag translation table** - Per-command flag mappings
-3. **First complex handler** - `commit` (most common)
-4. **Second complex handler** - `checkout` (maps to `goto`)
+**Steps:**
+1. Create `pyproject.toml` with metadata
+2. Configure entry points for `gitsl` command
+3. Configure setuptools package discovery
+4. Merge pytest.ini into pyproject.toml (optional)
 
-**Result:** Handle `git commit -am "msg"`, `git checkout branch`
+**Dependencies:** Phase 1 complete
 
-### Phase 3: Complex Commands
+### Phase 3: Test Updates
 
-Handle commands with significant behavioral differences.
+**Goal:** Tests work with new structure.
 
-**Order:**
-1. **push translation** - `git push` -> `sl push --to`
-2. **pull translation** - `git pull` -> `sl pull`
-3. **reset translation** - Different semantics
-4. **stash translation** - `stash` -> `shelve`
-5. **branch translation** - `branch` -> `bookmark`
+**Steps:**
+1. Update conftest.py to use installed package
+2. Update imports in test files
+3. Verify `pytest -k <command>` filtering works
+4. Create `./test` convenience script
 
-**Result:** Comprehensive git workflow support
+**Dependencies:** Phase 2 complete (need editable install)
 
-### Phase 4: Output Transformation
+### Phase 4: CI Integration
 
-Make output look git-like where needed.
+**Goal:** Automated testing on push.
 
-**Order:**
-1. **Output transformer registry**
-2. **Branch output transformer** - If output differs significantly
-3. **Log output transformer** - If needed for scripts
+**Steps:**
+1. Create `.github/workflows/test.yml`
+2. Configure Sapling installation in CI
+3. Add linting step
+4. Test matrix across Python versions
 
-**Result:** Drop-in git replacement for most workflows
+**Dependencies:** Phase 3 complete (tests must pass)
+
+### Phase 5: PyPI Publishing (Optional)
+
+**Goal:** Package available via `pip install gitsl`.
+
+**Steps:**
+1. Create PyPI account and API token
+2. Add publish workflow to GitHub Actions
+3. Configure trusted publisher (recommended)
+4. Create first release
+
+**Dependencies:** Phase 4 complete
 
 ### Dependency Graph
 
 ```
-Data Structures ─────────────────────────┐
-      │                                  │
-      v                                  │
-Translation Tables ──────────────────────┤
-      │                                  │
-      v                                  │
-Parser ──────────────────────────────────┤
-      │                                  │
-      v                                  │
-Translator ──────────────────────────────┤
-      │                                  │
-      v                                  │
-Executor ────────────────────────────────┤
-      │                                  │
-      v                                  │
-Output Transformer ──────────────────────┤
-      │                                  │
-      v                                  │
-Main ────────────────────────────────────┘
+Phase 1: Package Restructure
+    │
+    v
+Phase 2: pyproject.toml
+    │
+    v
+Phase 3: Test Updates
+    │
+    v
+Phase 4: CI Integration
+    │
+    v
+Phase 5: PyPI Publishing (optional)
 ```
 
 ---
 
-## Error Handling Strategy
+## Import Updates Required
 
-### Error Categories
-
-| Category | Example | Strategy |
-|----------|---------|----------|
-| **Unknown command** | `git foo` | Attempt passthrough to `sl foo`, report if fails |
-| **Parse error** | Malformed flags | Show usage hint, exit 1 |
-| **Translation error** | Unsupported flag combo | Warn, attempt best-effort translation |
-| **Execution error** | `sl` command fails | Pass through exit code and output |
-| **Environment error** | `sl` not installed | Clear error message, exit 127 |
-
-### Implementation Pattern
+### Before (Flat Layout)
 
 ```python
-def main(argv: List[str] = None) -> int:
-    if argv is None:
-        argv = sys.argv[1:]
+# In gitsl.py
+from common import parse_argv, is_debug_mode, print_debug_info, VERSION
+import cmd_status
+import cmd_log
+...
 
-    # Handle no-args case
-    if not argv:
-        return show_help()
-
-    try:
-        # Stage 1: Parse
-        parsed = parse_argv(argv)
-    except ParseError as e:
-        print(f"git: {e}", file=sys.stderr)
-        return 1
-
-    try:
-        # Stage 2: Translate
-        translated = translate_command(parsed)
-    except UnsupportedCommandError as e:
-        return attempt_passthrough(parsed)
-    except TranslationError as e:
-        print(f"git: translation error: {e}", file=sys.stderr)
-        return 1
-
-    try:
-        # Stage 3: Execute
-        result = execute_command(translated)
-    except FileNotFoundError:
-        print("git: 'sl' not found. Is Sapling installed?", file=sys.stderr)
-        return 127
-    except subprocess.SubprocessError as e:
-        print(f"git: execution error: {e}", file=sys.stderr)
-        return 1
-
-    # Stage 4: Output
-    if translated.needs_output_transform:
-        output = transform_output(result, translated.transform_type)
-        print(output)
-    else:
-        if result.stdout:
-            print(result.stdout, end="")
-        if result.stderr:
-            print(result.stderr, end="", file=sys.stderr)
-
-    return result.exit_code
+# In cmd_status.py
+from common import ParsedCommand, run_sl
 ```
 
-### Passthrough Strategy
-
-For unrecognized commands, attempt transparent passthrough:
+### After (src Layout)
 
 ```python
-def attempt_passthrough(parsed: ParsedCommand) -> int:
-    """Try to run command directly with sl."""
-    try:
-        result = subprocess.run(
-            ["sl"] + parsed.raw_args,
-            capture_output=False  # Stream directly to terminal
-        )
-        return result.returncode
-    except FileNotFoundError:
-        print(f"git: '{parsed.command}' is not a git command.", file=sys.stderr)
-        return 1
+# In src/gitsl/cli.py
+from gitsl.common import parse_argv, is_debug_mode, print_debug_info, VERSION
+from gitsl import cmd_status
+from gitsl import cmd_log
+...
+
+# In src/gitsl/cmd_status.py
+from gitsl.common import ParsedCommand, run_sl
 ```
 
-### Exit Code Preservation
+### Automated Migration
 
-**Critical:** Preserve Sapling's exit codes for script compatibility.
+Consider using `rope` or manual find-replace:
 
-```python
-def execute_command(translated: TranslatedCommand) -> ExecutionResult:
-    cmd = [translated.executable, translated.command] + translated.args
-    result = subprocess.run(
-        cmd,
-        capture_output=True,
-        text=True
-    )
-    return ExecutionResult(
-        exit_code=result.returncode,  # Preserve!
-        stdout=result.stdout,
-        stderr=result.stderr
-    )
+```bash
+# Find all imports to update
+grep -r "from common import" --include="*.py"
+grep -r "import cmd_" --include="*.py"
 ```
 
 ---
 
-## Key Design Decisions
+## Pitfalls to Avoid
 
-### 1. Dictionary Dispatch over argparse
+### 1. Forgetting Editable Install
 
-**Recommendation:** Use dictionary dispatch, not argparse subparsers.
+**Problem:** Tests fail with `ModuleNotFoundError: No module named 'gitsl'`
 
-**Why:**
-- Git command syntax is not standard argparse (git allows `commit -am "msg"`)
-- Need flexible passthrough for unknown commands
-- Translation logic is simpler with lookup tables
-- argparse subparsers would require defining every command upfront
+**Solution:** Always run `pip install -e .` after restructure before testing.
 
-**Pattern:**
-```python
-def translate_command(parsed: ParsedCommand) -> TranslatedCommand:
-    cmd = parsed.command
+### 2. Circular Import with __init__.py
 
-    # Check direct mapping first (O(1))
-    if cmd in DIRECT_COMMAND_MAP:
-        return TranslatedCommand(
-            executable="sl",
-            command=DIRECT_COMMAND_MAP[cmd],
-            args=parsed.raw_args[1:],  # Pass remaining args
-            needs_output_transform=False,
-            transform_type=None
-        )
+**Problem:** Importing VERSION in `__init__.py` from common.py may cause issues if common.py imports from other modules.
 
-    # Check complex handlers
-    if cmd in COMPLEX_COMMANDS:
-        return COMPLEX_COMMANDS[cmd](parsed)
+**Solution:** Keep `__init__.py` minimal. Only import what is truly needed for public API.
 
-    # Unknown - mark for passthrough attempt
-    raise UnsupportedCommandError(cmd)
-```
+### 3. Test Import Path Confusion
 
-### 2. Dataclasses for Structure
+**Problem:** Tests import wrong version (local vs installed).
 
-**Recommendation:** Use `@dataclass` for ParsedCommand, TranslatedCommand, ExecutionResult.
+**Solution:** src layout prevents this by design - you MUST install to import.
 
-**Why:**
-- Self-documenting structure
-- Type hints for IDE support
-- No external dependencies (Python 3.7+)
-- Immutable-by-default behavior with `frozen=True`
+### 4. Missing __init__.py Files
 
-### 3. subprocess.run() for Execution
+**Problem:** Package not discoverable.
 
-**Recommendation:** Use `subprocess.run()` with `capture_output=True` for most commands.
-
-**Why:**
-- Modern Python standard (3.5+)
-- Clean API for output capture
-- Built-in timeout support
-- Easy exit code access
-
-**Exception:** For long-running commands or when streaming is needed, use `subprocess.Popen()` with line-by-line reading.
-
-### 4. Minimal Output Transformation
-
-**Recommendation:** Only transform output when necessary for compatibility.
-
-**Why:**
-- Most Sapling output is already similar to git
-- Transformation adds complexity and maintenance
-- Passthrough is faster and less error-prone
-
-**Transform only when:**
-- Scripts depend on specific git output format
-- Branch/bookmark output differs significantly
-- Error messages need translation
-
----
-
-## Sapling Command Mapping Reference
-
-Based on [Sapling's Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/):
-
-### Direct Mappings (Same Command, Same Args)
-
-| Git | Sapling | Notes |
-|-----|---------|-------|
-| `git clone` | `sl clone` | Direct |
-| `git status` | `sl status` | Direct |
-| `git diff` | `sl diff` | Direct |
-| `git log` | `sl log` | Direct |
-| `git add FILE` | `sl add FILE` | Direct |
-| `git rm FILE` | `sl rm FILE` | Direct |
-| `git mv OLD NEW` | `sl mv OLD NEW` | Direct |
-| `git blame FILE` | `sl blame FILE` | Direct |
-| `git show` | `sl show` | Direct |
-
-### Semantic Mappings (Different Command)
-
-| Git | Sapling | Notes |
-|-----|---------|-------|
-| `git checkout COMMIT` | `sl goto COMMIT` | Different verb |
-| `git checkout -- FILE` | `sl revert FILE` | Different command |
-| `git branch` | `sl bookmark` | Different concept |
-| `git stash` | `sl shelve` | Different verb |
-| `git stash pop` | `sl unshelve` | Different verb |
-| `git cherry-pick` | `sl graft` | Different verb |
-| `git reflog` | `sl journal` | Different verb |
-
-### Flag Translations
-
-| Git | Sapling | Notes |
-|-----|---------|-------|
-| `git commit -a` | `sl commit` | Sapling commits all tracked by default |
-| `git commit --amend` | `sl amend` | Separate command |
-| `git reset --soft HEAD^` | `sl uncommit` | Separate command |
-| `git reset --hard` | `sl revert --all` | Different flags |
-| `git add -A .` | `sl addremove` | Separate command |
-| `git push HEAD:BRANCH` | `sl push --to BRANCH` | Different syntax |
-
-### Complex Behaviors
-
-| Git | Sapling | Complexity |
-|-----|---------|------------|
-| `git rebase -i` | `sl histedit` | Different interactive model |
-| `git add -p` | `sl commit -i` | Part of commit, not add |
-| `git fetch origin REFSPEC` | `sl pull -B BRANCH` | Different semantics |
+**Solution:** Ensure `__init__.py` exists in:
+- `src/gitsl/__init__.py`
+- `tests/__init__.py`
+- `tests/helpers/__init__.py`
 
 ---
 
 ## Sources
 
 ### Primary (HIGH Confidence)
-- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - Official command mappings
-- [Python argparse Documentation](https://docs.python.org/3/library/argparse.html) - Standard library reference
-- [GeeksforGeeks: Executing Shell Commands](https://www.geeksforgeeks.org/python/executing-shell-commands-with-python/) - subprocess patterns
+- [Python Packaging User Guide - Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+- [Python Packaging User Guide - src layout vs flat layout](https://daobook.github.io/packaging.python.org/discussions/src-layout-vs-flat-layout.html)
+- [Xebia - Updated Guide to Setuptools and Pyproject.toml](https://xebia.com/blog/an-updated-guide-to-setuptools-and-pyproject-toml/)
 
 ### Secondary (MEDIUM Confidence)
-- [Hacker News: Dictionary Dispatch Pattern](https://news.ycombinator.com/item?id=37271162) - Community patterns discussion
-- [GitHub Gist: argparse subparsers](https://gist.github.com/amarao/36327a6f77b86b90c2bca72ba03c9d3a) - Subparser examples
-- [dev.to: g wrapper tool](https://dev.to/pcdevil/g-a-wrapper-around-git-with-additional-feature-extension-3m11) - Wrapper architecture example
-- [GeeksforGeeks: Retrieving subprocess output](https://www.geeksforgeeks.org/python/retrieving-the-output-of-subprocesscall-in-python/) - Output capture patterns
+- [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
+- [Pytest with Eric - Organizing Tests](https://pytest-with-eric.com/pytest-best-practices/pytest-organize-tests/)
+- [pyOpenSci - pyproject.toml Tutorial](https://www.pyopensci.org/python-package-guide/tutorials/pyproject-toml.html)
+- [Real Python - Managing Python Projects with pyproject.toml](https://realpython.com/python-pyproject-toml/)
