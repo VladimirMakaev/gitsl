@@ -171,3 +171,22 @@ def sl_repo_with_commit(sl_repo: Path) -> Path:
     run_command(["sl", "commit", "-m", "Initial commit"], cwd=sl_repo)
 
     return sl_repo
+
+
+@pytest.fixture
+def sl_repo_with_commits(sl_repo: Path) -> Path:
+    """
+    Sapling repo with 10 commits for testing limit flags.
+
+    Creates file0.txt through file9.txt, each with a commit.
+
+    Returns:
+        Path to the sl repository with 10 commits
+    """
+    for i in range(10):
+        file_path = sl_repo / f"file{i}.txt"
+        file_path.write_text(f"Content {i}")
+        run_command(["sl", "add", str(file_path)], cwd=sl_repo)
+        run_command(["sl", "commit", "-m", f"Commit {i}"], cwd=sl_repo)
+
+    return sl_repo
