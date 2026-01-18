@@ -15,6 +15,8 @@ import cmd_log
 import cmd_diff
 import cmd_init
 import cmd_rev_parse
+import cmd_add
+import cmd_commit
 
 
 def main(argv: List[str] = None) -> int:
@@ -68,6 +70,12 @@ def main(argv: List[str] = None) -> int:
 
     if parsed.command == "rev-parse":
         return cmd_rev_parse.handle(parsed)
+
+    if parsed.command == "add":
+        return cmd_add.handle(parsed)
+
+    if parsed.command == "commit":
+        return cmd_commit.handle(parsed)
 
     # Fallback for unimplemented commands
     print(f"[STUB] Would process: git {parsed.command}", file=sys.stderr)
