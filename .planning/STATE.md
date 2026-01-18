@@ -47,6 +47,7 @@ Recent decisions affecting current work:
 - Exact match for porcelain formats, semantic match for human-readable
 - Manual argv parsing instead of argparse for git-style command handling
 - Debug mode via environment variable (GITSL_DEBUG) to avoid consuming args
+- **Multi-file architecture**: gitsl.py entry point only, common.py shared logic, one file per command (cmd_*.py)
 
 ### Pending Todos
 

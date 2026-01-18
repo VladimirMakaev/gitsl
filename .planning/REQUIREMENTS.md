@@ -5,6 +5,13 @@
 
 ## v1 Requirements
 
+### Architecture
+
+- [ ] **ARCH-01**: Entry point (gitsl.py) contains only argument dispatch, no command logic
+- [ ] **ARCH-02**: Shared utilities (common.py) contain parsing, subprocess, debug mode functions
+- [ ] **ARCH-03**: Each command has its own file (cmd_status.py, cmd_commit.py, etc.)
+- [ ] **ARCH-04**: Command files export a handler function that receives parsed args
+
 ### Core Execution
 
 - [ ] **EXEC-01**: Script parses argv and extracts git command + arguments
@@ -88,6 +95,10 @@
 | TEST-05 | Phase 2 | Pending |
 | TEST-06 | Phase 2 | Pending |
 | TEST-07 | Phase 2 | Pending |
+| ARCH-01 | Phase 3 | Pending |
+| ARCH-02 | Phase 3 | Pending |
+| ARCH-03 | Phase 3 | Pending |
+| ARCH-04 | Phase 3 | Pending |
 | EXEC-02 | Phase 3 | Pending |
 | EXEC-03 | Phase 3 | Pending |
 | EXEC-04 | Phase 3 | Pending |
@@ -109,10 +120,10 @@
 | UNSUP-02 | Phase 9 | Pending |
 
 **Coverage:**
-- v1 requirements: 28 total (21 original + 7 testing)
-- Mapped to phases: 28
+- v1 requirements: 32 total (21 original + 7 testing + 4 architecture)
+- Mapped to phases: 32
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-17 - Added E2E test infrastructure requirements, renumbered phases*
+*Last updated: 2026-01-18 - Added multi-file architecture requirements (ARCH-01 through ARCH-04)*

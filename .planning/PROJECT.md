@@ -2,7 +2,12 @@
 
 ## What This Is
 
-A single-file Python script that acts as a git CLI shim, intercepting git commands and translating them to equivalent Sapling (sl) commands. Designed to allow tools that expect git (like get-shit-done) to work transparently with Sapling repositories.
+A Python package that acts as a git CLI shim, intercepting git commands and translating them to equivalent Sapling (sl) commands. Designed to allow tools that expect git (like get-shit-done) to work transparently with Sapling repositories.
+
+**Architecture:**
+- `gitsl.py` — Entry point only (receives argv, dispatches to command handlers)
+- `common.py` — Shared logic (parsing, subprocess handling, debug mode)
+- One file per command (e.g., `cmd_status.py`, `cmd_commit.py`)
 
 ## Core Value
 
@@ -73,7 +78,7 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 
 ## Constraints
 
-- **Single file**: Must be one Python file for easy PATH manipulation
+- **Multi-file package**: Entry point in gitsl.py, shared logic in common.py, one file per command
 - **No dependencies**: Standard library only — no pip installs
 - **Python 3**: Assume Python 3.8+ available
 - **Sapling installed**: Assume `sl` command is available in PATH
@@ -82,7 +87,7 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Single Python file | Easy to drop into PATH, no installation | — Pending |
+| Multi-file architecture | Easier to maintain, one file per command | Adopted 2026-01-18 |
 | Exit 0 on unsupported commands | Prevent calling CLI from failing | — Pending |
 | Emulate porcelain exactly | GSD may parse this output | — Pending |
 | Pass-through diff output | User confirmed no parsing of diff | — Pending |

@@ -69,13 +69,16 @@ Plans:
 ### Phase 3: Execution Pipeline
 **Goal**: Script can execute Sapling commands and faithfully relay results to caller
 **Depends on**: Phase 2 (test infra ready)
-**Requirements**: EXEC-02, EXEC-03, EXEC-04, EXEC-05
+**Requirements**: ARCH-01, ARCH-02, ARCH-03, ARCH-04, EXEC-02, EXEC-03, EXEC-04, EXEC-05
 **Success Criteria** (what must be TRUE):
-  1. Script executes sl commands via subprocess without deadlock
-  2. Exit code from sl propagates exactly to caller (verified by echo $?)
-  3. stdout from sl appears on caller's stdout in real-time
-  4. stderr from sl appears on caller's stderr in real-time
-  5. Ctrl+C cleanly terminates both script and sl subprocess
+  1. gitsl.py contains only entry point logic, dispatches to command handlers
+  2. common.py contains shared utilities (parsing, subprocess, debug mode)
+  3. Command handlers are in separate files (cmd_*.py pattern)
+  4. Script executes sl commands via subprocess without deadlock
+  5. Exit code from sl propagates exactly to caller (verified by echo $?)
+  6. stdout from sl appears on caller's stdout in real-time
+  7. stderr from sl appears on caller's stderr in real-time
+  8. Ctrl+C cleanly terminates both script and sl subprocess
 **E2E Tests**:
   - Test exit code propagation: run command that fails, verify exit code matches
   - Test stdout passthrough: run `sl status`, verify output appears
