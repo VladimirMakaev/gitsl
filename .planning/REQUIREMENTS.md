@@ -14,22 +14,22 @@
 
 ### Core Execution
 
-- [ ] **EXEC-01**: Script parses argv and extracts git command + arguments
+- [x] **EXEC-01**: Script parses argv and extracts git command + arguments
 - [x] **EXEC-02**: Script executes equivalent Sapling command via subprocess
 - [x] **EXEC-03**: Script propagates Sapling's exit code to caller
 - [x] **EXEC-04**: Script passes through stdout from Sapling to caller
 - [x] **EXEC-05**: Script passes through stderr from Sapling to caller
-- [ ] **EXEC-06**: Debug mode shows command that would run without executing
+- [x] **EXEC-06**: Debug mode shows command that would run without executing
 
 ### E2E Test Infrastructure
 
-- [ ] **TEST-01**: Test framework creates temp git repositories using tempfile
-- [ ] **TEST-02**: Test harness runs real git command and captures stdout, stderr, exit code
-- [ ] **TEST-03**: Test harness runs gitsl shim command and captures stdout, stderr, exit code
-- [ ] **TEST-04**: Exit code comparison asserts git and gitsl return same codes
-- [ ] **TEST-05**: Output comparison supports exact match mode (for porcelain formats)
-- [ ] **TEST-06**: Output comparison supports semantic match mode (for human-readable formats)
-- [ ] **TEST-07**: Test fixtures can set up repos with commits, branches, modified files
+- [x] **TEST-01**: Test framework creates temp git repositories using tempfile
+- [x] **TEST-02**: Test harness runs real git command and captures stdout, stderr, exit code
+- [x] **TEST-03**: Test harness runs gitsl shim command and captures stdout, stderr, exit code
+- [x] **TEST-04**: Exit code comparison asserts git and gitsl return same codes
+- [x] **TEST-05**: Output comparison supports exact match mode (for porcelain formats)
+- [x] **TEST-06**: Output comparison supports semantic match mode (for human-readable formats)
+- [x] **TEST-07**: Test fixtures can set up repos with commits, branches, modified files
 
 ### Command Translation
 
@@ -52,8 +52,8 @@
 
 ### Unsupported Commands
 
-- [ ] **UNSUP-01**: Unsupported commands print original command to stderr
-- [ ] **UNSUP-02**: Unsupported commands exit with code 0
+- [x] **UNSUP-01**: Unsupported commands print original command to stderr
+- [x] **UNSUP-02**: Unsupported commands exit with code 0
 
 ## v2 Requirements
 
@@ -116,8 +116,8 @@
 | FLAG-04 | Phase 7 | Complete |
 | FLAG-05 | Phase 7 | Complete |
 | FLAG-03 | Phase 8 | Complete |
-| UNSUP-01 | Phase 9 | Pending |
-| UNSUP-02 | Phase 9 | Pending |
+| UNSUP-01 | Phase 9 | Complete |
+| UNSUP-02 | Phase 9 | Complete |
 
 **Coverage:**
 - v1 requirements: 32 total (21 original + 7 testing + 4 architecture)
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 8 requirements marked complete (FLAG-03)*
+*Last updated: 2026-01-18 - All v1 requirements complete (32/32)*
