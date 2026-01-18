@@ -61,10 +61,11 @@ Plans:
   6. Test can assert semantic output match (ignoring whitespace, timestamps for human formats)
   7. Test fixtures can create repos with: initial commit, modified files, untracked files, branches
 **E2E Tests**: Self-validating - the infrastructure IS the tests
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 02-01: TBD
+- [ ] 02-01-PLAN.md - Core test infrastructure (helpers, fixtures, conftest)
+- [ ] 02-02-PLAN.md - Harness self-validation tests
 
 ### Phase 3: Execution Pipeline
 **Goal**: Script can execute Sapling commands and faithfully relay results to caller
@@ -205,7 +206,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Script Skeleton | 1/1 | Complete | 2026-01-18 |
-| 2. E2E Test Infrastructure | 0/? | Not started | - |
+| 2. E2E Test Infrastructure | 0/2 | In Progress | - |
 | 3. Execution Pipeline | 0/? | Not started | - |
 | 4. Direct Command Mappings | 0/? | Not started | - |
 | 5. File Operation Commands | 0/? | Not started | - |
@@ -216,4 +217,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-17 - Phase 1 planning complete, 1 plan created*
+*Last updated: 2026-01-18 - Phase 2 planning complete, 2 plans created*
