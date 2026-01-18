@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-01-17)
 
 **Core value:** Git commands used by get-shit-done execute correctly against Sapling repos
-**Current focus:** Phase 3 - Execution Pipeline
+**Current focus:** Phase 3 - Execution Pipeline (COMPLETE)
 
 ## Current Position
 
-Phase: 3 of 9 (Execution Pipeline)
-Plan: 1 of 2 in current phase
-Status: In progress
-Last activity: 2026-01-18 - Completed 03-01-PLAN.md (multi-file architecture)
+Phase: 3 of 9 (Execution Pipeline) - COMPLETE
+Plan: 2 of 2 in current phase
+Status: Phase complete
+Last activity: 2026-01-18 - Completed 03-02-PLAN.md (subprocess execution)
 
-Progress: [███.......] 30%
+Progress: [████......] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4
-- Average duration: 2.5 min
-- Total execution time: 10 min
+- Total plans completed: 5
+- Average duration: 2.4 min
+- Total execution time: 12 min
 
 **By Phase:**
 
@@ -29,10 +29,10 @@ Progress: [███.......] 30%
 |-------|-------|-------|----------|
 | 01-script-skeleton | 1 | 2 min | 2 min |
 | 02-e2e-test-infrastructure | 2 | 6 min | 3 min |
-| 03-execution-pipeline | 1 | 2 min | 2 min |
+| 03-execution-pipeline | 2 | 4 min | 2 min |
 
 **Recent Trend:**
-- Last 5 plans: 2 min, 4 min, 2 min, 2 min
+- Last 5 plans: 2 min, 4 min, 2 min, 2 min, 2 min
 - Trend: stable
 
 *Updated after each plan completion*
@@ -54,7 +54,8 @@ Recent decisions affecting current work:
 - **.gitignore:** Added standard Python gitignore entries
 - **Path.resolve() for symlink handling:** Use Path.resolve() when comparing paths on macOS
 - **Handler interface:** handle(ParsedCommand) -> int for all command handlers in cmd_*.py
-- **run_sl stub:** Returns 0 and prints message, ready for Plan 02 subprocess implementation
+- **subprocess.run() defaults:** No PIPE, no capture_output - real-time I/O passthrough
+- **sys.executable in tests:** Use sys.executable for portable Python invocation
 
 ### Pending Todos
 
@@ -66,6 +67,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-01-18 03:16 UTC
-Stopped at: Completed 03-01-PLAN.md
+Last session: 2026-01-18 03:21 UTC
+Stopped at: Completed 03-02-PLAN.md (Phase 3 complete)
 Resume file: None
