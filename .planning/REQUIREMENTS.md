@@ -7,18 +7,18 @@
 
 ### Architecture
 
-- [ ] **ARCH-01**: Entry point (gitsl.py) contains only argument dispatch, no command logic
-- [ ] **ARCH-02**: Shared utilities (common.py) contain parsing, subprocess, debug mode functions
-- [ ] **ARCH-03**: Each command has its own file (cmd_status.py, cmd_commit.py, etc.)
-- [ ] **ARCH-04**: Command files export a handler function that receives parsed args
+- [x] **ARCH-01**: Entry point (gitsl.py) contains only argument dispatch, no command logic
+- [x] **ARCH-02**: Shared utilities (common.py) contain parsing, subprocess, debug mode functions
+- [x] **ARCH-03**: Each command has its own file (cmd_status.py, cmd_commit.py, etc.)
+- [x] **ARCH-04**: Command files export a handler function that receives parsed args
 
 ### Core Execution
 
 - [ ] **EXEC-01**: Script parses argv and extracts git command + arguments
-- [ ] **EXEC-02**: Script executes equivalent Sapling command via subprocess
-- [ ] **EXEC-03**: Script propagates Sapling's exit code to caller
-- [ ] **EXEC-04**: Script passes through stdout from Sapling to caller
-- [ ] **EXEC-05**: Script passes through stderr from Sapling to caller
+- [x] **EXEC-02**: Script executes equivalent Sapling command via subprocess
+- [x] **EXEC-03**: Script propagates Sapling's exit code to caller
+- [x] **EXEC-04**: Script passes through stdout from Sapling to caller
+- [x] **EXEC-05**: Script passes through stderr from Sapling to caller
 - [ ] **EXEC-06**: Debug mode shows command that would run without executing
 
 ### E2E Test Infrastructure
@@ -95,14 +95,14 @@
 | TEST-05 | Phase 2 | Complete |
 | TEST-06 | Phase 2 | Complete |
 | TEST-07 | Phase 2 | Complete |
-| ARCH-01 | Phase 3 | Pending |
-| ARCH-02 | Phase 3 | Pending |
-| ARCH-03 | Phase 3 | Pending |
-| ARCH-04 | Phase 3 | Pending |
-| EXEC-02 | Phase 3 | Pending |
-| EXEC-03 | Phase 3 | Pending |
-| EXEC-04 | Phase 3 | Pending |
-| EXEC-05 | Phase 3 | Pending |
+| ARCH-01 | Phase 3 | Complete |
+| ARCH-02 | Phase 3 | Complete |
+| ARCH-03 | Phase 3 | Complete |
+| ARCH-04 | Phase 3 | Complete |
+| EXEC-02 | Phase 3 | Complete |
+| EXEC-03 | Phase 3 | Complete |
+| EXEC-04 | Phase 3 | Complete |
+| EXEC-05 | Phase 3 | Complete |
 | CMD-01 | Phase 4 | Pending |
 | CMD-04 | Phase 4 | Pending |
 | CMD-05 | Phase 4 | Pending |
@@ -126,4 +126,4 @@
 
 ---
 *Requirements defined: 2026-01-17*
-*Last updated: 2026-01-18 - Added multi-file architecture requirements (ARCH-01 through ARCH-04)*
+*Last updated: 2026-01-18 - Phase 3 requirements marked complete (ARCH-01-04, EXEC-02-05)*
