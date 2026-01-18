@@ -2,6 +2,7 @@
 Shared test fixtures for gitsl E2E testing.
 """
 
+import sys
 from pathlib import Path
 from typing import List, Optional
 
@@ -46,7 +47,8 @@ def run_gitsl(args: List[str], cwd: Path, env: Optional[dict] = None) -> Command
     """
     # Get path to gitsl.py relative to tests directory
     gitsl_path = Path(__file__).parent.parent / "gitsl.py"
-    return run_command(["python", str(gitsl_path)] + args, cwd=cwd, env=env)
+    # Use sys.executable to run with same Python interpreter as tests
+    return run_command([sys.executable, str(gitsl_path)] + args, cwd=cwd, env=env)
 
 
 # ============================================================
