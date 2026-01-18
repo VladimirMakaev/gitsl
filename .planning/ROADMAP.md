@@ -178,10 +178,10 @@ Plans:
   - Test with modified tracked file + untracked file: only tracked staged
   - Test with deleted tracked file: marked for removal
   - Compare `git status --porcelain` before/after between git and gitsl
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 08-01: TBD
+- [ ] 08-01-PLAN.md - Implement -u/--update flag with deleted file handling
 
 ### Phase 9: Unsupported Command Handling
 **Goal**: Gracefully handle commands we cannot translate
@@ -214,9 +214,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. File Operation Commands | 1/1 | Complete | 2026-01-18 |
 | 6. Status Output Emulation | 1/1 | Complete | 2026-01-18 |
 | 7. Log Output Emulation | 1/1 | Complete | 2026-01-18 |
-| 8. Add -u Emulation | 0/? | Not started | - |
+| 8. Add -u Emulation | 0/1 | Planned | - |
 | 9. Unsupported Command Handling | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 7 complete (log output emulation)*
+*Last updated: 2026-01-18 - Phase 8 planned (add -u emulation)*
