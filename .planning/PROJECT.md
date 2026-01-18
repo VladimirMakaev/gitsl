@@ -13,29 +13,36 @@ A Python package that acts as a git CLI shim, intercepting git commands and tran
 
 Git commands used by get-shit-done execute correctly against Sapling repos without the calling tool knowing the difference.
 
+## Current State
+
+**Shipped:** v1.0 MVP (2026-01-18)
+**Lines of Code:** 1,984 Python
+**Tests:** 91 passing
+**Requirements:** 32/32 complete
+
 ## Requirements
 
 ### Validated
 
-(None yet — ship to validate)
+- ✓ Script intercepts git commands from argv — v1.0
+- ✓ `git status` translates to `sl status` — v1.0
+- ✓ `git status --short` emulates git's short format from sl output — v1.0
+- ✓ `git status --porcelain` emulates git's porcelain format exactly — v1.0
+- ✓ `git add <files>` translates to `sl add <files>` — v1.0
+- ✓ `git add -u` emulates by finding modified tracked files and adding them — v1.0
+- ✓ `git add -A` translates to `sl addremove` — v1.0
+- ✓ `git commit -m "msg"` translates to `sl commit -m "msg"` — v1.0
+- ✓ `git log` translates to `sl log` — v1.0
+- ✓ `git log -N` translates to `sl log -l N` — v1.0
+- ✓ `git log --oneline` emulates git's oneline format from sl output — v1.0
+- ✓ `git diff` translates to `sl diff` (pass-through) — v1.0
+- ✓ `git rev-parse --short HEAD` translates to `sl whereami` — v1.0
+- ✓ `git init` translates to `sl init` — v1.0
+- ✓ Unsupported commands print original command to stderr and exit 0 — v1.0
 
 ### Active
 
-- [ ] Script intercepts git commands from argv
-- [ ] `git status` translates to `sl status`
-- [ ] `git status --short` emulates git's short format from sl output
-- [ ] `git status --porcelain` emulates git's porcelain format exactly
-- [ ] `git add <files>` translates to `sl add <files>`
-- [ ] `git add -u` emulates by finding modified tracked files and adding them
-- [ ] `git add -A` translates to `sl addremove`
-- [ ] `git commit -m "msg"` translates to `sl commit -m "msg"`
-- [ ] `git log` translates to `sl log`
-- [ ] `git log -N` translates to `sl log -l N`
-- [ ] `git log --oneline` emulates git's oneline format from sl output
-- [ ] `git diff` translates to `sl diff` (pass-through)
-- [ ] `git rev-parse --short HEAD` translates to `sl whereami`
-- [ ] `git init` translates to `sl init`
-- [ ] Unsupported commands print original command to stderr and exit 0
+(None — ready for next milestone)
 
 ### Out of Scope
 
@@ -88,9 +95,12 @@ Git commands used by get-shit-done execute correctly against Sapling repos witho
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
 | Multi-file architecture | Easier to maintain, one file per command | Adopted 2026-01-18 |
-| Exit 0 on unsupported commands | Prevent calling CLI from failing | — Pending |
-| Emulate porcelain exactly | GSD may parse this output | — Pending |
-| Pass-through diff output | User confirmed no parsing of diff | — Pending |
+| Exit 0 on unsupported commands | Prevent calling CLI from failing | ✓ Good |
+| Emulate porcelain exactly | GSD may parse this output | ✓ Good |
+| Pass-through diff output | User confirmed no parsing of diff | ✓ Good |
+| Manual argv parsing | argparse doesn't handle git-style subcommands well | ✓ Good |
+| GITSL_DEBUG via env var | Avoid consuming CLI args | ✓ Good |
+| subprocess.run() no PIPE | Real-time I/O passthrough | ✓ Good |
 
 ---
-*Last updated: 2026-01-17 after initialization*
+*Last updated: 2026-01-18 after v1.0 milestone*
