@@ -131,3 +131,43 @@ def git_repo_with_branch(git_repo_with_commit: Path) -> Path:
     """
     run_git(["branch", "feature"], cwd=git_repo_with_commit)
     return git_repo_with_commit
+
+
+# ============================================================
+# SAPLING REPO FIXTURES
+# ============================================================
+
+
+@pytest.fixture
+def sl_repo(tmp_path: Path) -> Path:
+    """
+    Create a temporary Sapling repository.
+
+    Uses sl init to create a proper .hg/ repo.
+    Configured with test user for commits.
+
+    Returns:
+        Path to the initialized sl repository
+    """
+    run_command(["sl", "init"], cwd=tmp_path)
+    run_command(["sl", "config", "--local", "ui.username", "Test User <test@test.com>"], cwd=tmp_path)
+    return tmp_path
+
+
+@pytest.fixture
+def sl_repo_with_commit(sl_repo: Path) -> Path:
+    """
+    Sapling repo with initial commit.
+
+    Creates README.md and commits it.
+
+    Returns:
+        Path to the sl repository with one commit
+    """
+    readme = sl_repo / "README.md"
+    readme.write_text("# Test Repository\n")
+
+    run_command(["sl", "add", "README.md"], cwd=sl_repo)
+    run_command(["sl", "commit", "-m", "Initial commit"], cwd=sl_repo)
+
+    return sl_repo
