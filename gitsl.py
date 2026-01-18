@@ -6,6 +6,7 @@ Translates git commands to their Sapling (sl) equivalents.
 Set GITSL_DEBUG=1 to see what would be executed without running.
 """
 
+import shlex
 import sys
 from typing import List
 
@@ -77,8 +78,13 @@ def main(argv: List[str] = None) -> int:
     if parsed.command == "commit":
         return cmd_commit.handle(parsed)
 
-    # Fallback for unimplemented commands
-    print(f"[STUB] Would process: git {parsed.command}", file=sys.stderr)
+    # Unsupported command handling (UNSUP-01, UNSUP-02)
+    if parsed.args:
+        original_command = f"git {parsed.command} {shlex.join(parsed.args)}"
+    else:
+        original_command = f"git {parsed.command}"
+
+    print(f"gitsl: unsupported command: {original_command}", file=sys.stderr)
     return 0
 
 
