@@ -11,6 +11,10 @@ from typing import List
 
 from common import parse_argv, is_debug_mode, print_debug_info, VERSION
 import cmd_status
+import cmd_log
+import cmd_diff
+import cmd_init
+import cmd_rev_parse
 
 
 def main(argv: List[str] = None) -> int:
@@ -52,6 +56,18 @@ def main(argv: List[str] = None) -> int:
     # Dispatch to command handlers
     if parsed.command == "status":
         return cmd_status.handle(parsed)
+
+    if parsed.command == "log":
+        return cmd_log.handle(parsed)
+
+    if parsed.command == "diff":
+        return cmd_diff.handle(parsed)
+
+    if parsed.command == "init":
+        return cmd_init.handle(parsed)
+
+    if parsed.command == "rev-parse":
+        return cmd_rev_parse.handle(parsed)
 
     # Fallback for unimplemented commands
     print(f"[STUB] Would process: git {parsed.command}", file=sys.stderr)
