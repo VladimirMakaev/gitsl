@@ -127,12 +127,13 @@ class TestGitRepoFixture:
 
     def test_is_temporary(self, git_repo):
         """git_repo path is under system temp dir (or not in project)."""
-        project_dir = Path(__file__).parent.parent
+        project_dir = Path(__file__).parent.parent.resolve()
+        git_repo_resolved = git_repo.resolve()
         # The git_repo should not be under our project directory
-        assert not str(git_repo).startswith(str(project_dir))
-        # It should be under a temp directory
-        temp_dir = tempfile.gettempdir()
-        assert str(git_repo).startswith(temp_dir)
+        assert not str(git_repo_resolved).startswith(str(project_dir))
+        # It should be under a temp directory (resolve symlinks for macOS /var -> /private/var)
+        temp_dir = Path(tempfile.gettempdir()).resolve()
+        assert str(git_repo_resolved).startswith(str(temp_dir))
 
 
 # ============================================================
