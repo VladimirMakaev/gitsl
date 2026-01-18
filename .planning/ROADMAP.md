@@ -107,10 +107,11 @@ Plans:
   - Test `git diff` with modifications
   - Test `git init` creates working repo
   - Test `git rev-parse --short HEAD` returns valid hash
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 04-01: TBD
+- [ ] 04-01-PLAN.md - Passthrough commands (log, diff, init) with E2E tests
+- [ ] 04-02-PLAN.md - rev-parse --short HEAD handler with output truncation
 
 ### Phase 5: File Operation Commands
 **Goal**: File staging and commit commands work correctly
@@ -209,7 +210,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 1. Script Skeleton | 1/1 | Complete | 2026-01-18 |
 | 2. E2E Test Infrastructure | 2/2 | Complete | 2026-01-18 |
 | 3. Execution Pipeline | 2/2 | Complete | 2026-01-18 |
-| 4. Direct Command Mappings | 0/? | Not started | - |
+| 4. Direct Command Mappings | 0/2 | Ready | - |
 | 5. File Operation Commands | 0/? | Not started | - |
 | 6. Status Output Emulation | 0/? | Not started | - |
 | 7. Log Output Emulation | 0/? | Not started | - |
@@ -218,4 +219,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 3 complete (execution pipeline verified)*
+*Last updated: 2026-01-18 - Phase 4 planned (2 plans in 1 wave)*
