@@ -29,7 +29,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 5: File Operation Commands** - Add, commit, and addremove commands
 - [x] **Phase 6: Status Output Emulation** - Porcelain and short format matching
 - [x] **Phase 7: Log Output Emulation** - Oneline format and -N flag translation
-- [ ] **Phase 8: Add -u Emulation** - Finding and staging modified tracked files
+- [x] **Phase 8: Add -u Emulation** - Finding and staging modified tracked files
 - [ ] **Phase 9: Unsupported Command Handling** - Graceful failure with informative messages
 
 ## Phase Details
@@ -181,7 +181,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 08-01-PLAN.md - Implement -u/--update flag with deleted file handling
+- [x] 08-01-PLAN.md - Implement -u/--update flag with deleted file handling
 
 ### Phase 9: Unsupported Command Handling
 **Goal**: Gracefully handle commands we cannot translate
@@ -214,9 +214,9 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | 5. File Operation Commands | 1/1 | Complete | 2026-01-18 |
 | 6. Status Output Emulation | 1/1 | Complete | 2026-01-18 |
 | 7. Log Output Emulation | 1/1 | Complete | 2026-01-18 |
-| 8. Add -u Emulation | 0/1 | Planned | - |
+| 8. Add -u Emulation | 1/1 | Complete | 2026-01-18 |
 | 9. Unsupported Command Handling | 0/? | Not started | - |
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 8 planned (add -u emulation)*
+*Last updated: 2026-01-18 - Phase 8 complete (add -u emulation)*
