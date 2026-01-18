@@ -23,7 +23,7 @@ This gives us confidence that gitsl behaves identically to git for all supported
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [x] **Phase 1: Script Skeleton** - Argument parsing and debug mode
-- [ ] **Phase 2: E2E Test Infrastructure** - Golden-master testing framework
+- [x] **Phase 2: E2E Test Infrastructure** - Golden-master testing framework
 - [ ] **Phase 3: Execution Pipeline** - Subprocess handling with proper I/O and exit codes
 - [ ] **Phase 4: Direct Command Mappings** - Simple 1:1 git-to-sl translations
 - [ ] **Phase 5: File Operation Commands** - Add, commit, and addremove commands
@@ -64,8 +64,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 02-01-PLAN.md - Core test infrastructure (helpers, fixtures, conftest)
-- [ ] 02-02-PLAN.md - Harness self-validation tests
+- [x] 02-01-PLAN.md - Core test infrastructure (helpers, fixtures, conftest)
+- [x] 02-02-PLAN.md - Harness self-validation tests
 
 ### Phase 3: Execution Pipeline
 **Goal**: Script can execute Sapling commands and faithfully relay results to caller
@@ -206,7 +206,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Script Skeleton | 1/1 | Complete | 2026-01-18 |
-| 2. E2E Test Infrastructure | 0/2 | In Progress | - |
+| 2. E2E Test Infrastructure | 2/2 | Complete | 2026-01-18 |
 | 3. Execution Pipeline | 0/? | Not started | - |
 | 4. Direct Command Mappings | 0/? | Not started | - |
 | 5. File Operation Commands | 0/? | Not started | - |
@@ -217,4 +217,4 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
 
 ---
 *Roadmap created: 2026-01-17*
-*Last updated: 2026-01-18 - Phase 2 planning complete, 2 plans created*
+*Last updated: 2026-01-18 - Phase 2 complete, all 7 TEST requirements verified*
