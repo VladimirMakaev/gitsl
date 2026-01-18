@@ -8,6 +8,7 @@ and subprocess execution.
 
 import os
 import shlex
+import subprocess
 import sys
 from dataclasses import dataclass
 from typing import List, Optional
@@ -80,6 +81,21 @@ def print_debug_info(parsed: ParsedCommand) -> None:
 # ============================================================
 
 def run_sl(args: List[str]) -> int:
-    """Execute sl command with I/O passthrough. Stub for Plan 02."""
-    print(f"[STUB] Would run: sl {shlex.join(args)}", file=sys.stderr)
-    return 0
+    """
+    Execute sl command with I/O passthrough.
+
+    Args:
+        args: Arguments to pass to sl (command and flags)
+
+    Returns:
+        Exit code from sl process
+
+    Notes:
+        - stdin=None, stdout=None, stderr=None (defaults) mean child
+          inherits parent's file descriptors
+        - stdout appears on caller's stdout in real-time
+        - stderr appears on caller's stderr in real-time
+        - Child receives SIGINT directly (same process group)
+    """
+    result = subprocess.run(["sl"] + args)
+    return result.returncode
