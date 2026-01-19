@@ -143,3 +143,15 @@ jobs:
         with:
           name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
           path: test-results.xml
+
+      - name: Display test failures (Windows debug)
+        if: failure() && runner.os == 'Windows'
+        shell: bash
+        run: |
+          echo "=== Test Results ==="
+          cat test-results.xml || echo "No test results file"
+          echo ""
+          echo "=== Environment ==="
+          which sl
+          sl --version
+          echo "PATH: $PATH"
