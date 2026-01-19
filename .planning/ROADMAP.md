@@ -108,8 +108,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Create CI workflow with cross-platform test matrix and Sapling installation
-- [ ] 13-02-PLAN.md — Create release workflow for PyPI trusted publishing
+- [x] 13-01-PLAN.md — Create CI workflow with cross-platform test matrix and Sapling installation
+- [x] 13-02-PLAN.md — Create release workflow for PyPI trusted publishing
 
 #### Phase 14: Documentation
 **Goal**: Production-quality README with installation, usage, and command matrix
@@ -145,5 +145,5 @@ Phases execute in numeric order: 10 → 11 → 12 → 13 → 14
 | 10. Cleanup | v1.1 | 1/1 | Complete | 2026-01-19 |
 | 11. Testing | v1.1 | 2/2 | Complete | 2026-01-19 |
 | 12. Packaging | v1.1 | 1/1 | Complete | 2026-01-19 |
-| 13. CI/CD | v1.1 | 0/2 | Planned | - |
+| 13. CI/CD | v1.1 | 2/2 | Complete | 2026-01-19 |
 | 14. Documentation | v1.1 | 0/? | Not started | - |

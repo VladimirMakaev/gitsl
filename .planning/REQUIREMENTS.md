@@ -31,11 +31,11 @@ Requirements for v1.1 Polish & Documentation release. Each maps to roadmap phase
 
 ### CI/CD
 
-- [ ] **CI-01**: GitHub Actions workflow runs tests on push/PR
-- [ ] **CI-02**: Test matrix covers MacOS, Linux, Windows
-- [ ] **CI-03**: CI installs Sapling on each platform
-- [ ] **CI-04**: Release workflow publishes to PyPI on version tag
-- [ ] **CI-05**: Trusted publishing configured (no API tokens in secrets)
+- [x] **CI-01**: GitHub Actions workflow runs tests on push/PR
+- [x] **CI-02**: Test matrix covers MacOS, Linux, Windows
+- [x] **CI-03**: CI installs Sapling on each platform
+- [x] **CI-04**: Release workflow publishes to PyPI on version tag
+- [x] **CI-05**: Trusted publishing configured (no API tokens in secrets)
 
 ### Documentation
 
@@ -93,11 +93,11 @@ Which phases cover which requirements. Updated during roadmap creation.
 | PACK-02 | Phase 12 | Pending (Phase 13) |
 | PACK-03 | Phase 12 | Complete |
 | PACK-04 | Phase 12 | Complete |
-| CI-01 | Phase 13 | Pending |
-| CI-02 | Phase 13 | Pending |
-| CI-03 | Phase 13 | Pending |
-| CI-04 | Phase 13 | Pending |
-| CI-05 | Phase 13 | Pending |
+| CI-01 | Phase 13 | Complete |
+| CI-02 | Phase 13 | Complete |
+| CI-03 | Phase 13 | Complete |
+| CI-04 | Phase 13 | Complete |
+| CI-05 | Phase 13 | Complete |
 | DOC-01 | Phase 14 | Pending |
 | DOC-02 | Phase 14 | Pending |
 | DOC-03 | Phase 14 | Pending |
