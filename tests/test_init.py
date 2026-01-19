@@ -3,7 +3,7 @@ E2E tests for git init command (CMD-06).
 
 These tests verify:
 - git init translates to sl init
-- Creates a Sapling repository (.hg directory)
+- Creates a Sapling repository (.sl or .hg directory depending on Sapling version)
 - Exit codes propagate correctly
 """
 
@@ -23,6 +23,25 @@ pytestmark = [
 ]
 
 
+def get_sapling_repo_dir(path: Path) -> Path | None:
+    """
+    Find the Sapling repository directory.
+
+    Sapling can create either .sl (OSS versions with git-compatible storage)
+    or .hg (traditional Mercurial-style) depending on version and install method.
+
+    Returns:
+        Path to .sl or .hg if found, None otherwise
+    """
+    sl_dir = path / ".sl"
+    if sl_dir.exists():
+        return sl_dir
+    hg_dir = path / ".hg"
+    if hg_dir.exists():
+        return hg_dir
+    return None
+
+
 class TestInitBasic:
     """Basic init command functionality."""
 
@@ -32,9 +51,9 @@ class TestInitBasic:
         result = run_gitsl(["init"], cwd=tmp_path)
         assert result.exit_code == 0
 
-    def test_init_creates_hg_directory(self, tmp_path: Path):
-        """sl init creates .hg directory."""
+    def test_init_creates_repo_directory(self, tmp_path: Path):
+        """sl init creates .sl or .hg directory."""
         run_gitsl(["init"], cwd=tmp_path)
-        hg_dir = tmp_path / ".hg"
-        assert hg_dir.exists()
-        assert hg_dir.is_dir()
+        repo_dir = get_sapling_repo_dir(tmp_path)
+        assert repo_dir is not None, f"Expected .sl or .hg directory in {tmp_path}, found: {list(tmp_path.iterdir())}"
+        assert repo_dir.is_dir()
