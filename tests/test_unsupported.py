@@ -2,6 +2,7 @@
 E2E tests for unsupported command handling (UNSUP-01, UNSUP-02).
 """
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -9,7 +10,11 @@ import pytest
 from conftest import run_gitsl
 
 
-pytestmark = pytest.mark.unsupported
+sl_available = shutil.which("sl") is not None
+pytestmark = [
+    pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed"),
+    pytest.mark.unsupported,
+]
 
 
 class TestUnsupportedCommands:

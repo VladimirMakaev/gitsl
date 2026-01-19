@@ -138,15 +138,63 @@ jobs:
           ls -la tests/
 
       - name: Run tests
+        shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          echo "=== Creating minimal test ==="
-          cat > /tmp/test_minimal.py << 'EOF'
-          def test_one():
-              assert 1 == 1
-          EOF
-          echo "=== Running minimal test ==="
-          pytest /tmp/test_minimal.py -v
-          echo "=== Minimal test passed, running actual tests ==="
-          export PYTHONPATH="${{ github.workspace }}/tests"
-          pytest tests/test_init.py -v --tb=long
+          echo "=== Environment Info ==="
+          echo "RUNNER_OS: $RUNNER_OS"
+          echo "PWD: $(pwd)"
+          echo "Python: $(python --version)"
+          echo "Pytest: $(pytest --version)"
+
+          echo "=== Verifying sl is accessible ==="
+          # On Windows, sl.exe is in C:\sapling which should be in PATH
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            echo "Windows detected, checking sl.exe..."
+            ls -la /c/sapling/ 2>/dev/null || echo "C:\sapling not found or empty"
+            /c/sapling/sl.exe --version 2>&1 || echo "sl.exe not working"
+            # Also check if shutil.which finds it
+            python -c "import shutil; print('shutil.which sl:', shutil.which('sl'))"
+          else
+            which sl && sl --version || echo "sl command not found in PATH"
+          fi
+
+          echo "=== Checking pytest.ini ==="
+          cat pytest.ini
+
+          echo "=== Testing imports before pytest ==="
+          python -c "
+import sys
+print('sys.path:', sys.path[:5])
+sys.path.insert(0, 'tests')
+print('After adding tests to path:', sys.path[:5])
+
+# Test the import chain
+try:
+    from helpers.commands import CommandResult, run_command
+    print('helpers.commands imported OK')
+except Exception as e:
+    print('helpers.commands FAILED:', e)
+
+try:
+    import conftest
+    print('conftest imported OK')
+except Exception as e:
+    print('conftest FAILED:', e)
+
+try:
+    from conftest import run_gitsl
+    print('run_gitsl imported OK')
+except Exception as e:
+    print('run_gitsl import FAILED:', e)
+
+import shutil
+sl = shutil.which('sl')
+print('shutil.which(sl):', sl)
+"
+
+          echo "=== Running actual tests ==="
+          pytest tests/test_init.py -v --tb=long 2>&1 || {
+            echo "=== TEST FAILED ==="
+            exit 1
+          }
