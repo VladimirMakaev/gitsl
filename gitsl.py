@@ -24,6 +24,9 @@ import cmd_rm
 import cmd_mv
 import cmd_clone
 import cmd_grep
+import cmd_clean
+import cmd_config
+import cmd_switch
 
 
 def main(argv: List[str] = None) -> int:
@@ -101,6 +104,15 @@ def main(argv: List[str] = None) -> int:
 
     if parsed.command == "grep":
         return cmd_grep.handle(parsed)
+
+    if parsed.command == "clean":
+        return cmd_clean.handle(parsed)
+
+    if parsed.command == "config":
+        return cmd_config.handle(parsed)
+
+    if parsed.command == "switch":
+        return cmd_switch.handle(parsed)
 
     # Unsupported command handling (UNSUP-01, UNSUP-02)
     if parsed.args:
