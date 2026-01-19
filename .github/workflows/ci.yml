@@ -163,35 +163,9 @@ jobs:
           cat pytest.ini
 
           echo "=== Testing imports before pytest ==="
-          python -c "
-import sys
-print('sys.path:', sys.path[:5])
-sys.path.insert(0, 'tests')
-print('After adding tests to path:', sys.path[:5])
-
-# Test the import chain
-try:
-    from helpers.commands import CommandResult, run_command
-    print('helpers.commands imported OK')
-except Exception as e:
-    print('helpers.commands FAILED:', e)
-
-try:
-    import conftest
-    print('conftest imported OK')
-except Exception as e:
-    print('conftest FAILED:', e)
-
-try:
-    from conftest import run_gitsl
-    print('run_gitsl imported OK')
-except Exception as e:
-    print('run_gitsl import FAILED:', e)
-
-import shutil
-sl = shutil.which('sl')
-print('shutil.which(sl):', sl)
-"
+          python -c "import sys; print('sys.path:', sys.path[:5]); sys.path.insert(0, 'tests'); import shutil; print('shutil.which sl:', shutil.which('sl'))"
+          python -c "import sys; sys.path.insert(0, 'tests'); from helpers.commands import run_command; print('helpers.commands OK')" || echo "helpers.commands FAILED"
+          python -c "import sys; sys.path.insert(0, 'tests'); from conftest import run_gitsl; print('conftest OK')" || echo "conftest FAILED"
 
           echo "=== Running actual tests ==="
           pytest tests/test_init.py -v --tb=long 2>&1 || {
