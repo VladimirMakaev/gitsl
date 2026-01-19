@@ -131,8 +131,16 @@ jobs:
           python --version
           python -c "import sys; print(sys.executable)"
           # Run tests (use --no-parallel on Windows due to potential issues)
+          # Add --tb=short for shorter traceback on failures
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            python test --report test-results.xml -v --no-parallel
+            python test --report test-results.xml -v --no-parallel --tb=short 2>&1 | tee test-output.log || true
+            TEST_EXIT=$?
+            echo "=== Test Exit Code: $TEST_EXIT ==="
+            if [ $TEST_EXIT -ne 0 ]; then
+              echo "=== Last 100 lines of test output ==="
+              tail -100 test-output.log
+            fi
+            exit $TEST_EXIT
           else
             python test --report test-results.xml -v
           fi
