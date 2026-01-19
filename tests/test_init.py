@@ -10,6 +10,8 @@ These tests verify:
 import shutil
 from pathlib import Path
 
+from typing import Optional
+
 import pytest
 
 from conftest import run_gitsl
@@ -23,7 +25,7 @@ pytestmark = [
 ]
 
 
-def get_sapling_repo_dir(path: Path) -> Path | None:
+def get_sapling_repo_dir(path: Path) -> Optional[Path]:
     """
     Find the Sapling repository directory.
 
