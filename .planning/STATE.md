@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-01-19)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** Phase 11 - Testing
+**Current focus:** Phase 12 - Packaging
 
 ## Current Position
 
-Phase: 11 of 14 (Testing)
-Plan: 1 of 2 complete
-Status: In progress
-Last activity: 2026-01-19 - Completed 11-01-PLAN.md
+Phase: 12 of 14 (Packaging)
+Plan: 0 of ? complete
+Status: Ready to start
+Last activity: 2026-01-19 - Completed 11-02-PLAN.md
 
-Progress: [###_______] 30% (v1.1)
+Progress: [####______] 40% (v1.1)
 
 ## Milestones
 
@@ -24,16 +24,16 @@ Progress: [###_______] 30% (v1.1)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15 (13 v1.0 + 2 v1.1)
-- v1.1 plans completed: 2
-- v1.1 execution time: 10min
+- Total plans completed: 16 (13 v1.0 + 3 v1.1)
+- v1.1 plans completed: 3
+- v1.1 execution time: 18min
 
 **By Phase (v1.1):**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 10. Cleanup | 1/1 | 5min | 5min |
-| 11. Testing | 1/2 | 5min | 5min |
+| 11. Testing | 2/2 | 13min | 6.5min |
 | 12. Packaging | 0/? | - | - |
 | 13. CI/CD | 0/? | - | - |
 | 14. Documentation | 0/? | - | - |
@@ -62,5 +62,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-19
-Stopped at: Completed 11-01-PLAN.md (test runner and markers)
-Resume with: Execute 11-02-PLAN.md (coverage)
+Stopped at: Completed 11-02-PLAN.md (edge cases and error conditions)
+Resume with: Execute 12-01-PLAN.md (packaging)
