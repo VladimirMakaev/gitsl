@@ -112,6 +112,12 @@ Plans:
 
 **Dependencies**: Phase 15 (establishes handler pattern rhythm)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 16-01-PLAN.md - Create 3 command handlers (clean, config, switch) with flag translation
+- [ ] 16-02-PLAN.md - E2E tests for all 8 requirements
+
 **Requirements**:
 - CLEAN-01, CLEAN-02, CLEAN-03 (git clean)
 - CONFIG-01, CONFIG-02, CONFIG-03 (git config)
@@ -211,7 +217,7 @@ Phases execute in numeric order.
 | 13. CI/CD | v1.1 | 2/2 | Complete | 2026-01-19 |
 | 14. Documentation | v1.1 | 1/1 | Complete | 2026-01-19 |
 | 15. Direct Pass-through | v1.2 | 2/2 | Complete | 2026-01-19 |
-| 16. Flag Translation | v1.2 | 0/? | Pending | - |
+| 16. Flag Translation | v1.2 | 0/2 | Planned | - |
 | 17. Branch and Restore | v1.2 | 0/? | Pending | - |
 | 18. Stash Operations | v1.2 | 0/? | Pending | - |
 | 19. Checkout Command | v1.2 | 0/? | Pending | - |
