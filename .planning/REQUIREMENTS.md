@@ -9,8 +9,8 @@ Requirements for v1.1 Polish & Documentation release. Each maps to roadmap phase
 
 ### Cleanup
 
-- [ ] **CLEAN-01**: Remove external tool references from codebase
-- [ ] **CLEAN-02**: Remove external tool references from comments/docs
+- [x] **CLEAN-01**: Remove external tool references from codebase
+- [x] **CLEAN-02**: Remove external tool references from comments/docs
 
 ### Testing
 
