@@ -141,40 +141,61 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
+          set +e  # Don't exit on first error - we want to capture all output
+
           echo "=== Environment Info ===" | tee test_output.log
           echo "RUNNER_OS: $RUNNER_OS" | tee -a test_output.log
           echo "PWD: $(pwd)" | tee -a test_output.log
-          echo "Python: $(python --version)" | tee -a test_output.log
-          echo "Pytest: $(pytest --version)" | tee -a test_output.log
+          echo "Python: $(python --version 2>&1)" | tee -a test_output.log
+          echo "Pytest: $(pytest --version 2>&1)" | tee -a test_output.log
+          echo "PATH: $PATH" | tee -a test_output.log
 
           echo "=== Verifying sl is accessible ===" | tee -a test_output.log
           # On Windows, sl.exe is in C:\sapling which should be in PATH
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             echo "Windows detected, checking sl.exe..." | tee -a test_output.log
-            ls -la /c/sapling/ 2>&1 | tee -a test_output.log || echo "C:\sapling not found or empty" | tee -a test_output.log
-            /c/sapling/sl.exe --version 2>&1 | tee -a test_output.log || echo "sl.exe not working" | tee -a test_output.log
-            python -c "import shutil; print('shutil.which sl:', shutil.which('sl'))" | tee -a test_output.log
+            ls -la /c/sapling/ 2>&1 | tee -a test_output.log
+            /c/sapling/sl.exe --version 2>&1 | tee -a test_output.log
+            python -c "import shutil; print('shutil.which sl:', shutil.which('sl'))" 2>&1 | tee -a test_output.log
           else
-            which sl 2>&1 | tee -a test_output.log && sl --version 2>&1 | tee -a test_output.log || echo "sl command not found in PATH" | tee -a test_output.log
+            echo "which sl:" | tee -a test_output.log
+            which sl 2>&1 | tee -a test_output.log
+            echo "sl --version:" | tee -a test_output.log
+            sl --version 2>&1 | tee -a test_output.log
           fi
 
           echo "=== Testing sl init directly ===" | tee -a test_output.log
-          mkdir -p /tmp/test_sl_init
-          cd /tmp/test_sl_init && sl init . 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
-          ls -la /tmp/test_sl_init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          TEST_DIR="/tmp/test_sl_init_$$"
+          mkdir -p "$TEST_DIR"
+          echo "Created test dir: $TEST_DIR" | tee -a test_output.log
+          cd "$TEST_DIR"
+          echo "Running: sl init ." | tee -a test_output.log
+          sl init . 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          SL_EXIT=$?
+          echo "sl init exit code: $SL_EXIT" | tee -a $GITHUB_WORKSPACE/test_output.log
+          echo "Directory contents after sl init:" | tee -a $GITHUB_WORKSPACE/test_output.log
+          ls -la 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
           cd $GITHUB_WORKSPACE
 
           echo "=== Testing gitsl.py directly ===" | tee -a test_output.log
-          mkdir -p /tmp/test_gitsl_init
-          python gitsl.py init 2>&1 --help || true | tee -a test_output.log
-          cd /tmp/test_gitsl_init && python $GITHUB_WORKSPACE/gitsl.py init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
-          ls -la /tmp/test_gitsl_init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          GITSL_DIR="/tmp/test_gitsl_init_$$"
+          mkdir -p "$GITSL_DIR"
+          echo "Created gitsl test dir: $GITSL_DIR" | tee -a test_output.log
+          cd "$GITSL_DIR"
+          echo "Running: python $GITHUB_WORKSPACE/gitsl.py init" | tee -a $GITHUB_WORKSPACE/test_output.log
+          python $GITHUB_WORKSPACE/gitsl.py init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          GITSL_EXIT=$?
+          echo "gitsl.py init exit code: $GITSL_EXIT" | tee -a $GITHUB_WORKSPACE/test_output.log
+          echo "Directory contents after gitsl init:" | tee -a $GITHUB_WORKSPACE/test_output.log
+          ls -la 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
           cd $GITHUB_WORKSPACE
 
           echo "=== Running actual tests ===" | tee -a test_output.log
           pytest tests/test_init.py -v --tb=long 2>&1 | tee -a test_output.log
           TEST_RESULT=$?
           echo "Test exit code: $TEST_RESULT" | tee -a test_output.log
+
+          # Now actually fail if tests failed
           exit $TEST_RESULT
 
       - name: Upload test output
