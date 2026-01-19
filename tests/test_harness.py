@@ -5,6 +5,7 @@ These tests verify that fixtures and helpers work correctly before
 using them to test gitsl.
 """
 
+import sys
 import tempfile
 from pathlib import Path
 
@@ -135,8 +136,14 @@ class TestGitRepoFixture:
         # The git_repo should not be under our project directory
         assert not str(git_repo_resolved).startswith(str(project_dir))
         # It should be under a temp directory (resolve symlinks for macOS /var -> /private/var)
+        # On Windows, use case-insensitive comparison since paths are case-insensitive
         temp_dir = Path(tempfile.gettempdir()).resolve()
-        assert str(git_repo_resolved).startswith(str(temp_dir))
+        git_repo_str = str(git_repo_resolved)
+        temp_dir_str = str(temp_dir)
+        if sys.platform == "win32":
+            git_repo_str = git_repo_str.lower()
+            temp_dir_str = temp_dir_str.lower()
+        assert git_repo_str.startswith(temp_dir_str)
 
 
 # ============================================================
