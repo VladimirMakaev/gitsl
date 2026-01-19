@@ -85,7 +85,7 @@ Explicitly excluded. Documented to prevent scope creep.
 
 | Feature | Reason |
 |---------|--------|
-| `git revert` | Maps to `sl backout`, not `sl revert` — semantic confusion risk |
+| `git revert` | Maps to `sl backout`, not `sl revert` - semantic confusion risk |
 | `git merge` | Sapling prefers rebase workflow |
 | `git rebase` | Complex flag translation, use sl rebase directly |
 | `git push/pull/fetch` | Remote model differs fundamentally |
@@ -95,29 +95,56 @@ Explicitly excluded. Documented to prevent scope creep.
 
 ## Traceability
 
-Which phases cover which requirements. Updated during roadmap creation.
+Phase mappings for v1.2 requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SHOW-01, SHOW-02 | Phase 15 | Pending |
-| BLAME-01, BLAME-02 | Phase 15 | Pending |
-| RM-01, RM-02, RM-03 | Phase 15 | Pending |
-| MV-01, MV-02 | Phase 15 | Pending |
-| CLONE-01, CLONE-02 | Phase 15 | Pending |
-| GREP-01, GREP-02 | Phase 15 | Pending |
-| CLEAN-01, CLEAN-02, CLEAN-03 | Phase 16 | Pending |
-| CONFIG-01, CONFIG-02, CONFIG-03 | Phase 16 | Pending |
-| SWITCH-01, SWITCH-02 | Phase 16 | Pending |
-| BRANCH-01, BRANCH-02, BRANCH-03, BRANCH-04 | Phase 17 | Pending |
-| RESTORE-01, RESTORE-02 | Phase 17 | Pending |
-| STASH-01 through STASH-07 | Phase 18 | Pending |
-| CHECKOUT-01 through CHECKOUT-06 | Phase 19 | Pending |
+| SHOW-01 | Phase 15 | Pending |
+| SHOW-02 | Phase 15 | Pending |
+| BLAME-01 | Phase 15 | Pending |
+| BLAME-02 | Phase 15 | Pending |
+| RM-01 | Phase 15 | Pending |
+| RM-02 | Phase 15 | Pending |
+| RM-03 | Phase 15 | Pending |
+| MV-01 | Phase 15 | Pending |
+| MV-02 | Phase 15 | Pending |
+| CLONE-01 | Phase 15 | Pending |
+| CLONE-02 | Phase 15 | Pending |
+| GREP-01 | Phase 15 | Pending |
+| GREP-02 | Phase 15 | Pending |
+| CLEAN-01 | Phase 16 | Pending |
+| CLEAN-02 | Phase 16 | Pending |
+| CLEAN-03 | Phase 16 | Pending |
+| CONFIG-01 | Phase 16 | Pending |
+| CONFIG-02 | Phase 16 | Pending |
+| CONFIG-03 | Phase 16 | Pending |
+| SWITCH-01 | Phase 16 | Pending |
+| SWITCH-02 | Phase 16 | Pending |
+| BRANCH-01 | Phase 17 | Pending |
+| BRANCH-02 | Phase 17 | Pending |
+| BRANCH-03 | Phase 17 | Pending |
+| BRANCH-04 | Phase 17 | Pending |
+| RESTORE-01 | Phase 17 | Pending |
+| RESTORE-02 | Phase 17 | Pending |
+| STASH-01 | Phase 18 | Pending |
+| STASH-02 | Phase 18 | Pending |
+| STASH-03 | Phase 18 | Pending |
+| STASH-04 | Phase 18 | Pending |
+| STASH-05 | Phase 18 | Pending |
+| STASH-06 | Phase 18 | Pending |
+| STASH-07 | Phase 18 | Pending |
+| CHECKOUT-01 | Phase 19 | Pending |
+| CHECKOUT-02 | Phase 19 | Pending |
+| CHECKOUT-03 | Phase 19 | Pending |
+| CHECKOUT-04 | Phase 19 | Pending |
+| CHECKOUT-05 | Phase 19 | Pending |
+| CHECKOUT-06 | Phase 19 | Pending |
 
 **Coverage:**
 - v1.2 requirements: 40 total
 - Mapped to phases: 40
-- Unmapped: 0 ✓
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-19*
-*Last updated: 2026-01-19 after initial definition*
+*Last updated: 2026-01-19 after roadmap creation*
