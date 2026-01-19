@@ -9,22 +9,22 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 
 ### Direct Mappings
 
-- [ ] **SHOW-01**: `git show` translates to `sl show` with pass-through flags
-- [ ] **SHOW-02**: `git show <commit>` shows specified commit
-- [ ] **BLAME-01**: `git blame <file>` translates to `sl annotate <file>`
-- [ ] **BLAME-02**: `git blame` passes through common flags (-L, -w)
-- [ ] **RM-01**: `git rm <files>` translates to `sl remove <files>`
-- [ ] **RM-02**: `git rm -f` translates to `sl remove -f`
-- [ ] **RM-03**: `git rm -r` translates to `sl remove` (recursive by default)
-- [ ] **MV-01**: `git mv <src> <dst>` translates to `sl rename <src> <dst>`
-- [ ] **MV-02**: `git mv -f` translates to `sl rename -f`
+- [x] **SHOW-01**: `git show` translates to `sl show` with pass-through flags
+- [x] **SHOW-02**: `git show <commit>` shows specified commit
+- [x] **BLAME-01**: `git blame <file>` translates to `sl annotate <file>`
+- [x] **BLAME-02**: `git blame` passes through common flags (-L, -w)
+- [x] **RM-01**: `git rm <files>` translates to `sl remove <files>`
+- [x] **RM-02**: `git rm -f` translates to `sl remove -f`
+- [x] **RM-03**: `git rm -r` translates to `sl remove` (recursive by default)
+- [x] **MV-01**: `git mv <src> <dst>` translates to `sl rename <src> <dst>`
+- [x] **MV-02**: `git mv -f` translates to `sl rename -f`
 - [ ] **CLEAN-01**: `git clean -f` translates to `sl purge`
 - [ ] **CLEAN-02**: `git clean -fd` translates to `sl purge` (dirs included by default)
 - [ ] **CLEAN-03**: `git clean -n` translates to `sl purge --print` (dry run)
-- [ ] **CLONE-01**: `git clone <url>` translates to `sl clone <url>`
-- [ ] **CLONE-02**: `git clone <url> <dir>` translates to `sl clone <url> <dir>`
-- [ ] **GREP-01**: `git grep <pattern>` translates to `sl grep <pattern>`
-- [ ] **GREP-02**: `git grep` passes through common flags (-n, -i, -l)
+- [x] **CLONE-01**: `git clone <url>` translates to `sl clone <url>`
+- [x] **CLONE-02**: `git clone <url> <dir>` translates to `sl clone <url> <dir>`
+- [x] **GREP-01**: `git grep <pattern>` translates to `sl grep <pattern>`
+- [x] **GREP-02**: `git grep` passes through common flags (-n, -i, -l)
 - [ ] **CONFIG-01**: `git config <key>` translates to `sl config <key>`
 - [ ] **CONFIG-02**: `git config <key> <value>` translates to `sl config <key> <value>`
 - [ ] **CONFIG-03**: `git config --list` translates to `sl config`
@@ -99,19 +99,19 @@ Phase mappings for v1.2 requirements.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SHOW-01 | Phase 15 | Pending |
-| SHOW-02 | Phase 15 | Pending |
-| BLAME-01 | Phase 15 | Pending |
-| BLAME-02 | Phase 15 | Pending |
-| RM-01 | Phase 15 | Pending |
-| RM-02 | Phase 15 | Pending |
-| RM-03 | Phase 15 | Pending |
-| MV-01 | Phase 15 | Pending |
-| MV-02 | Phase 15 | Pending |
-| CLONE-01 | Phase 15 | Pending |
-| CLONE-02 | Phase 15 | Pending |
-| GREP-01 | Phase 15 | Pending |
-| GREP-02 | Phase 15 | Pending |
+| SHOW-01 | Phase 15 | Complete |
+| SHOW-02 | Phase 15 | Complete |
+| BLAME-01 | Phase 15 | Complete |
+| BLAME-02 | Phase 15 | Complete |
+| RM-01 | Phase 15 | Complete |
+| RM-02 | Phase 15 | Complete |
+| RM-03 | Phase 15 | Complete |
+| MV-01 | Phase 15 | Complete |
+| MV-02 | Phase 15 | Complete |
+| CLONE-01 | Phase 15 | Complete |
+| CLONE-02 | Phase 15 | Complete |
+| GREP-01 | Phase 15 | Complete |
+| GREP-02 | Phase 15 | Complete |
 | CLEAN-01 | Phase 16 | Pending |
 | CLEAN-02 | Phase 16 | Pending |
 | CLEAN-03 | Phase 16 | Pending |
