@@ -141,34 +141,45 @@ jobs:
         shell: bash
         working-directory: ${{ github.workspace }}
         run: |
-          echo "=== Environment Info ==="
-          echo "RUNNER_OS: $RUNNER_OS"
-          echo "PWD: $(pwd)"
-          echo "Python: $(python --version)"
-          echo "Pytest: $(pytest --version)"
+          echo "=== Environment Info ===" | tee test_output.log
+          echo "RUNNER_OS: $RUNNER_OS" | tee -a test_output.log
+          echo "PWD: $(pwd)" | tee -a test_output.log
+          echo "Python: $(python --version)" | tee -a test_output.log
+          echo "Pytest: $(pytest --version)" | tee -a test_output.log
 
-          echo "=== Verifying sl is accessible ==="
+          echo "=== Verifying sl is accessible ===" | tee -a test_output.log
           # On Windows, sl.exe is in C:\sapling which should be in PATH
           if [[ "$RUNNER_OS" == "Windows" ]]; then
-            echo "Windows detected, checking sl.exe..."
-            ls -la /c/sapling/ 2>/dev/null || echo "C:\sapling not found or empty"
-            /c/sapling/sl.exe --version 2>&1 || echo "sl.exe not working"
-            # Also check if shutil.which finds it
-            python -c "import shutil; print('shutil.which sl:', shutil.which('sl'))"
+            echo "Windows detected, checking sl.exe..." | tee -a test_output.log
+            ls -la /c/sapling/ 2>&1 | tee -a test_output.log || echo "C:\sapling not found or empty" | tee -a test_output.log
+            /c/sapling/sl.exe --version 2>&1 | tee -a test_output.log || echo "sl.exe not working" | tee -a test_output.log
+            python -c "import shutil; print('shutil.which sl:', shutil.which('sl'))" | tee -a test_output.log
           else
-            which sl && sl --version || echo "sl command not found in PATH"
+            which sl 2>&1 | tee -a test_output.log && sl --version 2>&1 | tee -a test_output.log || echo "sl command not found in PATH" | tee -a test_output.log
           fi
 
-          echo "=== Checking pytest.ini ==="
-          cat pytest.ini
+          echo "=== Testing sl init directly ===" | tee -a test_output.log
+          mkdir -p /tmp/test_sl_init
+          cd /tmp/test_sl_init && sl init . 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          ls -la /tmp/test_sl_init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          cd $GITHUB_WORKSPACE
 
-          echo "=== Testing imports before pytest ==="
-          python -c "import sys; print('sys.path:', sys.path[:5]); sys.path.insert(0, 'tests'); import shutil; print('shutil.which sl:', shutil.which('sl'))"
-          python -c "import sys; sys.path.insert(0, 'tests'); from helpers.commands import run_command; print('helpers.commands OK')" || echo "helpers.commands FAILED"
-          python -c "import sys; sys.path.insert(0, 'tests'); from conftest import run_gitsl; print('conftest OK')" || echo "conftest FAILED"
+          echo "=== Testing gitsl.py directly ===" | tee -a test_output.log
+          mkdir -p /tmp/test_gitsl_init
+          python gitsl.py init 2>&1 --help || true | tee -a test_output.log
+          cd /tmp/test_gitsl_init && python $GITHUB_WORKSPACE/gitsl.py init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          ls -la /tmp/test_gitsl_init 2>&1 | tee -a $GITHUB_WORKSPACE/test_output.log
+          cd $GITHUB_WORKSPACE
 
-          echo "=== Running actual tests ==="
-          pytest tests/test_init.py -v --tb=long 2>&1 || {
-            echo "=== TEST FAILED ==="
-            exit 1
-          }
+          echo "=== Running actual tests ===" | tee -a test_output.log
+          pytest tests/test_init.py -v --tb=long 2>&1 | tee -a test_output.log
+          TEST_RESULT=$?
+          echo "Test exit code: $TEST_RESULT" | tee -a test_output.log
+          exit $TEST_RESULT
+
+      - name: Upload test output
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-output-${{ matrix.os }}-${{ matrix.python-version }}
+          path: test_output.log
