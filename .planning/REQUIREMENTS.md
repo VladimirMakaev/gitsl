@@ -14,13 +14,13 @@ Requirements for v1.1 Polish & Documentation release. Each maps to roadmap phase
 
 ### Testing
 
-- [ ] **TEST-01**: `./test` script runs all tests
-- [ ] **TEST-02**: `./test <command>` runs tests for specific command only
-- [ ] **TEST-03**: Test script works on MacOS, Linux, Windows
-- [ ] **TEST-04**: Audit existing tests for completeness gaps
-- [ ] **TEST-05**: Add tests for edge cases (empty repos, special characters, large files)
-- [ ] **TEST-06**: Add tests for error conditions (missing sl, invalid args)
-- [ ] **TEST-07**: Add tests for flag combinations not currently covered
+- [x] **TEST-01**: `./test` script runs all tests
+- [x] **TEST-02**: `./test <command>` runs tests for specific command only
+- [x] **TEST-03**: Test script works on MacOS, Linux, Windows
+- [x] **TEST-04**: Audit existing tests for completeness gaps
+- [x] **TEST-05**: Add tests for edge cases (empty repos, special characters, large files)
+- [x] **TEST-06**: Add tests for error conditions (missing sl, invalid args)
+- [x] **TEST-07**: Add tests for flag combinations not currently covered
 
 ### Packaging
 
@@ -82,13 +82,13 @@ Which phases cover which requirements. Updated during roadmap creation.
 |-------------|-------|--------|
 | CLEAN-01 | Phase 10 | Complete |
 | CLEAN-02 | Phase 10 | Complete |
-| TEST-01 | Phase 11 | Pending |
-| TEST-02 | Phase 11 | Pending |
-| TEST-03 | Phase 11 | Pending |
-| TEST-04 | Phase 11 | Pending |
-| TEST-05 | Phase 11 | Pending |
-| TEST-06 | Phase 11 | Pending |
-| TEST-07 | Phase 11 | Pending |
+| TEST-01 | Phase 11 | Complete |
+| TEST-02 | Phase 11 | Complete |
+| TEST-03 | Phase 11 | Complete |
+| TEST-04 | Phase 11 | Complete |
+| TEST-05 | Phase 11 | Complete |
+| TEST-06 | Phase 11 | Complete |
+| TEST-07 | Phase 11 | Complete |
 | PACK-01 | Phase 12 | Pending |
 | PACK-02 | Phase 12 | Pending |
 | PACK-03 | Phase 12 | Pending |
