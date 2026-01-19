@@ -1,5 +1,34 @@
 # Project Milestones: GitSL
 
+## v1.1 Polish & Documentation (Shipped: 2026-01-19)
+
+**Delivered:** Production-ready package with comprehensive CI/CD, cross-platform testing, PyPI publishing, and documentation.
+
+**Phases completed:** 10-14 (7 plans total)
+
+**Key accomplishments:**
+
+- Cleaned codebase of external tool references for self-contained package
+- Built comprehensive test infrastructure with 124 tests and cross-platform parallel runner
+- Created pip-installable package with pyproject.toml and proper entry points
+- Set up GitHub Actions CI with 9-job matrix (Linux, macOS, Windows × Python 3.9/3.11/3.13)
+- Configured PyPI trusted publishing with OIDC (no API tokens)
+- Created production-quality README with badges, command matrix, and flag documentation
+
+**Stats:**
+
+- 18 files created/modified
+- 3,131 lines of Python
+- 124 tests passing
+- 5 phases, 7 plans
+- 2 days from start to ship
+
+**Git range:** `v1.0.0` → `v1.0.1`
+
+**What's next:** v2.0 - Extended command support based on research and user feedback
+
+---
+
 ## v1.0 MVP (Shipped: 2026-01-18)
 
 **Delivered:** Git-to-Sapling CLI shim enabling git workflow tools to work transparently with Sapling repositories.

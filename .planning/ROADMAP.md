@@ -2,8 +2,8 @@
 
 ## Milestones
 
-- ✅ **v1.0 MVP** - Phases 01-09 (shipped 2026-01-18)
-- 🚧 **v1.1 Polish & Documentation** - Phases 10-14 (in progress)
+- **v1.0 MVP** - Phases 01-09 (shipped 2026-01-18)
+- **v1.1 Polish & Documentation** - Phases 10-14 (shipped 2026-01-19)
 
 ## Phases
 
@@ -48,88 +48,35 @@
 
 </details>
 
-### 🚧 v1.1 Polish & Documentation (In Progress)
+<details>
+<summary>v1.1 Polish & Documentation (Phases 10-14) - SHIPPED 2026-01-19</summary>
 
-**Milestone Goal:** Make gitsl production-ready with comprehensive documentation, easier testing, CI/CD, and PyPI publishing.
-
-#### Phase 10: Cleanup
+### Phase 10: Cleanup
 **Goal**: Remove all external tool references from code and comments
-**Depends on**: Phase 09 (v1.0 complete)
-**Requirements**: CLEAN-01, CLEAN-02
-**Success Criteria** (what must be TRUE):
-  1. No references to external tools remain in Python source files
-  2. No references to external tools remain in comments or docstrings
-  3. Codebase is clean and self-contained
-**Plans**: 1 plan
+**Plans**: 1 plan (complete)
 
-Plans:
-- [x] 10-01-PLAN.md — Remove external tool references from planning documentation
-
-#### Phase 11: Testing
+### Phase 11: Testing
 **Goal**: Comprehensive test infrastructure with improved runner and coverage
-**Depends on**: Phase 10
-**Requirements**: TEST-01, TEST-02, TEST-03, TEST-04, TEST-05, TEST-06, TEST-07
-**Success Criteria** (what must be TRUE):
-  1. Running `./test` executes all tests and reports results
-  2. Running `./test status` runs only status command tests
-  3. Test script runs successfully on MacOS, Linux, and Windows
-  4. Test coverage includes edge cases (empty repos, special characters)
-  5. Test coverage includes error conditions (missing sl, invalid args)
-**Plans**: 2 plans
+**Plans**: 2 plans (complete)
 
-Plans:
-- [x] 11-01-PLAN.md — Create cross-platform test runner with command filtering
-- [x] 11-02-PLAN.md — Add edge case and error condition tests
-
-#### Phase 12: Packaging
+### Phase 12: Packaging
 **Goal**: gitsl installable via pip with proper entry points
-**Depends on**: Phase 11
-**Requirements**: PACK-01, PACK-02, PACK-03, PACK-04
-**Success Criteria** (what must be TRUE):
-  1. `pip install -e .` succeeds and `gitsl` command is available
-  2. `gitsl --version` displays correct version number
-  3. Package version matches git tag when building from tagged commit
-  4. All Python modules are included in the package
-**Plans**: 1 plan
+**Plans**: 1 plan (complete)
 
-Plans:
-- [x] 12-01-PLAN.md — Create pyproject.toml with setuptools and verify pip installation
-
-#### Phase 13: CI/CD
+### Phase 13: CI/CD
 **Goal**: Automated testing on all platforms with release automation
-**Depends on**: Phase 12
-**Requirements**: CI-01, CI-02, CI-03, CI-04, CI-05
-**Success Criteria** (what must be TRUE):
-  1. Push to main/PR triggers test workflow automatically
-  2. Tests run on MacOS, Linux, and Windows in CI matrix
-  3. Sapling is installed and functional in CI environment
-  4. Tagged release triggers PyPI publish workflow
-  5. PyPI publishing uses trusted publishing (no API tokens)
-**Plans**: 2 plans
+**Plans**: 2 plans (complete)
 
-Plans:
-- [x] 13-01-PLAN.md — Create CI workflow with cross-platform test matrix and Sapling installation
-- [x] 13-02-PLAN.md — Create release workflow for PyPI trusted publishing
-
-#### Phase 14: Documentation
+### Phase 14: Documentation
 **Goal**: Production-quality README with installation, usage, and command matrix
-**Depends on**: Phase 13
-**Requirements**: DOC-01, DOC-02, DOC-03, DOC-04, DOC-05, DOC-06, DOC-07, DOC-08
-**Success Criteria** (what must be TRUE):
-  1. README.md contains installation instructions (`pip install gitsl`)
-  2. README.md contains quick start example showing basic usage
-  3. README.md contains command support matrix (implemented vs unsupported)
-  4. Each supported command has flag documentation with support status
-  5. README.md displays CI status, PyPI version, and Python version badges
-**Plans**: 1 plan
+**Plans**: 1 plan (complete)
 
-Plans:
-- [x] 14-01-PLAN.md — Create README with badges, installation, command matrix, and flag documentation
+</details>
 
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 10 → 11 → 12 → 13 → 14
+Phases execute in numeric order.
 
 | Phase | Milestone | Plans Complete | Status | Completed |
 |-------|-----------|----------------|--------|-----------|

@@ -15,27 +15,16 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 ## Current State
 
-**Shipped:** v1.0 MVP (2026-01-18)
-**Lines of Code:** 1,984 Python
-**Tests:** 91 passing
-**Requirements:** 32/32 complete
-
-## Current Milestone: v1.1 Polish & Documentation
-
-**Goal:** Make gitsl production-ready with comprehensive documentation, easier testing, CI/CD, and PyPI publishing.
-
-**Target features:**
-- Research and document ~30 common git commands with flag support analysis
-- Improve test runner (`./test` and `./test <command>`)
-- Create polished README with command support status
-- GitHub Actions CI for MacOS/Linux/Windows
-- PyPI publishing (`pip install gitsl`)
-- Remove legacy references to external tools
+**Shipped:** v1.1 (2026-01-19)
+**PyPI:** https://pypi.org/project/gitsl/
+**Lines of Code:** 3,131 Python
+**Tests:** 124 passing (parallel, cross-platform)
 
 ## Requirements
 
 ### Validated
 
+**v1.0 Core Commands:**
 - ✓ Script intercepts git commands from argv — v1.0
 - ✓ `git status` translates to `sl status` — v1.0
 - ✓ `git status --short` emulates git's short format from sl output — v1.0
@@ -52,15 +41,17 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 - ✓ `git init` translates to `sl init` — v1.0
 - ✓ Unsupported commands print original command to stderr and exit 0 — v1.0
 
+**v1.1 Polish & Documentation:**
+- ✓ Cross-platform test runner (`./test`, `./test <command>`) — v1.1
+- ✓ 124 tests including edge cases and error conditions — v1.1
+- ✓ pip-installable package with pyproject.toml — v1.1
+- ✓ GitHub Actions CI (Linux, macOS, Windows × Python 3.9/3.11/3.13) — v1.1
+- ✓ PyPI trusted publishing with OIDC — v1.1
+- ✓ Production README with badges and command documentation — v1.1
+
 ### Active
 
-- [ ] Document ~30 common git commands with Sapling equivalents
-- [ ] Research flag support for each command, document unsupported with reasons
-- [ ] Test runner supports `./test` (all) and `./test <command>` (specific)
-- [ ] README.md with command support matrix
-- [ ] GitHub Actions CI for MacOS/Linux/Windows
-- [ ] PyPI package (`pip install gitsl`)
-- [ ] Remove external tool references from codebase
+None — planning next milestone.
 
 ### Out of Scope
 
@@ -94,7 +85,7 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 - **Multi-file package**: Entry point in gitsl.py, shared logic in common.py, one file per command
 - **No runtime dependencies**: Standard library only for core functionality
-- **Python 3**: Python 3.8+ required
+- **Python 3**: Python 3.9+ required
 - **Sapling installed**: Assume `sl` command is available in PATH
 - **Cross-platform**: Must work on MacOS, Linux, Windows
 
@@ -134,6 +125,9 @@ curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>
 | Manual argv parsing | argparse doesn't handle git-style subcommands well | ✓ Good |
 | GITSL_DEBUG via env var | Avoid consuming CLI args | ✓ Good |
 | subprocess.run() no PIPE | Real-time I/O passthrough | ✓ Good |
+| pyproject.toml with setuptools | Modern packaging, flat layout | ✓ Good |
+| OIDC trusted publishing | No API tokens in secrets | ✓ Good |
+| Parallel tests with pytest-xdist | 4x faster test execution | ✓ Good |
 
 ---
-*Last updated: 2026-01-18 after v1.1 milestone start*
+*Last updated: 2026-01-19 after v1.1 milestone completion*
