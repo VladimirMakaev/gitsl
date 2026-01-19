@@ -1,0 +1,190 @@
+#!/usr/bin/env python3
+"""
+Cross-platform test runner for gitsl.
+
+Usage:
+    ./test                  Run all tests
+    ./test <command>        Run tests for specific command (e.g., ./test status)
+    ./test --report <file>  Generate JUnit XML report
+    ./test <pytest args>    Pass through additional pytest arguments
+
+The script automatically:
+- Creates a virtual environment if not present
+- Installs pytest if not found in the venv
+- Warns if 'sl' (Sapling) is not installed
+"""
+
+import os
+import shutil
+import subprocess
+import sys
+import venv
+from pathlib import Path
+
+# Known command markers that map to test files
+COMMAND_MARKERS = {
+    "add",
+    "commit",
+    "diff",
+    "init",
+    "log",
+    "rev_parse",
+    "status",
+    "unsupported",
+    "execution",
+    "harness",
+}
+
+
+def get_project_root() -> Path:
+    """Get the project root directory (where this script lives)."""
+    return Path(__file__).parent.resolve()
+
+
+def get_venv_dir() -> Path:
+    """Get the virtual environment directory path."""
+    return get_project_root() / ".venv"
+
+
+def is_windows() -> bool:
+    """Check if running on Windows."""
+    return sys.platform == "win32"
+
+
+def get_venv_python() -> Path:
+    """Get path to the Python interpreter in the venv."""
+    venv_dir = get_venv_dir()
+    if is_windows():
+        return venv_dir / "Scripts" / "python.exe"
+    return venv_dir / "bin" / "python"
+
+
+def get_venv_pytest() -> Path:
+    """Get path to pytest in the venv."""
+    venv_dir = get_venv_dir()
+    if is_windows():
+        return venv_dir / "Scripts" / "pytest.exe"
+    return venv_dir / "bin" / "pytest"
+
+
+def check_sl_installed() -> None:
+    """Check if Sapling (sl) is installed and warn if not."""
+    if shutil.which("sl") is None:
+        print(
+            "WARNING: Sapling (sl) is not installed or not in PATH.",
+            file=sys.stderr,
+        )
+        print(
+            "         Some tests will be skipped.",
+            file=sys.stderr,
+        )
+        print(file=sys.stderr)
+
+
+def ensure_venv() -> None:
+    """Create virtual environment if it doesn't exist."""
+    venv_dir = get_venv_dir()
+    venv_python = get_venv_python()
+
+    if not venv_python.exists():
+        print(f"Creating virtual environment at {venv_dir}...")
+        venv.create(venv_dir, with_pip=True)
+        print("Virtual environment created.")
+
+
+def ensure_pytest() -> None:
+    """Install pytest if not found in the venv."""
+    pytest_path = get_venv_pytest()
+
+    if not pytest_path.exists():
+        print("Installing pytest...")
+        python = get_venv_python()
+        subprocess.run(
+            [str(python), "-m", "pip", "install", "pytest", "-q"],
+            check=True,
+        )
+        print("pytest installed.")
+
+
+def parse_args(args: list[str]) -> tuple[str | None, str | None, list[str]]:
+    """
+    Parse command line arguments.
+
+    Returns:
+        Tuple of (command_filter, report_file, extra_pytest_args)
+    """
+    command_filter = None
+    report_file = None
+    extra_args = []
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+
+        if arg == "--report":
+            if i + 1 < len(args):
+                report_file = args[i + 1]
+                i += 2
+                continue
+            else:
+                print("ERROR: --report requires a file path", file=sys.stderr)
+                sys.exit(1)
+        elif arg in COMMAND_MARKERS:
+            command_filter = arg
+        else:
+            extra_args.append(arg)
+
+        i += 1
+
+    return command_filter, report_file, extra_args
+
+
+def build_pytest_command(
+    command_filter: str | None,
+    report_file: str | None,
+    extra_args: list[str],
+) -> list[str]:
+    """Build the pytest command line."""
+    pytest_path = get_venv_pytest()
+    cmd = [str(pytest_path)]
+
+    # Add marker filter if specified
+    if command_filter:
+        cmd.extend(["-m", f"{command_filter} or always"])
+
+    # Add JUnit XML output if requested
+    if report_file:
+        cmd.extend([f"--junit-xml={report_file}"])
+
+    # Add extra pytest arguments
+    cmd.extend(extra_args)
+
+    return cmd
+
+
+def main() -> int:
+    """Main entry point."""
+    # Check for sl upfront
+    check_sl_installed()
+
+    # Ensure venv and pytest are available
+    ensure_venv()
+    ensure_pytest()
+
+    # Parse arguments
+    args = sys.argv[1:]
+    command_filter, report_file, extra_args = parse_args(args)
+
+    # Build and run pytest command
+    cmd = build_pytest_command(command_filter, report_file, extra_args)
+
+    # Change to project root for pytest to find tests
+    os.chdir(get_project_root())
+
+    # Run pytest
+    result = subprocess.run(cmd)
+    return result.returncode
+
+
+if __name__ == "__main__":
+    sys.exit(main())
