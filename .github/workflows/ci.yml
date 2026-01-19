@@ -119,4 +119,9 @@ jobs:
 
       # ==================== TESTS ====================
       - name: Run tests
-        run: python test
+        shell: bash
+        run: |
+          echo "Python version: $(python3 --version)"
+          echo "Working directory: $(pwd)"
+          echo "Test script exists: $(ls -la test)"
+          python3 test -v
