@@ -51,7 +51,36 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 ### Active
 
-None — planning next milestone.
+**v1.2 More Commands Support:**
+
+**Direct Mappings:**
+- [ ] `git show [commit]` translates to `sl show`
+- [ ] `git blame <file>` translates to `sl annotate`
+- [ ] `git rm <files>` translates to `sl remove`
+- [ ] `git mv <src> <dst>` translates to `sl rename`
+- [ ] `git clean -f [-d]` translates to `sl purge`
+- [ ] `git clone <url> [dir]` translates to `sl clone`
+- [ ] `git grep <pattern>` translates to `sl grep`
+- [ ] `git config [options]` translates to `sl config`
+
+**Stash/Shelve:**
+- [ ] `git stash` translates to `sl shelve`
+- [ ] `git stash pop` translates to `sl unshelve`
+- [ ] `git stash list` translates to `sl shelve --list`
+- [ ] `git stash drop` translates to `sl shelve --delete`
+- [ ] `git stash apply` translates to `sl unshelve --keep`
+
+**Checkout/Switch/Restore:**
+- [ ] `git checkout <commit>` translates to `sl goto`
+- [ ] `git checkout <file>` translates to `sl revert <file>`
+- [ ] `git checkout -b <branch>` translates to `sl bookmark <name>` + `sl goto`
+- [ ] `git switch <branch>` translates to `sl goto`
+- [ ] `git restore <file>` translates to `sl revert <file>`
+
+**Branch/Bookmark:**
+- [ ] `git branch` lists bookmarks via `sl bookmark`
+- [ ] `git branch <name>` creates bookmark via `sl bookmark <name>`
+- [ ] `git branch -d <name>` deletes bookmark via `sl bookmark -d <name>`
 
 ### Out of Scope
 
@@ -59,6 +88,8 @@ None — planning next milestone.
 - OAuth/authentication handling — Sapling handles this
 - Remote operations (push/pull/fetch) — Sapling model differs fundamentally
 - Interactive commands (rebase -i, add -p) — require terminal control
+- `git merge` — Sapling prefers rebase workflow
+- `git rebase` — complex flag translation, use sl rebase directly
 
 ## Context
 
@@ -75,6 +106,21 @@ None — planning next milestone.
 | `git rev-parse --short HEAD` | `sl whereami` | Different command |
 | `git init` | `sl init` | Direct |
 | `git diff` | `sl diff` | Direct |
+| `git show` | `sl show` | Direct |
+| `git blame` | `sl annotate` | Different command |
+| `git rm` | `sl remove` | Different command |
+| `git mv` | `sl rename` | Different command |
+| `git clean` | `sl purge` | Different command |
+| `git clone` | `sl clone` | Direct |
+| `git grep` | `sl grep` | Direct |
+| `git config` | `sl config` | Direct |
+| `git stash` | `sl shelve` | Different command |
+| `git stash pop` | `sl unshelve` | Different command |
+| `git checkout <commit>` | `sl goto` | Different command |
+| `git checkout <file>` | `sl revert` | Different semantics |
+| `git switch` | `sl goto` | Different command |
+| `git restore` | `sl revert` | Different command |
+| `git branch` | `sl bookmark` | Different model |
 
 **Emulation required for:**
 - `--porcelain` / `--short` on status — reformat sl output to match git exactly
@@ -130,4 +176,4 @@ curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>
 | Parallel tests with pytest-xdist | 4x faster test execution | ✓ Good |
 
 ---
-*Last updated: 2026-01-19 after v1.1 milestone completion*
+*Last updated: 2026-01-19 after v1.2 milestone start*
