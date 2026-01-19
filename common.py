@@ -11,6 +11,7 @@ import shlex
 import subprocess
 import sys
 from dataclasses import dataclass
+from importlib.metadata import version, PackageNotFoundError
 from typing import List, Optional
 
 
@@ -18,7 +19,10 @@ from typing import List, Optional
 # CONSTANTS
 # ============================================================
 
-VERSION = "0.1.0"
+try:
+    VERSION = version("gitsl")
+except PackageNotFoundError:
+    VERSION = "0.0.0"  # Fallback for uninstalled development
 
 
 # ============================================================
