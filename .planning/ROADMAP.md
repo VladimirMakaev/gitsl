@@ -121,10 +121,10 @@ Plans:
   3. README.md contains command support matrix (implemented vs unsupported)
   4. Each supported command has flag documentation with support status
   5. README.md displays CI status, PyPI version, and Python version badges
-**Plans**: TBD
+**Plans**: 1 plan
 
 Plans:
-- [ ] 14-01: TBD
+- [ ] 14-01-PLAN.md — Create README with badges, installation, command matrix, and flag documentation
 
 ## Progress
 
@@ -146,4 +146,4 @@ Phases execute in numeric order: 10 → 11 → 12 → 13 → 14
 | 11. Testing | v1.1 | 2/2 | Complete | 2026-01-19 |
 | 12. Packaging | v1.1 | 1/1 | Complete | 2026-01-19 |
 | 13. CI/CD | v1.1 | 2/2 | Complete | 2026-01-19 |
-| 14. Documentation | v1.1 | 0/? | Not started | - |
+| 14. Documentation | v1.1 | 0/1 | Planned | - |
