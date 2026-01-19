@@ -121,5 +121,21 @@ jobs:
       - name: Install test dependencies
         run: pip install pytest
 
+      - name: Debug environment
+        shell: bash
+        run: |
+          echo "=== PATH ==="
+          echo $PATH
+          echo "=== which sl ==="
+          which sl || echo "sl not found"
+          echo "=== which git ==="
+          which git
+          echo "=== Python ==="
+          python --version || python3 --version
+          echo "=== pytest location ==="
+          which pytest
+          echo "=== List tests dir ==="
+          ls -la tests/
+
       - name: Run tests
-        run: pytest tests/ -v
+        run: pytest tests/ -v --tb=short
