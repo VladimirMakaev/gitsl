@@ -118,13 +118,8 @@ jobs:
         run: Remove-Alias -Name sl -Force -Scope Global -ErrorAction SilentlyContinue
 
       # ==================== TESTS ====================
+      - name: Install test dependencies
+        run: pip install pytest
+
       - name: Run tests
-        shell: bash
-        run: |
-          echo "Python version:"
-          python3 --version
-          echo "Working directory: $(pwd)"
-          echo "Test script:"
-          ls -la test
-          echo "Running tests..."
-          python3 test -v 2>&1 || { echo "Tests failed with exit code $?"; exit 1; }
+        run: pytest tests/ -v
