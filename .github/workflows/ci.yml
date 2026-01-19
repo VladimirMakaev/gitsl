@@ -138,4 +138,6 @@ jobs:
           ls -la tests/
 
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}/tests
         run: pytest tests/ -v --tb=short
