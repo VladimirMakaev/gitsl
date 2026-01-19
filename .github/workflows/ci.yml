@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 env:
-  SAPLING_CACHE_VERSION: "2"  # Bump to invalidate cache
+  SAPLING_CACHE_VERSION: "3"  # Bump to invalidate cache
 
 jobs:
   test:
@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Use ubuntu-22.04 because Sapling .deb has glibc dependencies for 22.04
+        # Use ubuntu-22.04 because Sapling .deb is built for 22.04
         os: [ubuntu-22.04, macos-latest, windows-latest]
         python-version: ["3.9", "3.11", "3.13"]
 
@@ -39,80 +39,35 @@ jobs:
           echo "Sapling version: $TAG_NAME"
 
       # ==================== LINUX ====================
-      - name: Cache Sapling (Linux)
+      - name: Cache Sapling deb (Linux)
         if: runner.os == 'Linux'
         id: cache-sapling-linux
         uses: actions/cache@v4
         with:
-          path: /opt/sapling
-          key: sapling-linux-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
+          path: ~/.cache/sapling
+          key: sapling-deb-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
 
-      - name: Install Sapling (Linux)
+      - name: Download Sapling (Linux)
         if: runner.os == 'Linux' && steps.cache-sapling-linux.outputs.cache-hit != 'true'
         run: |
           SAPLING_VERSION="${{ steps.sapling-release.outputs.version }}"
           SAPLING_VERSION_ENCODED="${{ steps.sapling-release.outputs.version_encoded }}"
-
+          mkdir -p ~/.cache/sapling
           echo "Downloading Sapling $SAPLING_VERSION..."
-          curl -L -o sapling.deb \
+          curl -L -o ~/.cache/sapling/sapling.deb \
             "https://github.com/facebook/sapling/releases/download/${SAPLING_VERSION_ENCODED}/sapling_${SAPLING_VERSION}_amd64.Ubuntu22.04.deb"
 
-          # Extract binaries from .deb without using dpkg
-          ar x sapling.deb
-
-          # Handle different compression formats
-          if [ -f data.tar.zst ]; then
-            sudo apt-get update -qq && sudo apt-get install -y -qq zstd
-            zstd -d data.tar.zst -o data.tar
-          elif [ -f data.tar.xz ]; then
-            xz -d data.tar.xz
-          elif [ -f data.tar.gz ]; then
-            gzip -d data.tar.gz
-          fi
-
-          # Extract to temp location first
-          mkdir -p extract
-          tar xf data.tar -C extract
-
-          # Copy binaries to /opt/sapling
-          sudo mkdir -p /opt/sapling/bin /opt/sapling/lib
-
-          # Find and copy sl binary and related files
-          if [ -d extract/usr/local/bin ]; then
-            sudo cp -r extract/usr/local/bin/* /opt/sapling/bin/
-          fi
-          if [ -d extract/usr/local/lib ]; then
-            sudo cp -r extract/usr/local/lib/* /opt/sapling/lib/
-          fi
-
-          # Cleanup
-          rm -rf sapling.deb data.tar* control.tar* debian-binary extract
-
-      - name: Setup Sapling PATH (Linux)
+      - name: Install Sapling (Linux)
         if: runner.os == 'Linux'
         run: |
-          echo "/opt/sapling/bin" >> $GITHUB_PATH
-          ls -la /opt/sapling/bin/
-          /opt/sapling/bin/sl --version
+          sudo dpkg -i ~/.cache/sapling/sapling.deb || sudo apt-get install -f -y
+          sl --version
 
       # ==================== macOS ====================
-      - name: Cache Homebrew Sapling (macOS)
-        if: runner.os == 'macOS'
-        id: cache-sapling-macos
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/Library/Caches/Homebrew/sapling--*
-            ~/Library/Caches/Homebrew/downloads/*sapling*
-            /opt/homebrew/Cellar/sapling
-          key: sapling-macos-homebrew-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
-
       - name: Install Sapling (macOS)
         if: runner.os == 'macOS'
         run: |
-          # Homebrew handles architecture (ARM64/x86_64) and dependencies automatically
-          brew install sapling || brew upgrade sapling
-          which sl
+          brew install sapling
           sl --version
 
       # ==================== WINDOWS ====================
@@ -136,11 +91,10 @@ jobs:
           $url = "https://github.com/facebook/sapling/releases/download/$SAPLING_VERSION_ENCODED/sapling_windows_${SAPLING_VERSION}_amd64.zip"
           Invoke-WebRequest -Uri $url -OutFile sapling.zip
 
-          # Extract
           New-Item -ItemType Directory -Force -Path $INSTALL_DIR | Out-Null
           Expand-Archive sapling.zip -DestinationPath $INSTALL_DIR -Force
 
-          # Flatten if there's a subdirectory
+          # Flatten - the zip contains a subdirectory
           $subdir = Get-ChildItem -Path $INSTALL_DIR -Directory | Select-Object -First 1
           if ($subdir) {
             Get-ChildItem -Path $subdir.FullName | Move-Item -Destination $INSTALL_DIR -Force
@@ -148,7 +102,6 @@ jobs:
           }
 
           Remove-Item sapling.zip -Force
-          Get-ChildItem $INSTALL_DIR
 
       - name: Setup Sapling PATH (Windows)
         if: runner.os == 'Windows'
