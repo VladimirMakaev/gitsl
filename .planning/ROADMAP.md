@@ -75,10 +75,11 @@ Plans:
   3. Test script runs successfully on MacOS, Linux, and Windows
   4. Test coverage includes edge cases (empty repos, special characters)
   5. Test coverage includes error conditions (missing sl, invalid args)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 11-01: TBD
+- [ ] 11-01-PLAN.md — Create cross-platform test runner with command filtering
+- [ ] 11-02-PLAN.md — Add edge case and error condition tests
 
 #### Phase 12: Packaging
 **Goal**: gitsl installable via pip with proper entry points
@@ -141,7 +142,7 @@ Phases execute in numeric order: 10 → 11 → 12 → 13 → 14
 | 08. Add -u Emulation | v1.0 | 1/1 | Complete | 2026-01-18 |
 | 09. Unsupported Command Handling | v1.0 | 1/1 | Complete | 2026-01-18 |
 | 10. Cleanup | v1.1 | 1/1 | Complete | 2026-01-19 |
-| 11. Testing | v1.1 | 0/? | Not started | - |
+| 11. Testing | v1.1 | 0/2 | Planned | - |
 | 12. Packaging | v1.1 | 0/? | Not started | - |
 | 13. CI/CD | v1.1 | 0/? | Not started | - |
 | 14. Documentation | v1.1 | 0/? | Not started | - |
