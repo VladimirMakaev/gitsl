@@ -6,13 +6,17 @@ on:
   pull_request:
     branches: [main, master]
 
+env:
+  SAPLING_CACHE_VERSION: "2"  # Bump to invalidate cache
+
 jobs:
   test:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        # Use ubuntu-22.04 because Sapling .deb has glibc dependencies for 22.04
+        os: [ubuntu-22.04, macos-latest, windows-latest]
         python-version: ["3.9", "3.11", "3.13"]
 
     steps:
@@ -23,43 +27,142 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install Sapling (Ubuntu)
+      - name: Get latest Sapling release info
+        id: sapling-release
+        shell: bash
+        run: |
+          RELEASE_INFO=$(curl -s https://api.github.com/repos/facebook/sapling/releases/latest)
+          TAG_NAME=$(echo "$RELEASE_INFO" | python -c "import sys, json; print(json.load(sys.stdin)['tag_name'])")
+          echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
+          TAG_ENCODED=$(echo "$TAG_NAME" | sed 's/+/%2B/g')
+          echo "version_encoded=$TAG_ENCODED" >> $GITHUB_OUTPUT
+          echo "Sapling version: $TAG_NAME"
+
+      # ==================== LINUX ====================
+      - name: Cache Sapling (Linux)
+        if: runner.os == 'Linux'
+        id: cache-sapling-linux
+        uses: actions/cache@v4
+        with:
+          path: /opt/sapling
+          key: sapling-linux-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
+
+      - name: Install Sapling (Linux)
+        if: runner.os == 'Linux' && steps.cache-sapling-linux.outputs.cache-hit != 'true'
+        run: |
+          SAPLING_VERSION="${{ steps.sapling-release.outputs.version }}"
+          SAPLING_VERSION_ENCODED="${{ steps.sapling-release.outputs.version_encoded }}"
+
+          echo "Downloading Sapling $SAPLING_VERSION..."
+          curl -L -o sapling.deb \
+            "https://github.com/facebook/sapling/releases/download/${SAPLING_VERSION_ENCODED}/sapling_${SAPLING_VERSION}_amd64.Ubuntu22.04.deb"
+
+          # Extract binaries from .deb without using dpkg
+          ar x sapling.deb
+
+          # Handle different compression formats
+          if [ -f data.tar.zst ]; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq zstd
+            zstd -d data.tar.zst -o data.tar
+          elif [ -f data.tar.xz ]; then
+            xz -d data.tar.xz
+          elif [ -f data.tar.gz ]; then
+            gzip -d data.tar.gz
+          fi
+
+          # Extract to temp location first
+          mkdir -p extract
+          tar xf data.tar -C extract
+
+          # Copy binaries to /opt/sapling
+          sudo mkdir -p /opt/sapling/bin /opt/sapling/lib
+
+          # Find and copy sl binary and related files
+          if [ -d extract/usr/local/bin ]; then
+            sudo cp -r extract/usr/local/bin/* /opt/sapling/bin/
+          fi
+          if [ -d extract/usr/local/lib ]; then
+            sudo cp -r extract/usr/local/lib/* /opt/sapling/lib/
+          fi
+
+          # Cleanup
+          rm -rf sapling.deb data.tar* control.tar* debian-binary extract
+
+      - name: Setup Sapling PATH (Linux)
         if: runner.os == 'Linux'
         run: |
-          SAPLING_VERSION="0.2.20250521-115337+25ed6ac4"
-          curl -LO "https://github.com/facebook/sapling/releases/download/${SAPLING_VERSION}/sapling_${SAPLING_VERSION}_amd64.Ubuntu22.04.deb"
-          sudo dpkg -i sapling_*.deb
-          sl --version
+          echo "/opt/sapling/bin" >> $GITHUB_PATH
+          ls -la /opt/sapling/bin/
+          /opt/sapling/bin/sl --version
+
+      # ==================== macOS ====================
+      - name: Cache Homebrew Sapling (macOS)
+        if: runner.os == 'macOS'
+        id: cache-sapling-macos
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/Library/Caches/Homebrew/sapling--*
+            ~/Library/Caches/Homebrew/downloads/*sapling*
+            /opt/homebrew/Cellar/sapling
+          key: sapling-macos-homebrew-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
 
       - name: Install Sapling (macOS)
         if: runner.os == 'macOS'
         run: |
-          brew install sapling
+          # Homebrew handles architecture (ARM64/x86_64) and dependencies automatically
+          brew install sapling || brew upgrade sapling
+          which sl
           sl --version
 
+      # ==================== WINDOWS ====================
+      - name: Cache Sapling (Windows)
+        if: runner.os == 'Windows'
+        id: cache-sapling-windows
+        uses: actions/cache@v4
+        with:
+          path: C:\sapling
+          key: sapling-windows-${{ steps.sapling-release.outputs.version }}-v${{ env.SAPLING_CACHE_VERSION }}
+
       - name: Install Sapling (Windows)
+        if: runner.os == 'Windows' && steps.cache-sapling-windows.outputs.cache-hit != 'true'
+        shell: pwsh
+        run: |
+          $SAPLING_VERSION = "${{ steps.sapling-release.outputs.version }}"
+          $SAPLING_VERSION_ENCODED = "${{ steps.sapling-release.outputs.version_encoded }}"
+          $INSTALL_DIR = "C:\sapling"
+
+          Write-Host "Downloading Sapling $SAPLING_VERSION..."
+          $url = "https://github.com/facebook/sapling/releases/download/$SAPLING_VERSION_ENCODED/sapling_windows_${SAPLING_VERSION}_amd64.zip"
+          Invoke-WebRequest -Uri $url -OutFile sapling.zip
+
+          # Extract
+          New-Item -ItemType Directory -Force -Path $INSTALL_DIR | Out-Null
+          Expand-Archive sapling.zip -DestinationPath $INSTALL_DIR -Force
+
+          # Flatten if there's a subdirectory
+          $subdir = Get-ChildItem -Path $INSTALL_DIR -Directory | Select-Object -First 1
+          if ($subdir) {
+            Get-ChildItem -Path $subdir.FullName | Move-Item -Destination $INSTALL_DIR -Force
+            Remove-Item $subdir.FullName -Recurse -Force
+          }
+
+          Remove-Item sapling.zip -Force
+          Get-ChildItem $INSTALL_DIR
+
+      - name: Setup Sapling PATH (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: |
-          $SAPLING_VERSION = "0.2.20250521-115337+25ed6ac4"
-          $url = "https://github.com/facebook/sapling/releases/download/$SAPLING_VERSION/sapling_windows_${SAPLING_VERSION}_amd64.zip"
-          Invoke-WebRequest -Uri $url -OutFile sapling.zip
-          Expand-Archive sapling.zip -DestinationPath "$env:LOCALAPPDATA\Sapling"
-
-          # Add to GITHUB_PATH for subsequent steps
-          $saplingPath = "$env:LOCALAPPDATA\Sapling\sapling_windows_${SAPLING_VERSION}_amd64"
-          echo $saplingPath >> $env:GITHUB_PATH
-
-          # Remove PowerShell sl alias that conflicts with Sapling
+          echo "C:\sapling" >> $env:GITHUB_PATH
           Remove-Alias -Name sl -Force -Scope Global -ErrorAction SilentlyContinue
-
-          # Verify with explicit .exe
-          & "$saplingPath\sl.exe" --version
+          & "C:\sapling\sl.exe" --version
 
       - name: Remove sl alias (Windows)
         if: runner.os == 'Windows'
         shell: pwsh
         run: Remove-Alias -Name sl -Force -Scope Global -ErrorAction SilentlyContinue
 
+      # ==================== TESTS ====================
       - name: Run tests
         run: python test
