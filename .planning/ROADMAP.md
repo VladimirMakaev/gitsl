@@ -83,6 +83,12 @@
 
 **Dependencies**: None (builds on existing cmd_*.py pattern)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 15-01-PLAN.md - Create 6 command handlers and dispatch routing
+- [ ] 15-02-PLAN.md - E2E tests for all 6 commands
+
 **Requirements**:
 - SHOW-01, SHOW-02 (git show)
 - BLAME-01, BLAME-02 (git blame)
@@ -204,7 +210,7 @@ Phases execute in numeric order.
 | 12. Packaging | v1.1 | 1/1 | Complete | 2026-01-19 |
 | 13. CI/CD | v1.1 | 2/2 | Complete | 2026-01-19 |
 | 14. Documentation | v1.1 | 1/1 | Complete | 2026-01-19 |
-| 15. Direct Pass-through | v1.2 | 0/? | Pending | - |
+| 15. Direct Pass-through | v1.2 | 0/2 | Planned | - |
 | 16. Flag Translation | v1.2 | 0/? | Pending | - |
 | 17. Branch and Restore | v1.2 | 0/? | Pending | - |
 | 18. Stash Operations | v1.2 | 0/? | Pending | - |
