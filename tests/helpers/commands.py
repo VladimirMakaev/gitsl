@@ -52,8 +52,12 @@ def run_command(
         capture_output=True,
         text=True,
     )
+    # Normalize line endings for cross-platform compatibility
+    # Windows may output CRLF, we standardize to LF
+    stdout = result.stdout.replace('\r\n', '\n')
+    stderr = result.stderr.replace('\r\n', '\n')
     return CommandResult(
-        stdout=result.stdout,
-        stderr=result.stderr,
+        stdout=stdout,
+        stderr=stderr,
         exit_code=result.returncode,
     )
