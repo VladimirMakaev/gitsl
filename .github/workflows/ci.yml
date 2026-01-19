@@ -126,7 +126,16 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: python test --report test-results.xml -v
+        run: |
+          # Debug: show Python info
+          python --version
+          python -c "import sys; print(sys.executable)"
+          # Run tests (use --no-parallel on Windows due to potential issues)
+          if [[ "$RUNNER_OS" == "Windows" ]]; then
+            python test --report test-results.xml -v --no-parallel
+          else
+            python test --report test-results.xml -v
+          fi
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
