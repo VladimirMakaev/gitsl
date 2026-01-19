@@ -32,8 +32,8 @@ jobs:
         shell: bash
         run: |
           RELEASE_INFO=$(curl -s https://api.github.com/repos/facebook/sapling/releases/latest)
-          # Use python3 explicitly (python may not exist on all platforms)
-          TAG_NAME=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; print(json.load(sys.stdin)['tag_name'])")
+          # Use jq which is available on all GitHub runners
+          TAG_NAME=$(echo "$RELEASE_INFO" | jq -r '.tag_name')
           echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
           TAG_ENCODED=$(echo "$TAG_NAME" | sed 's/+/%2B/g')
           echo "version_encoded=$TAG_ENCODED" >> $GITHUB_OUTPUT
@@ -121,7 +121,10 @@ jobs:
       - name: Run tests
         shell: bash
         run: |
-          echo "Python version: $(python3 --version)"
+          echo "Python version:"
+          python3 --version
           echo "Working directory: $(pwd)"
-          echo "Test script exists: $(ls -la test)"
-          python3 test -v
+          echo "Test script:"
+          ls -la test
+          echo "Running tests..."
+          python3 test -v 2>&1 || { echo "Tests failed with exit code $?"; exit 1; }
