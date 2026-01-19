@@ -138,6 +138,7 @@ jobs:
           ls -la tests/
 
       - name: Run tests
+        working-directory: ${{ github.workspace }}
         env:
           PYTHONPATH: ${{ github.workspace }}/tests
-        run: pytest tests/ -v --tb=short
+        run: pytest tests/ -v --tb=long -c pytest.ini
