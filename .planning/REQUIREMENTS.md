@@ -39,14 +39,14 @@ Requirements for v1.1 Polish & Documentation release. Each maps to roadmap phase
 
 ### Documentation
 
-- [ ] **DOC-01**: README.md with installation instructions
-- [ ] **DOC-02**: README.md with quick start / usage examples
-- [ ] **DOC-03**: README.md with command support matrix (supported vs unsupported)
-- [ ] **DOC-04**: Per-command flag documentation with support status
-- [ ] **DOC-05**: Unsupported commands/flags include reason why
-- [ ] **DOC-06**: CI status badge in README
-- [ ] **DOC-07**: PyPI version badge in README
-- [ ] **DOC-08**: Python version badge in README
+- [x] **DOC-01**: README.md with installation instructions
+- [x] **DOC-02**: README.md with quick start / usage examples
+- [x] **DOC-03**: README.md with command support matrix (supported vs unsupported)
+- [x] **DOC-04**: Per-command flag documentation with support status
+- [x] **DOC-05**: Unsupported commands/flags include reason why
+- [x] **DOC-06**: CI status badge in README
+- [x] **DOC-07**: PyPI version badge in README
+- [x] **DOC-08**: Python version badge in README
 
 ## v2 Requirements
 
@@ -98,14 +98,14 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CI-03 | Phase 13 | Complete |
 | CI-04 | Phase 13 | Complete |
 | CI-05 | Phase 13 | Complete |
-| DOC-01 | Phase 14 | Pending |
-| DOC-02 | Phase 14 | Pending |
-| DOC-03 | Phase 14 | Pending |
-| DOC-04 | Phase 14 | Pending |
-| DOC-05 | Phase 14 | Pending |
-| DOC-06 | Phase 14 | Pending |
-| DOC-07 | Phase 14 | Pending |
-| DOC-08 | Phase 14 | Pending |
+| DOC-01 | Phase 14 | Complete |
+| DOC-02 | Phase 14 | Complete |
+| DOC-03 | Phase 14 | Complete |
+| DOC-04 | Phase 14 | Complete |
+| DOC-05 | Phase 14 | Complete |
+| DOC-06 | Phase 14 | Complete |
+| DOC-07 | Phase 14 | Complete |
+| DOC-08 | Phase 14 | Complete |
 
 **Coverage:**
 - v1.1 requirements: 26 total
