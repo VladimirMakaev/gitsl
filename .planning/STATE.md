@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 15 of 19 (v1.2)
-Plan: 02 of 02 (Direct pass-through commands - tests)
-Status: Phase 15 complete
-Last activity: 2026-01-19 - Completed 15-02-PLAN.md
+Phase: 16 of 19 (v1.2)
+Plan: 01 of 02 (Flag translation commands - handlers)
+Status: In progress
+Last activity: 2026-01-19 - Completed 16-01-PLAN.md
 
-Progress: [##........] 20% (v1.2 - 1 of 5 phases)
+Progress: [###.......] 30% (v1.2 - 1.5 of 5 phases)
 
 ## Milestones
 
@@ -27,7 +27,7 @@ Progress: [##........] 20% (v1.2 - 1 of 5 phases)
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 15 | Direct pass-through commands | 13 | Complete |
-| 16 | Flag translation commands | 8 | Pending |
+| 16 | Flag translation commands | 8 | In progress |
 | 17 | Branch and restore | 6 | Pending |
 | 18 | Stash operations | 7 | Pending |
 | 19 | Checkout command | 6 | Pending |
@@ -37,7 +37,7 @@ Progress: [##........] 20% (v1.2 - 1 of 5 phases)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22 (13 v1.0 + 7 v1.1 + 2 v1.2)
+- Total plans completed: 23 (13 v1.0 + 7 v1.1 + 3 v1.2)
 - Total phases completed: 15
 - Total requirements validated: 21 v1.0 + 26 v1.1 + 13 v1.2
 
@@ -47,7 +47,7 @@ Progress: [##........] 20% (v1.2 - 1 of 5 phases)
 |-----------|--------|-------|------|
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 2 |
-| v1.2 Commands | 1 | 2 | - |
+| v1.2 Commands | 1.5 | 3 | - |
 
 ## Accumulated Context
 
@@ -56,9 +56,14 @@ Progress: [##........] 20% (v1.2 - 1 of 5 phases)
 All decisions logged in PROJECT.md Key Decisions table.
 All marked as "Good" during milestone completions.
 
+**Phase 16 decisions:**
+- Enforce git's safety model for clean (-f or -n required, exit 128 otherwise)
+- Filter -d flag for clean since sl purge handles dirs by default
+- Default to --local scope for config writes when no scope specified
+
 ### Pending Todos
 
-- Plan Phase 16 (Flag Translation Commands)
+- Complete 16-02-PLAN.md (E2E tests for flag translation commands)
 
 ### Blockers/Concerns
 
@@ -68,12 +73,12 @@ None.
 
 Key pitfalls to address:
 1. **Checkout disambiguation** - Phase 19 must handle branch/file/commit ambiguity
-2. **Clean data safety** - Phase 16 must enforce `-f` requirement before passing to sl purge
+2. ~~**Clean data safety** - Phase 16 must enforce `-f` requirement before passing to sl purge~~ DONE in 16-01
 3. **Stash conflict handling** - Phase 18 must detect conflict state on pop
 4. **Bookmark model mismatch** - Phase 17 should document git branch vs sl bookmark differences
 
 ## Session Continuity
 
-Last session: 2026-01-19T23:22:00Z
-Stopped at: Completed 15-02-PLAN.md
-Resume with: `/gsd:plan-phase 16`
+Last session: 2026-01-19T23:38:00Z
+Stopped at: Completed 16-01-PLAN.md
+Resume with: `/gsd:execute-phase 16-02`
