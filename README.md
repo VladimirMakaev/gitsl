@@ -1,6 +1,6 @@
 # gitsl
 
-[![CI](https://img.shields.io/github/actions/workflow/status/owner/gitsl/ci.yml?branch=master)](https://github.com/owner/gitsl/actions)
+[![CI](https://img.shields.io/github/actions/workflow/status/VladimirMakaev/gitsl/ci.yml?branch=master)](https://github.com/VladimirMakaev/gitsl/actions)
 [![PyPI](https://img.shields.io/pypi/v/gitsl)](https://pypi.org/project/gitsl/)
 [![Python](https://img.shields.io/pypi/pyversions/gitsl)](https://pypi.org/project/gitsl/)
 
