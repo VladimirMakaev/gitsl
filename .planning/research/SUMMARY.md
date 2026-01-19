@@ -1,210 +1,190 @@
 # Project Research Summary
 
-**Project:** gitsl v1.1 Polish & Documentation
-**Domain:** CLI Packaging / PyPI Publishing / CI/CD
-**Researched:** 2026-01-18
+**Project:** GitSL v1.2 More Commands Support
+**Domain:** CLI Command Translation (Git to Sapling)
+**Researched:** 2026-01-19
 **Confidence:** HIGH
 
 ## Executive Summary
 
-gitsl v1.1 is a polish and documentation release that transforms the existing CLI shim from a working prototype into a properly packaged, documented, and continuously tested product. The research confirms that Python's modern packaging ecosystem (pyproject.toml with setuptools) provides a straightforward path to PyPI publishing, and GitHub Actions offers robust cross-platform CI capabilities. The key challenge is gitsl's flat module layout, which requires explicit module listing rather than relying on setuptools auto-discovery.
+GitSL v1.2 adds 13 new git commands to the existing shim, translating them to their Sapling equivalents. Research confirms the existing stdlib-only Python architecture scales well for this expansion. The codebase pattern is consistent: each command gets a `cmd_*.py` handler with a `handle(parsed)` function, using shared utilities from `common.py`. No new libraries are required. The key challenge is semantic translation rather than tooling -- understanding how git concepts map to fundamentally different Sapling models.
 
-The recommended approach prioritizes package structure first, then CI/CD, followed by documentation and finally the release workflow. This order ensures that each phase builds on a stable foundation: you cannot test what you cannot install, you cannot document what you have not verified works, and you cannot release what is not thoroughly tested. The existing codebase is well-structured for this transition, with clear module boundaries and established test patterns.
+The commands fall into five complexity categories: (1) simple pass-through (show, clone, grep), (2) command rename (blame->annotate, rm->remove, mv->move, clean->purge), (3) flag translation (config, switch, restore), (4) subcommand routing (stash->shelve, branch->bookmark), and (5) complex disambiguation (checkout). Implementation should proceed from simplest to most complex, building confidence and establishing patterns before tackling the notorious `git checkout` command.
 
-The primary risks are (1) the PowerShell `sl` alias conflict on Windows that will cause mysterious test failures, (2) PyPI's immutable releases meaning any premature release permanently consumes that version number, and (3) the need to configure trusted publishing on PyPI before the first release attempt. All three are preventable with proper planning and testing on TestPyPI first.
+Critical risks center on semantic model differences: Git's staging area vs Sapling's no-staging model, Git branches vs Sapling bookmarks, and most critically, `git checkout`'s overloaded behavior (branch switching, file restoration, and branch creation all in one command). Mitigation requires careful disambiguation logic, respecting the `--` separator, and potentially warning on ambiguous arguments. The `git clean` command also poses data-loss risk if the `-f` safety flag requirement is not enforced.
 
 ## Key Findings
 
 ### Recommended Stack
 
-The v1.1 stack is primarily about tooling and configuration rather than new dependencies. All recommendations use mature, well-documented components.
+The existing stack is fully sufficient. No new dependencies needed.
 
 **Core technologies:**
-- **pyproject.toml + setuptools**: Modern packaging standard, no extra dependencies, handles entry points cleanly
-- **GitHub Actions**: Native CI/CD, free for open source, excellent matrix support for cross-platform testing
-- **Trusted Publishing (OIDC)**: PyPI authentication without managing secrets, recommended by Python Packaging Authority
-- **pytest**: Already in use, add `./test` wrapper script for command-specific testing convenience
+- **Python >=3.8:** Runtime -- stdlib-only approach is a strength, keeps deps minimal
+- **subprocess (stdlib):** Execute sl commands -- existing `run_sl()` pattern works for all new commands
+- **dataclasses (stdlib):** ParsedCommand structure -- extends naturally to new commands
+- **pytest >=7.0:** Testing -- existing fixtures (`sl_repo`, `sl_repo_with_commit`) support new tests
 
-**Key configuration decisions:**
-- Use explicit `py-modules` list in pyproject.toml (flat layout requires this)
-- Version should remain in `common.py` with dynamic reading at build time
-- Python support: 3.8-3.13 to maximize compatibility
+**Architecture patterns that scale:**
+- One file per command (`cmd_*.py`) with consistent `handle(parsed)` interface
+- Entry point dispatch in `gitsl.py` (consider registry pattern for 20+ commands)
+- Shared utilities in `common.py` for `run_sl()`, argument parsing, debug mode
 
 ### Expected Features
 
 **Must have (table stakes):**
-- README with one-liner description, installation instructions, quick start example
-- Command support matrix showing what git commands are supported
-- Per-command flag documentation
-- `pip install gitsl` entry point works
-- `--help` and `--version` work correctly
-- LICENSE file (MIT)
+- `show <commit>`, `--stat` -- view commit details
+- `blame <file>` with `-u`, `-d` flags -- per-line annotations
+- `rm <files>`, `mv <src> <dst>` with `-f` flag -- file operations
+- `clean -f -d` with dry-run support -- remove untracked files
+- `clone <url>` with `-b` branch support -- repository cloning
+- `grep <pattern>` with `-i`, `-n` flags -- content search
+- `config <key>` with `--global`, `--local` scope -- configuration
+- `stash` / `stash pop` / `stash list` / `stash drop` -- temporary saves
+- `checkout <ref>`, `checkout -b <name>`, `checkout -- <file>` -- the overloaded classic
+- `switch <branch>`, `switch -c <name>` -- modern branch switching
+- `restore <file>`, `restore -s <source>` -- modern file restoration
+- `branch`, `branch <name>`, `branch -d` -- branch management
 
 **Should have (differentiators):**
-- Comprehensive command matrix covering ~34 git commands with status (implemented/planned/out-of-scope)
-- Badges showing CI status, Python versions, PyPI version
-- Cross-platform CI (Ubuntu, macOS, Windows)
-- `./test` and `./test <command>` convenience scripts
-- Architecture section explaining how translation works
+- `stash apply` (keep stash after applying)
+- `blame -w` (ignore whitespace)
+- `grep -A/-B/-C` (context lines)
+- `branch -a`, `branch -r` (remote listing)
+- `switch/checkout -m` (merge uncommitted changes)
 
 **Defer (v2+):**
-- GIF/video demos in README
-- Homebrew tap or other package managers
-- Additional git command implementations
-- GUI/TUI components
-- Extensive configuration options
+- `git blame --porcelain` (machine-readable format transformation)
+- `stash@{n}` reference syntax (complex index-to-name translation)
+- `checkout --track`, `--orphan` (different tracking model)
+- `branch --contains`, `--merged` (commit ancestry analysis)
+- Interactive modes (`-i`, `-p` flags requiring terminal control)
 
 ### Architecture Approach
 
-The research supports two viable package structures: maintaining the current flat layout with explicit module listing, or migrating to src layout. **Recommendation: keep flat layout for v1.1** to minimize disruption and testing burden. The flat layout works fine with explicit `py-modules` configuration.
+The existing handler-per-command pattern extends naturally. New commands integrate by: (1) creating `cmd_*.py`, (2) importing in `gitsl.py`, (3) adding dispatch condition, (4) updating `pyproject.toml` py-modules. Consider introducing a command registry decorator to replace the growing if-chain in `gitsl.py`.
 
 **Major components:**
-1. **pyproject.toml** - Package metadata, entry points, build configuration
-2. **GitHub workflows** - `ci.yml` for testing, `publish.yml` for PyPI release
-3. **Test infrastructure** - Existing pytest + new `./test` wrapper script
-4. **Documentation** - README.md structured per best practices
+1. **gitsl.py** -- Entry point, command dispatch (expand with 13 new imports)
+2. **common.py** -- Shared utilities (add `translate_flags()` helper, `is_file_path()` for checkout)
+3. **cmd_*.py handlers** -- 13 new files following established patterns
+4. **conftest.py fixtures** -- Add `sl_repo_with_shelve`, `sl_repo_with_bookmarks` for new commands
 
-**Entry point configuration:**
-```toml
-[project.scripts]
-gitsl = "gitsl:main"
-```
-
-This creates the `gitsl` command that calls `main()` from `gitsl.py`.
+**Handler complexity levels discovered in codebase:**
+- Level 1: Pass-through (cmd_commit.py pattern)
+- Level 2: Flag translation (cmd_log.py pattern)
+- Level 3: Output transformation (cmd_status.py pattern)
+- Level 4: Multi-step operations (cmd_add.py pattern)
 
 ### Critical Pitfalls
 
-1. **PowerShell `sl` alias conflict (Windows)** - PowerShell has built-in `sl` alias for `Set-Location`. Must remove alias in CI workflow: `Remove-Alias -Name sl -Force -ErrorAction SilentlyContinue`
+1. **Checkout command overloading** -- `git checkout` does three unrelated things (switch branch, restore file, create branch). Incorrect disambiguation causes data loss. **Prevention:** Check for `--` separator first, then file existence, then treat as ref. When truly ambiguous, prefer ref (safer).
 
-2. **PyPI immutable releases** - Cannot overwrite or delete released versions. Test on TestPyPI first. Use `.dev` versions for testing.
+2. **Bookmark vs branch model mismatch** -- Git branches are mandatory (always on a branch), Sapling bookmarks are optional (commits exist without bookmarks). **Prevention:** Document behavior difference; consider showing "no active bookmark" state to git users.
 
-3. **Missing trusted publisher config** - Must configure on PyPI.org AND test.pypi.org BEFORE first release attempt. Workflow, repo, and environment names must match exactly.
+3. **Stash/shelve conflict handling** -- Git stash pop keeps the stash on conflict; Sapling unshelve enters merge state requiring `--continue`/`--abort`. **Prevention:** Detect conflict state and preserve shelve; match git's behavior.
 
-4. **Flat layout module discovery** - Setuptools auto-discovery fails for flat layout. Must explicitly list all modules in `py-modules`.
+4. **Clean command data loss** -- `git clean` requires `-f` for safety; `sl clean` deletes by default. **Prevention:** Enforce `-f` requirement in gitsl wrapper before passing to sl.
 
-5. **pypa/gh-action-pypi-publish is Linux-only** - Docker-based action only runs on Linux. Build can happen on any OS, but publish job MUST use ubuntu-latest.
+5. **Config scope flag differences** -- Git uses `--global`, Sapling uses `--user`. **Prevention:** Flag translation: `--global` -> `--user`, `--system` -> `--system`.
 
-6. **Windows PATH for Sapling** - Sapling installer may not persist PATH changes. Explicitly add to `$GITHUB_PATH` in workflow.
-
-7. **Matrix fail-fast default** - GitHub Actions cancels all matrix jobs when one fails. Set `fail-fast: false` to see which platforms actually work.
+6. **Output format incompatibility** -- `git blame` output format differs from `sl annotate`; tools parse blame output. **Prevention:** Start with pass-through; add format transformation if user feedback indicates need.
 
 ## Implications for Roadmap
 
 Based on research, suggested phase structure:
 
-### Phase 1: Package Configuration
-**Rationale:** Foundation for all other phases. Cannot test installation without pyproject.toml.
-**Delivers:** Working `pip install -e .` and `pip install gitsl` (local)
-**Addresses:** pyproject.toml, entry points, version management
-**Avoids:** Pitfalls #4 (flat layout), #15-20 (package structure issues)
+### Phase 1: Direct Pass-through Commands
+**Rationale:** Simplest pattern (Level 1 complexity), establishes rhythm, builds confidence
+**Delivers:** 6 working commands with minimal risk
+**Commands:** show, clone, grep, blame (annotate), rm (remove), mv (move)
+**Avoids:** All critical pitfalls -- these are straightforward mappings
+**Estimated scope:** ~6 handlers, ~30 lines each
 
-Key tasks:
-- Create pyproject.toml with explicit py-modules list
-- Verify `pip install -e .` works
-- Verify `gitsl` command works after install
-- Verify `--version` shows correct version
+### Phase 2: Flag Translation Commands
+**Rationale:** Introduces flag mapping pattern used by later phases
+**Delivers:** 3 commands with moderate complexity
+**Commands:** config (scope flags), clean (safety enforcement + flag translation), switch (goto with -c create)
+**Avoids:** Pitfall #4 (clean data loss) by enforcing -f requirement
+**Uses:** New `translate_flags()` utility in common.py
+**Estimated scope:** ~3 handlers, ~50 lines each
 
-### Phase 2: CI Pipeline
-**Rationale:** Must have automated testing before documentation (ensures accuracy) and before release (prevents broken releases).
-**Delivers:** Green CI badge, cross-platform test matrix
-**Uses:** GitHub Actions, pytest
-**Avoids:** Pitfalls #6 (sl alias), #7 (paths), #8 (line endings), #10 (fail-fast), #11-14 (Sapling install)
+### Phase 3: Branch and Restore
+**Rationale:** Establishes subcommand routing pattern for stash; introduces file restoration pattern for checkout
+**Delivers:** 2 commands, prepares patterns for Phase 4
+**Commands:** branch (bookmark with subcommand routing), restore (revert with flag translation)
+**Avoids:** Pitfall #2 (bookmark model) addressed in branch handler documentation
+**Note:** Restore with `--staged` should warn (no staging in Sapling)
+**Estimated scope:** ~2 handlers, ~60 lines each
 
-Key tasks:
-- Create `.github/workflows/ci.yml`
-- Install Sapling on Ubuntu, macOS, Windows
-- Handle PowerShell `sl` alias on Windows
-- Test matrix: Python 3.8-3.13 x 3 OSes (with exclusions)
-- Set `fail-fast: false`
+### Phase 4: Stash Operations
+**Rationale:** Complex subcommand routing; builds on Phase 3 patterns
+**Delivers:** Full stash workflow (save, pop, list, drop, apply)
+**Commands:** stash (all subcommands -> shelve/unshelve)
+**Avoids:** Pitfall #3 (conflict handling), Pitfall #4 (list format)
+**Critical:** Must detect conflict state and preserve shelve on pop
+**Estimated scope:** 1 handler with ~5 subcommand functions, ~150 lines
 
-### Phase 3: Test Runner Improvements
-**Rationale:** Developer experience improvement. Should happen alongside CI to ensure `./test` works the same locally and in CI.
-**Delivers:** `./test` and `./test <command>` convenience scripts
-**Addresses:** Test runner UX from FEATURES.md
-
-Key tasks:
-- Create `./test` shell script
-- Support `./test status`, `./test log`, etc.
-- Ensure pytest.ini alignment with CI
-
-### Phase 4: Documentation
-**Rationale:** Documentation comes after CI is green so we can add accurate status badges and know exactly what works.
-**Delivers:** Complete README.md, LICENSE file
-**Addresses:** All table stakes from FEATURES.md
-
-Key tasks:
-- Write README.md with required sections
-- Add command support matrix (34 commands)
-- Add flag documentation for implemented commands
-- Add CI status badge
-- Ensure LICENSE file exists
-
-### Phase 5: Release Workflow
-**Rationale:** Final phase after everything else is stable and documented.
-**Delivers:** PyPI package, release automation
-**Avoids:** Pitfalls #1 (immutable), #2 (trusted publisher), #3 (TestPyPI), #4 (Linux-only), #5 (artifacts)
-
-Key tasks:
-- Configure trusted publisher on test.pypi.org
-- Test release to TestPyPI
-- Configure trusted publisher on pypi.org
-- Create `.github/workflows/publish.yml`
-- Test full release flow
+### Phase 5: Checkout (Most Complex)
+**Rationale:** Save for last -- benefits from all prior patterns; most critical pitfall area
+**Delivers:** The classic overloaded command
+**Commands:** checkout (disambiguation between goto, revert, bookmark+goto)
+**Avoids:** Pitfall #1 (command overloading) with explicit disambiguation logic
+**Uses:** Patterns from switch (Phase 2), restore (Phase 3)
+**Implementation approach:** Check `-b` flag first, then `--` separator, then file existence, finally treat as ref
+**Estimated scope:** 1 handler, ~100 lines with disambiguation logic
 
 ### Phase Ordering Rationale
 
-- **Package before CI**: Cannot run `pip install -e .` in CI without pyproject.toml
-- **CI before Documentation**: Need accurate CI status before adding badges
-- **Test runner alongside CI**: Both use pytest, should stay synchronized
-- **Documentation before Release**: README.md required for PyPI page
-- **Release last**: All quality checks must pass first
+- **Dependencies:** Checkout builds on patterns from switch (goto), restore (revert), and branch (bookmark). These must come first.
+- **Risk mitigation:** Simple commands first builds confidence; complex checkout last allows learning from earlier phases.
+- **Pattern establishment:** Flag translation (Phase 2) and subcommand routing (Phase 3) patterns are reused in Phases 4-5.
+- **Pitfall avoidance:** Critical pitfalls (#1 checkout, #3 stash conflict, #4 clean safety) each get dedicated focus in their respective phases.
 
 ### Research Flags
 
 Phases likely needing deeper research during planning:
-- **Phase 2 (CI):** Sapling installation steps may change with new releases. Pin specific version and test.
-- **Phase 5 (Release):** Trusted publishing configuration is repository-specific. Verify exact steps when ready.
+- **Phase 4 (Stash):** Verify sl shelve conflict detection; test unshelve error states; validate `--keep` preserves shelve correctly
+- **Phase 5 (Checkout):** Edge cases with ambiguous refs/files; behavior with uncommitted changes; `-B` force create semantics
 
 Phases with standard patterns (skip research-phase):
-- **Phase 1 (Package):** pyproject.toml is well-documented, patterns are established
-- **Phase 3 (Test Runner):** Simple shell script, no research needed
-- **Phase 4 (Documentation):** README patterns are established, just execution
+- **Phase 1:** All commands have 1:1 Sapling equivalents documented in official cheat sheet
+- **Phase 2:** Flag mappings clearly documented (config, clean, switch)
+- **Phase 3:** Branch/bookmark and restore/revert mappings are well-documented
 
 ## Confidence Assessment
 
 | Area | Confidence | Notes |
 |------|------------|-------|
-| Stack | HIGH | Official Python Packaging Guide, setuptools docs |
-| Features | MEDIUM-HIGH | Based on CLI best practices, may need user feedback |
-| Architecture | HIGH | Standard patterns, no novel approaches |
-| Pitfalls | HIGH | Verified against official docs, specific to this project |
+| Stack | HIGH | No changes needed; existing patterns sufficient |
+| Features | HIGH | All commands verified against Sapling docs |
+| Architecture | HIGH | Direct codebase analysis; patterns established |
+| Pitfalls | HIGH | 25 pitfalls identified from official docs |
 
 **Overall confidence:** HIGH
 
 ### Gaps to Address
 
-- **Sapling Windows installation**: Documentation is sparse. May need to experiment in CI to find reliable approach.
-- **Package name availability**: Have not verified "gitsl" is available on PyPI. Check before first release.
-- **macOS Sapling Homebrew stability**: `brew install sapling` works but version pinning options unclear.
+- **stash@{n} syntax:** Translating index-based references to shelve names adds complexity. Recommend supporting only "most recent" initially.
+- **Output format transformation:** Blame and stash list output formats differ. Decide during implementation whether to transform or document.
+- **Checkout ambiguity edge cases:** File named same as branch requires testing; may need to prefer explicit `--` usage.
+- **Bookmark-less state:** How to represent Sapling's "no active bookmark" to git users expecting to always be on a branch.
 
 ## Sources
 
 ### Primary (HIGH confidence)
-- [Python Packaging User Guide - Modernize setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/)
-- [Setuptools pyproject.toml Configuration](https://setuptools.pypa.io/en/latest/userguide/pyproject_config.html)
-- [PyPI Trusted Publishers Documentation](https://docs.pypi.org/trusted-publishers/)
-- [GitHub Actions Matrix Strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs)
-- [gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish)
+- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) -- Command mappings
+- [Sapling Commands Reference](https://sapling-scm.com/docs/category/commands/) -- All command details
+- [Sapling Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) -- Model differences
+- Existing codebase (`gitsl.py`, `common.py`, `cmd_*.py`) -- Established patterns
 
 ### Secondary (MEDIUM confidence)
-- [GitHub README guide](https://www.markepear.dev/blog/github-readme-guide) - README structure patterns
-- [gh CLI manual](https://cli.github.com/manual/gh) - Command documentation format
-- [Sapling Installation Guide](https://sapling-scm.com/docs/introduction/getting-started/)
-- [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
+- [Git Documentation](https://git-scm.com/docs) -- Command flag reference
+- [Sapling Bookmarks Overview](https://sapling-scm.com/docs/overview/bookmarks/) -- Branch model differences
 
 ### Tertiary (LOW confidence)
-- Sapling Windows installation specifics - May need validation during CI implementation
+- Community feedback on git-sapling interop -- Needs validation during implementation
 
 ---
-*Research completed: 2026-01-18*
+*Research completed: 2026-01-19*
 *Ready for roadmap: yes*

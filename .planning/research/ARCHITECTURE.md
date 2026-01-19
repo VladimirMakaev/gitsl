@@ -1,485 +1,680 @@
-# Architecture Research: v1.1 Polish
+# Architecture Research: v1.2 Command Expansion
 
-**Domain:** Python CLI Packaging for PyPI
-**Researched:** 2026-01-18
-**Confidence:** HIGH (well-established Python packaging patterns)
+**Domain:** Git-to-Sapling CLI Shim - Command Handler Integration
+**Researched:** 2026-01-19
+**Confidence:** HIGH (based on direct codebase analysis)
 
-## Executive Summary
+## Summary
 
-For v1.1, gitsl needs to transition from a flat collection of Python files to a proper installable package. The recommended approach uses **src layout** with **setuptools** as the build backend. This structure enables `pip install gitsl` to create the `gitsl` command via console script entry points, while maintaining backward compatibility with the existing module organization.
-
----
-
-## Package Layout
-
-### Recommended Directory Structure
-
-Transform the current flat layout into a src layout package:
-
-```
-gitsl/
-├── pyproject.toml          # Package metadata and build config
-├── README.md               # Package description for PyPI
-├── LICENSE                 # License file
-├── pytest.ini              # Test configuration (unchanged)
-├── src/
-│   └── gitsl/              # Main package
-│       ├── __init__.py     # Package initialization, exports VERSION
-│       ├── __main__.py     # Enable `python -m gitsl`
-│       ├── cli.py          # Main entry point (from gitsl.py)
-│       ├── common.py       # Shared utilities
-│       ├── cmd_status.py   # Command handlers
-│       ├── cmd_log.py
-│       ├── cmd_diff.py
-│       ├── cmd_init.py
-│       ├── cmd_rev_parse.py
-│       ├── cmd_add.py
-│       └── cmd_commit.py
-└── tests/
-    ├── __init__.py
-    ├── conftest.py         # Fixtures
-    ├── helpers/
-    │   ├── __init__.py
-    │   ├── commands.py
-    │   └── comparison.py
-    ├── test_cmd_status.py  # Renamed from test_status_porcelain.py
-    ├── test_cmd_log.py
-    ├── test_cmd_diff.py
-    ├── test_cmd_init.py
-    ├── test_cmd_rev_parse.py
-    ├── test_cmd_add.py
-    ├── test_cmd_commit.py
-    └── test_unsupported.py
-```
-
-### Why src Layout
-
-**Benefits over flat layout:**
-
-1. **Prevents accidental imports** - Cannot accidentally import uninstalled code
-2. **Enforces proper installation** - Tests run against installed package, catching packaging errors
-3. **Clear separation** - Source code isolated from project metadata
-
-**Source:** [Python Packaging User Guide - src layout vs flat layout](https://daobook.github.io/packaging.python.org/discussions/src-layout-vs-flat-layout.html)
-
-### Migration from Current Structure
-
-| Current Location | New Location |
-|-----------------|--------------|
-| `gitsl.py` | `src/gitsl/cli.py` |
-| `common.py` | `src/gitsl/common.py` |
-| `cmd_*.py` | `src/gitsl/cmd_*.py` |
-| `tests/` | `tests/` (unchanged) |
+The existing gitsl architecture is well-suited for the v1.2 command expansion. The codebase follows a consistent pattern: each command has a dedicated `cmd_*.py` module exporting a `handle(parsed: ParsedCommand) -> int` function. The main `gitsl.py` dispatcher routes commands to handlers via simple if-statements. New commands integrate by: (1) creating a `cmd_*.py` handler, (2) importing it in `gitsl.py`, (3) adding a dispatch condition, and (4) updating `pyproject.toml` py-modules list. The five command categories (pass-through, rename, subcommand translation, complex disambiguation, model translation) each have established patterns in the existing codebase that can be extended.
 
 ---
 
-## Entry Points
+## Existing Patterns Analysis
 
-### Console Script Configuration
+### Entry Point and Dispatch (`gitsl.py`)
 
-The `gitsl` command is installed via entry points in `pyproject.toml`:
-
-```toml
-[project.scripts]
-gitsl = "gitsl.cli:main"
-```
-
-When users run `pip install gitsl`, this creates a `gitsl` executable that calls the `main()` function from `gitsl.cli` module.
-
-### Supporting `python -m gitsl`
-
-Create `src/gitsl/__main__.py`:
+The dispatcher is straightforward:
 
 ```python
-"""Enable running gitsl as a module: python -m gitsl"""
-from gitsl.cli import main
-import sys
+# Import all command handlers
+import cmd_status
+import cmd_log
+# ... etc
 
-if __name__ == "__main__":
-    sys.exit(main())
+def main(argv: List[str] = None) -> int:
+    parsed = parse_argv(argv)
+
+    # Special flags (--version, --help)
+    # ...
+
+    # Debug mode early exit
+    if is_debug_mode():
+        print_debug_info(parsed)
+        return 0
+
+    # Command dispatch
+    if parsed.command == "status":
+        return cmd_status.handle(parsed)
+    if parsed.command == "log":
+        return cmd_log.handle(parsed)
+    # ... more commands
+
+    # Unsupported fallback
+    print(f"gitsl: unsupported command: ...", file=sys.stderr)
+    return 0
 ```
 
-### Package Initialization
+**Pattern:** Each command is a simple if-condition. No routing table, no registry. This works well for the current 7 commands but may become unwieldy with 20+ commands. Consider introducing a command registry for v1.2.
 
-Create `src/gitsl/__init__.py`:
+### Command Handler Interface (`common.py`)
+
+All handlers share the same signature:
 
 ```python
-"""gitsl - Git to Sapling CLI shim."""
-from gitsl.common import VERSION
-
-__version__ = VERSION
-__all__ = ["VERSION", "__version__"]
+def handle(parsed: ParsedCommand) -> int:
+    """Handle the command. Return exit code."""
 ```
+
+Where `ParsedCommand` contains:
+- `command: Optional[str]` - The git command (e.g., "commit", "status")
+- `args: List[str]` - Remaining arguments after the command
+- `raw_argv: List[str]` - Original argv for debugging
+
+**Pattern:** Handlers receive the full argument list and are responsible for their own parsing and translation.
+
+### Handler Complexity Levels
+
+The existing handlers demonstrate three complexity levels:
+
+**Level 1: Pass-through (simplest)**
+```python
+# cmd_commit.py, cmd_diff.py, cmd_init.py
+def handle(parsed: ParsedCommand) -> int:
+    return run_sl(["commit"] + parsed.args)  # Just change command name
+```
+
+**Level 2: Flag translation**
+```python
+# cmd_log.py
+def handle(parsed: ParsedCommand) -> int:
+    # Parse args to identify --oneline, -N, etc.
+    # Build sl command with translated flags
+    return run_sl(sl_args)
+```
+
+**Level 3: Output transformation**
+```python
+# cmd_status.py
+def handle(parsed: ParsedCommand) -> int:
+    if needs_transform:
+        # Capture sl output, transform, print
+        result = subprocess.run(['sl', 'status'] + sl_args, capture_output=True)
+        transformed = transform_to_porcelain(result.stdout)
+        sys.stdout.write(transformed)
+        return result.returncode
+    return run_sl(['status'] + parsed.args)
+```
+
+**Level 4: Multi-step operations**
+```python
+# cmd_add.py (for -u flag)
+def handle(parsed: ParsedCommand) -> int:
+    if "-u" in parsed.args:
+        # Query sl for deleted files
+        deleted_files = get_deleted_files(pathspec)
+        # Mark deleted files for removal
+        if deleted_files:
+            subprocess.run(["sl", "remove", "--mark"] + deleted_files)
+        return 0
+    return run_sl(["add"] + parsed.args)
+```
+
+### Shared Utilities (`common.py`)
+
+Current utilities:
+- `ParsedCommand` - Dataclass for parsed arguments
+- `parse_argv(argv)` - Parse git-style arguments
+- `is_debug_mode()` - Check GITSL_DEBUG environment variable
+- `print_debug_info(parsed)` - Debug output
+- `run_sl(args)` - Execute sl command with I/O passthrough
 
 ---
 
-## pyproject.toml Configuration
+## New Command Categories
 
-### Complete Configuration
+Based on the project context, the 13 new commands fall into 5 categories:
 
-```toml
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
+### Category 1: Simple Pass-through
 
-[project]
-name = "gitsl"
-version = "1.1.0"
-description = "Git to Sapling CLI translation shim"
-readme = "README.md"
-license = "MIT"
-requires-python = ">=3.9"
-authors = [
-    {name = "Your Name", email = "your@email.com"}
-]
-keywords = ["git", "sapling", "vcs", "cli", "shim"]
-classifiers = [
-    "Development Status :: 4 - Beta",
-    "Environment :: Console",
-    "Intended Audience :: Developers",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-    "Topic :: Software Development :: Version Control",
-]
+**Commands:** `show`, `clone`, `grep`, `config`
 
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "ruff>=0.1.0",
-]
+**Pattern:** Same as `cmd_commit.py`, `cmd_diff.py`, `cmd_init.py`
 
-[project.scripts]
-gitsl = "gitsl.cli:main"
+```python
+# cmd_show.py
+from common import ParsedCommand, run_sl
 
-[project.urls]
-Homepage = "https://github.com/youruser/gitsl"
-Repository = "https://github.com/youruser/gitsl"
-Issues = "https://github.com/youruser/gitsl/issues"
-
-[tool.setuptools.packages.find]
-where = ["src"]
-
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
+def handle(parsed: ParsedCommand) -> int:
+    return run_sl(["show"] + parsed.args)
 ```
 
-### Key Configuration Points
+**Complexity:** LOW - One function, 3-5 lines each
+**Dependencies:** None (can be implemented in any order)
+**Testing:** Verify command reaches sl, exit code propagates
 
-| Section | Purpose |
-|---------|---------|
-| `[build-system]` | Declares setuptools as build backend |
-| `[project]` | Standard metadata (name, version, description) |
-| `[project.scripts]` | Creates `gitsl` CLI command |
-| `[tool.setuptools.packages.find]` | Tells setuptools to find packages in `src/` |
-| `[tool.pytest.ini_options]` | Configures pytest to find src and tests |
+### Category 2: Command Rename
 
-**Source:** [Python Packaging User Guide - Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
+**Commands:**
+- `blame` -> `annotate`
+- `rm` -> `remove`
+- `mv` -> `rename`
+- `clean` -> `purge`
+
+**Pattern:** Similar to pass-through but with command substitution:
+
+```python
+# cmd_blame.py
+from common import ParsedCommand, run_sl
+
+def handle(parsed: ParsedCommand) -> int:
+    return run_sl(["annotate"] + parsed.args)  # blame -> annotate
+```
+
+**Complexity:** LOW - Same as pass-through
+**Dependencies:** None
+**Testing:** Verify correct sl command is called, args pass through
+
+### Category 3: Subcommand Translation
+
+**Command:** `stash` with subcommands `pop`, `list`, `drop`, `apply`
+
+**Pattern:** Parse first argument to determine subcommand, translate to sl equivalents:
+
+```python
+# cmd_stash.py
+from common import ParsedCommand, run_sl
+
+STASH_SUBCOMMANDS = {
+    "pop": "shelve --continue",     # or appropriate sl equivalent
+    "list": "shelve --list",
+    "drop": "shelve --delete",
+    "apply": "shelve --apply",
+    # default (no subcommand): "shelve"
+}
+
+def handle(parsed: ParsedCommand) -> int:
+    if parsed.args and parsed.args[0] in STASH_SUBCOMMANDS:
+        subcommand = parsed.args[0]
+        remaining_args = parsed.args[1:]
+        # Translate and execute
+        ...
+    else:
+        # git stash (no subcommand) -> sl shelve
+        return run_sl(["shelve"] + parsed.args)
+```
+
+**Complexity:** MEDIUM - Subcommand parsing, translation mapping
+**Dependencies:** Research needed on sl shelve semantics
+**Testing:** Each subcommand needs separate test cases
+
+**Note:** Sapling uses `shelve` for stash-like functionality. Verify:
+- `sl shelve` (save)
+- `sl unshelve` (restore)
+- `sl shelve --list` (list)
+- `sl shelve --delete <name>` (drop)
+
+### Category 4: Complex Disambiguation
+
+**Command:** `checkout` - Can mean different things:
+
+1. `git checkout <branch>` -> `sl goto <bookmark>`
+2. `git checkout <file>` -> `sl revert <file>`
+3. `git checkout -b <branch>` -> `sl bookmark <name> && sl goto <name>`
+
+**Pattern:** Analyze arguments to determine intent:
+
+```python
+# cmd_checkout.py
+from common import ParsedCommand, run_sl
+import subprocess
+
+def handle(parsed: ParsedCommand) -> int:
+    # Case 1: -b flag (create and switch to new branch)
+    if "-b" in parsed.args:
+        return handle_create_branch(parsed)
+
+    # Case 2: File path (revert file)
+    # Need heuristic: is argument a file or a branch?
+    if is_file_path(parsed.args):
+        return handle_revert_files(parsed)
+
+    # Case 3: Branch/bookmark name
+    return handle_goto_branch(parsed)
+
+def is_file_path(args):
+    """Heuristic to detect file paths vs branch names."""
+    # Check if args contain paths that exist on disk
+    # Or use -- separator if present
+    ...
+```
+
+**Complexity:** HIGH - Requires disambiguation logic
+**Dependencies:** May need new utilities in `common.py`
+**Testing:** Extensive - each use case needs coverage
+
+**Disambiguation strategies:**
+1. **Explicit separator:** `git checkout -- file.txt` (the `--` indicates paths follow)
+2. **File existence check:** If argument is an existing file, treat as revert
+3. **Fail-safe:** When ambiguous, prefer safer interpretation or error
+
+### Category 5: Model Translation
+
+**Command:** `branch` -> `bookmark`
+
+Git branches are conceptually similar to Sapling bookmarks. Translation:
+
+| Git Command | Sapling Equivalent |
+|-------------|-------------------|
+| `git branch` | `sl bookmark` (list) |
+| `git branch <name>` | `sl bookmark <name>` |
+| `git branch -d <name>` | `sl bookmark --delete <name>` |
+| `git branch -D <name>` | `sl bookmark --delete --force <name>` |
+| `git branch -m <old> <new>` | `sl bookmark --rename <old> <new>` |
+| `git branch -a` | `sl bookmark --all` (or remote equivalent) |
+
+```python
+# cmd_branch.py
+from common import ParsedCommand, run_sl
+
+def handle(parsed: ParsedCommand) -> int:
+    sl_args = ["bookmark"]
+
+    # Translate flags
+    i = 0
+    while i < len(parsed.args):
+        arg = parsed.args[i]
+
+        if arg == "-d":
+            sl_args.append("--delete")
+        elif arg == "-D":
+            sl_args.extend(["--delete", "--force"])
+        elif arg == "-m":
+            sl_args.append("--rename")
+        elif arg == "-a":
+            sl_args.append("--all")  # verify this exists
+        else:
+            sl_args.append(arg)
+
+        i += 1
+
+    return run_sl(sl_args)
+```
+
+**Complexity:** MEDIUM - Flag translation similar to `cmd_log.py`
+**Dependencies:** Research sl bookmark flag semantics
+**Testing:** Each flag combination needs coverage
 
 ---
 
-## Test Organization
+## Suggested Build Order
 
-### Command-Specific Test Pattern
+### Phase 1: Pass-through Commands (Lowest Risk)
 
-Tests are already organized by command. Maintain this pattern:
+**Commands:** `show`, `clone`, `grep`, `config`
 
-```
-tests/
-├── test_cmd_status.py      # All status command tests
-├── test_cmd_log.py         # All log command tests
-├── test_cmd_diff.py        # All diff command tests
-└── ...
-```
-
-### Running Tests for Specific Commands
-
-With pytest, filter by command using `-k`:
-
-```bash
-# Run all status tests
-pytest -k status
-
-# Run all log tests
-pytest -k log
-
-# Run specific test class
-pytest -k "TestLogOneline"
-
-# Run tests matching pattern
-pytest -k "test_cmd_log and oneline"
-```
-
-### Wrapper Script for `./test <command>`
-
-Create a test runner script for the `./test <command>` pattern:
-
-```bash
-#!/bin/bash
-# test - Run tests for a specific command or all tests
-
-if [ -z "$1" ]; then
-    # No argument - run all tests
-    pytest tests/ -v
-else
-    # Filter by command name
-    pytest tests/ -k "$1" -v
-fi
-```
-
-Usage:
-```bash
-./test              # All tests
-./test status       # Status command tests
-./test log          # Log command tests
-./test "log and oneline"  # More specific filter
-```
-
-### Test Discovery After Restructure
-
-Update `pytest.ini` or use `pyproject.toml`:
-
-```toml
-[tool.pytest.ini_options]
-testpaths = ["tests"]
-pythonpath = ["src"]
-```
-
-**Important:** With src layout, you must either:
-1. Install the package in editable mode: `pip install -e .`
-2. OR configure `pythonpath` in pytest config
-
-**Source:** [Pytest with Eric - Organizing Tests](https://pytest-with-eric.com/pytest-best-practices/pytest-organize-tests/)
-
----
-
-## CI Workflow Integration
-
-### GitHub Actions Workflow
-
-Create `.github/workflows/test.yml`:
-
-```yaml
-name: Tests
-
-on:
-  push:
-    branches: [master, main]
-  pull_request:
-    branches: [master, main]
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install Sapling
-        run: |
-          # Install Sapling for E2E tests
-          # Note: Sapling may need specific installation steps
-          # This is a placeholder - verify actual installation method
-          echo "Sapling installation step"
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
-
-      - name: Run tests
-        run: pytest -v --tb=short
-
-      - name: Run linter
-        run: ruff check src/ tests/
-```
-
-### Key CI Considerations
-
-1. **Sapling Dependency** - E2E tests require Sapling (`sl`). CI needs to install it.
-2. **Editable Install** - Use `pip install -e .` so tests run against the actual package.
-3. **Matrix Testing** - Test across Python 3.9-3.12 for compatibility.
-4. **Linting** - Add ruff for code quality checks.
-
-**Source:** [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
-
----
-
-## Build Order
-
-### Phase 1: Package Restructure
-
-**Goal:** Reorganize files into src layout.
-
-**Steps:**
-1. Create `src/gitsl/` directory structure
-2. Move source files with updated imports
-3. Create `__init__.py` and `__main__.py`
-4. Update all internal imports (e.g., `from common import` -> `from gitsl.common import`)
+**Rationale:**
+- Simplest pattern (Level 1 complexity)
+- No argument translation needed
+- Establishes rhythm for v1.2 development
+- Provides quick wins to validate process
 
 **Dependencies:** None
+**Estimated effort:** 1 handler = 10-15 min each (with tests)
 
-### Phase 2: pyproject.toml
+### Phase 2: Command Renames (Low Risk)
 
-**Goal:** Create package configuration.
+**Commands:** `blame`->`annotate`, `rm`->`remove`, `mv`->`rename`, `clean`->`purge`
 
-**Steps:**
-1. Create `pyproject.toml` with metadata
-2. Configure entry points for `gitsl` command
-3. Configure setuptools package discovery
-4. Merge pytest.ini into pyproject.toml (optional)
+**Rationale:**
+- Same pattern as pass-through
+- Only difference is command name substitution
+- Still no argument translation
 
-**Dependencies:** Phase 1 complete
+**Dependencies:** None (can parallelize with Phase 1)
+**Estimated effort:** 1 handler = 10-15 min each (with tests)
 
-### Phase 3: Test Updates
+### Phase 3: Model Translation - Branch (Medium Risk)
 
-**Goal:** Tests work with new structure.
+**Command:** `branch` -> `bookmark`
 
-**Steps:**
-1. Update conftest.py to use installed package
-2. Update imports in test files
-3. Verify `pytest -k <command>` filtering works
-4. Create `./test` convenience script
+**Rationale:**
+- Establishes flag translation pattern for more complex commands
+- Well-defined flag mappings
+- Single command to focus on before tackling more complex cases
 
-**Dependencies:** Phase 2 complete (need editable install)
+**Dependencies:** Phases 1-2 (for pattern validation)
+**Estimated effort:** 30-45 min (with comprehensive flag testing)
 
-### Phase 4: CI Integration
+### Phase 4: Subcommand Translation - Stash (Medium Risk)
 
-**Goal:** Automated testing on push.
+**Command:** `stash` with pop/list/drop/apply
 
-**Steps:**
-1. Create `.github/workflows/test.yml`
-2. Configure Sapling installation in CI
-3. Add linting step
-4. Test matrix across Python versions
+**Rationale:**
+- New pattern (subcommand parsing)
+- Requires research into sl shelve behavior
+- Contained complexity (clear subcommand boundaries)
 
-**Dependencies:** Phase 3 complete (tests must pass)
+**Dependencies:** Phase 3 (for flag translation patterns)
+**Estimated effort:** 45-60 min (with research and testing)
 
-### Phase 5: PyPI Publishing (Optional)
+### Phase 5: Complex Disambiguation - Checkout (Highest Risk)
 
-**Goal:** Package available via `pip install gitsl`.
+**Command:** `checkout` (goto, revert, or bookmark+goto)
 
-**Steps:**
-1. Create PyPI account and API token
-2. Add publish workflow to GitHub Actions
-3. Configure trusted publisher (recommended)
-4. Create first release
+**Rationale:**
+- Most complex command in v1.2
+- Requires disambiguation heuristics
+- May need new common.py utilities
+- Save for last to benefit from all prior patterns
 
-**Dependencies:** Phase 4 complete
+**Dependencies:** Phases 1-4 (all patterns established)
+**Estimated effort:** 60-90 min (with extensive edge case testing)
 
 ### Dependency Graph
 
 ```
-Phase 1: Package Restructure
-    │
+Phase 1: Pass-through (show, clone, grep, config)
+    |
     v
-Phase 2: pyproject.toml
-    │
+Phase 2: Rename (blame, rm, mv, clean) [can parallelize with Phase 1]
+    |
     v
-Phase 3: Test Updates
-    │
+Phase 3: Branch -> Bookmark
+    |
     v
-Phase 4: CI Integration
-    │
+Phase 4: Stash -> Shelve
+    |
     v
-Phase 5: PyPI Publishing (optional)
+Phase 5: Checkout (disambiguation)
 ```
 
 ---
 
-## Import Updates Required
+## Shared Utilities
 
-### Before (Flat Layout)
+### Recommended Additions to `common.py`
 
-```python
-# In gitsl.py
-from common import parse_argv, is_debug_mode, print_debug_info, VERSION
-import cmd_status
-import cmd_log
-...
+**1. Command Registry (Optional but Recommended)**
 
-# In cmd_status.py
-from common import ParsedCommand, run_sl
-```
-
-### After (src Layout)
+Replace if-chain dispatch with registry pattern:
 
 ```python
-# In src/gitsl/cli.py
-from gitsl.common import parse_argv, is_debug_mode, print_debug_info, VERSION
-from gitsl import cmd_status
-from gitsl import cmd_log
-...
+# common.py
+from typing import Callable, Dict
 
-# In src/gitsl/cmd_status.py
-from gitsl.common import ParsedCommand, run_sl
+# Type alias for handler functions
+Handler = Callable[[ParsedCommand], int]
+
+# Command registry
+COMMAND_HANDLERS: Dict[str, Handler] = {}
+
+def register_command(name: str):
+    """Decorator to register a command handler."""
+    def decorator(handler: Handler) -> Handler:
+        COMMAND_HANDLERS[name] = handler
+        return handler
+    return decorator
+
+def dispatch(parsed: ParsedCommand) -> int:
+    """Dispatch to registered handler or return unsupported."""
+    handler = COMMAND_HANDLERS.get(parsed.command)
+    if handler:
+        return handler(parsed)
+    return handle_unsupported(parsed)
 ```
 
-### Automated Migration
+Usage in handlers:
+```python
+# cmd_show.py
+from common import ParsedCommand, run_sl, register_command
 
-Consider using `rope` or manual find-replace:
-
-```bash
-# Find all imports to update
-grep -r "from common import" --include="*.py"
-grep -r "import cmd_" --include="*.py"
+@register_command("show")
+def handle(parsed: ParsedCommand) -> int:
+    return run_sl(["show"] + parsed.args)
 ```
+
+**Benefits:**
+- Eliminates 20+ if-statements in gitsl.py
+- Self-documenting (handlers self-register)
+- Easier to test (can inspect registry)
+
+**Tradeoff:** More abstraction, slightly harder to trace code flow. Given current codebase is 7 commands going to 20+, the registry is justified.
+
+**2. File vs Branch Detection Utility (for checkout)**
+
+```python
+# common.py
+import os
+
+def is_file_path(path: str, cwd: str = None) -> bool:
+    """
+    Check if argument looks like a file path.
+
+    Returns True if:
+    - Path exists on disk
+    - Path contains directory separators
+    - Previous argument was '--'
+    """
+    if cwd:
+        full_path = os.path.join(cwd, path)
+    else:
+        full_path = path
+
+    if os.path.exists(full_path):
+        return True
+    if '/' in path or '\\' in path:
+        return True
+    return False
+
+def parse_checkout_args(args: List[str]) -> dict:
+    """
+    Parse checkout arguments to determine intent.
+
+    Returns dict with:
+    - mode: "create_branch" | "switch_branch" | "revert_files"
+    - branch: branch name (if applicable)
+    - files: file list (if applicable)
+    - create_flag: -b or -B (if applicable)
+    """
+    ...
+```
+
+**3. Flag Translation Helper (for branch, stash, etc.)**
+
+```python
+# common.py
+from typing import Dict, List, Tuple
+
+def translate_flags(
+    args: List[str],
+    flag_map: Dict[str, str],
+    value_flags: List[str] = None
+) -> List[str]:
+    """
+    Translate git flags to sl flags.
+
+    Args:
+        args: Original git arguments
+        flag_map: Mapping of git flag -> sl flag (e.g., {"-d": "--delete"})
+        value_flags: Flags that take a value argument (e.g., ["-m"])
+
+    Returns:
+        Translated argument list
+    """
+    result = []
+    value_flags = value_flags or []
+    i = 0
+
+    while i < len(args):
+        arg = args[i]
+
+        if arg in flag_map:
+            translated = flag_map[arg]
+            if isinstance(translated, list):
+                result.extend(translated)  # e.g., -D -> ["--delete", "--force"]
+            else:
+                result.append(translated)
+        else:
+            result.append(arg)
+
+        i += 1
+
+    return result
+```
+
+---
+
+## Component Boundaries
+
+### Current Architecture
+
+```
++-------------------+
+|     gitsl.py      |  Entry point, dispatch
++--------+----------+
+         |
+         v
++--------+----------+
+|    common.py      |  Shared utilities, ParsedCommand, run_sl
++--------+----------+
+         |
+    +----+----+----+----+----+----+----+
+    |    |    |    |    |    |    |    |
+    v    v    v    v    v    v    v    v
+  cmd_  cmd_  cmd_  cmd_  cmd_  cmd_  cmd_
+status log  diff  init  rev_  add commit
+                        parse
+```
+
+### Proposed v1.2 Architecture
+
+```
++-------------------+
+|     gitsl.py      |  Entry point (simplified with registry)
++--------+----------+
+         |
+         v
++--------+----------+
+|    common.py      |  ParsedCommand, run_sl, registry, utilities
++--------+----------+
+         |
+    +----+----+----+...+----+----+----+
+    |    |    |       |    |    |    |
+    v    v    v       v    v    v    v
+  cmd_* (20+ handlers, each self-registering)
+```
+
+### File Responsibilities
+
+| Component | Current | v1.2 Addition |
+|-----------|---------|---------------|
+| `gitsl.py` | Dispatch via if-chain | Dispatch via registry |
+| `common.py` | ParsedCommand, run_sl, debug | + register_command, translate_flags, is_file_path |
+| `cmd_*.py` | One per command | 13 new files following existing pattern |
+| `pyproject.toml` | Lists 7 cmd_* modules | Lists 20 cmd_* modules |
+
+---
+
+## Testing Patterns
+
+### Existing Test Structure (to follow)
+
+Each command has a test file `test_<command>.py` with:
+
+1. **Module-level markers:** Skip if sl not installed
+2. **Test classes by feature:** `TestLogBasic`, `TestLogOneline`, `TestLogLimit`
+3. **Fixtures from conftest:** `sl_repo`, `sl_repo_with_commit`, etc.
+4. **Assertion pattern:** Check exit code, verify sl state changes
+
+### New Test Requirements
+
+**Category 1-2 (Pass-through, Rename):**
+- Verify correct sl command called (use debug mode or mock)
+- Verify exit code propagation
+- Verify arguments pass through unchanged
+
+**Category 3 (Branch):**
+- Test each flag translation independently
+- Test flag combinations
+- Test error cases (delete non-existent branch, etc.)
+
+**Category 4 (Stash):**
+- Test each subcommand
+- Test stash with no subcommand
+- Verify shelve state changes
+
+**Category 5 (Checkout):**
+- Test `-b` branch creation
+- Test file revert with existing file
+- Test branch switch
+- Test ambiguous cases (file named same as branch)
+- Test `--` separator
 
 ---
 
 ## Pitfalls to Avoid
 
-### 1. Forgetting Editable Install
+### 1. Checkout Ambiguity
 
-**Problem:** Tests fail with `ModuleNotFoundError: No module named 'gitsl'`
+**Risk:** `git checkout main` - is `main` a file or a branch?
 
-**Solution:** Always run `pip install -e .` after restructure before testing.
+**Mitigation:**
+- Check file existence first
+- Respect `--` separator
+- When truly ambiguous, prefer branch (safer - doesn't modify files)
+- Consider warning message for ambiguous cases
 
-### 2. Circular Import with __init__.py
+### 2. Stash/Shelve Semantic Differences
 
-**Problem:** Importing VERSION in `__init__.py` from common.py may cause issues if common.py imports from other modules.
+**Risk:** Git stash and Sapling shelve may not be 1:1 equivalent.
 
-**Solution:** Keep `__init__.py` minimal. Only import what is truly needed for public API.
+**Mitigation:**
+- Research sl shelve thoroughly before implementing
+- Document any behavioral differences
+- Consider subset of stash functionality that maps cleanly
 
-### 3. Test Import Path Confusion
+### 3. Branch/Bookmark Model Differences
 
-**Problem:** Tests import wrong version (local vs installed).
+**Risk:** Git branches and Sapling bookmarks have different semantics (e.g., git branches track commits, bookmarks are just pointers).
 
-**Solution:** src layout prevents this by design - you MUST install to import.
+**Mitigation:**
+- Focus on common use cases
+- Document limitations in README
+- Consider "close enough" translations
 
-### 4. Missing __init__.py Files
+### 4. Growing Dispatch Complexity
 
-**Problem:** Package not discoverable.
+**Risk:** 20+ if-statements in gitsl.py becomes unmaintainable.
 
-**Solution:** Ensure `__init__.py` exists in:
-- `src/gitsl/__init__.py`
-- `tests/__init__.py`
-- `tests/helpers/__init__.py`
+**Mitigation:**
+- Implement command registry pattern
+- OR accept longer dispatch block (it's still just a switch statement)
+
+### 5. pyproject.toml Module List
+
+**Risk:** Forgetting to add new cmd_*.py to py-modules list.
+
+**Mitigation:**
+- Add to checklist for each new command
+- Consider wildcard pattern if supported
 
 ---
 
 ## Sources
 
-### Primary (HIGH Confidence)
-- [Python Packaging User Guide - Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/)
-- [Python Packaging User Guide - src layout vs flat layout](https://daobook.github.io/packaging.python.org/discussions/src-layout-vs-flat-layout.html)
-- [Xebia - Updated Guide to Setuptools and Pyproject.toml](https://xebia.com/blog/an-updated-guide-to-setuptools-and-pyproject-toml/)
+### Codebase Files Reviewed (HIGH Confidence)
 
-### Secondary (MEDIUM Confidence)
-- [Pytest with Eric - GitHub Actions Integration](https://pytest-with-eric.com/integrations/pytest-github-actions/)
-- [Pytest with Eric - Organizing Tests](https://pytest-with-eric.com/pytest-best-practices/pytest-organize-tests/)
-- [pyOpenSci - pyproject.toml Tutorial](https://www.pyopensci.org/python-package-guide/tutorials/pyproject-toml.html)
-- [Real Python - Managing Python Projects with pyproject.toml](https://realpython.com/python-pyproject-toml/)
+| File | Lines | Key Insights |
+|------|-------|--------------|
+| `gitsl.py` | 93 | Entry point, dispatch pattern |
+| `common.py` | 106 | ParsedCommand, run_sl, debug utilities |
+| `cmd_status.py` | 110 | Output transformation pattern |
+| `cmd_log.py` | 72 | Flag translation pattern |
+| `cmd_add.py` | 78 | Multi-step operation pattern |
+| `cmd_commit.py` | 13 | Pass-through pattern |
+| `cmd_diff.py` | 13 | Pass-through pattern |
+| `cmd_init.py` | 13 | Pass-through pattern |
+| `cmd_rev_parse.py` | 33 | Subprocess with output capture |
+| `tests/conftest.py` | 193 | Test fixtures, sl_repo patterns |
+| `tests/test_log.py` | 163 | Test class organization |
+| `tests/test_add.py` | 249 | Comprehensive flag testing |
+| `pyproject.toml` | 52 | Module list, entry point config |
+
+### Sapling Documentation (Research Needed)
+
+For v1.2 implementation, verify these sl commands:
+- `sl shelve` / `sl unshelve` semantics
+- `sl bookmark` flag equivalents
+- `sl goto` vs `sl checkout` (if different)
+- `sl revert` for file restoration

@@ -1,802 +1,958 @@
-# Pitfalls Research: v1.1 Polish (Packaging & CI/CD)
+# Pitfalls Research: v1.2 Git Command Expansion
 
-**Domain:** Python CLI package publishing and cross-platform CI
-**Researched:** 2026-01-18
-**Confidence:** HIGH (verified against PyPI docs, GitHub Actions docs, and Python Packaging Guide)
-
----
-
-## PyPI Publishing Pitfalls
-
-### Pitfall 1: Version Already Exists (Immutable Releases)
-
-**What goes wrong:** Attempting to upload a version that already exists on PyPI fails with "File already exists" error.
-
-**Why it happens:** PyPI does not allow overwriting releases. Once version 1.0.0 is uploaded, it cannot be replaced or deleted (even if yanked, the version number remains reserved).
-
-**Consequences:**
-- Failed CI releases require version bump to fix
-- Accidental premature release blocks that version number forever
-- Testing on TestPyPI then real PyPI can cause version conflicts
-
-**Prevention:**
-```yaml
-# Test on TestPyPI first with .dev versions
-# pyproject.toml
-version = "1.0.0.dev1"  # For testing
-
-# Only tag and release final versions after TestPyPI validation
-# Use semantic versioning: 1.0.0, 1.0.1, 1.1.0
-```
-
-**Warning signs:** CI publishing step fails with 400 error mentioning "file already exists"
-
-**Which phase should address:** Phase 1 (Release Workflow Setup). Establish versioning discipline before first release.
-
-**Source:** [PyPI Docs](https://docs.pypi.org/) - HIGH confidence
+**Domain:** Git-to-Sapling CLI command translation
+**Researched:** 2026-01-19
+**Confidence:** HIGH (verified against Sapling official documentation and Git documentation)
 
 ---
 
-### Pitfall 2: Missing Trusted Publisher Configuration
+## Summary
 
-**What goes wrong:** GitHub Actions workflow fails with 403 Forbidden when attempting to publish to PyPI.
+Expanding gitsl to support additional commands (show, blame, rm, mv, clean, clone, grep, config, stash, checkout, switch, restore, branch) introduces significant complexity due to fundamental differences between Git and Sapling models. The most critical pitfalls involve:
 
-**Why it happens:** Trusted Publishing requires explicit configuration on PyPI before the first publish. The workflow, repository, and environment must all match exactly.
+1. **Semantic model differences** - Git branches vs Sapling bookmarks, Git staging vs Sapling's no-staging model
+2. **Command overloading** - Git checkout does 3+ different things, requiring disambiguation
+3. **Output format incompatibility** - Tools parse git blame/branch output; format differences break tooling
+4. **Stash/shelve behavioral differences** - Conflict handling, naming conventions, list formats differ
+5. **Destructive operations** - clean/purge, checkout --force can cause data loss
 
-**Consequences:**
-- First release attempt fails
-- Must manually configure PyPI project settings
-- Environment name mismatch silently fails
-
-**Prevention:**
-```yaml
-# 1. Configure on PyPI BEFORE first release:
-#    pypi.org/manage/account/publishing/
-#    - Repository: owner/repo
-#    - Workflow: release.yml (exact filename)
-#    - Environment: pypi (if using environments)
-
-# 2. Workflow must have id-token permission:
-jobs:
-  publish:
-    permissions:
-      id-token: write  # MANDATORY for trusted publishing
-
-    # 3. Environment must match PyPI configuration
-    environment:
-      name: pypi
-      url: https://pypi.org/p/gitsl
-```
-
-**Warning signs:** 403 errors mentioning "token" or "authentication" despite using trusted publishing
-
-**Which phase should address:** Phase 1 (Release Workflow Setup). Configure before first release attempt.
-
-**Source:** [PyPI Trusted Publishers Docs](https://docs.pypi.org/trusted-publishers/) - HIGH confidence
+This research identifies 25 specific pitfalls organized by command category with prevention strategies and phase recommendations.
 
 ---
 
-### Pitfall 3: TestPyPI vs PyPI Account Confusion
+## Critical Pitfalls
 
-**What goes wrong:** Credentials work on TestPyPI but not PyPI, or vice versa.
+### Pitfall 1: checkout Command Overloading
 
-**Why it happens:** TestPyPI and PyPI are completely separate systems with independent:
-- User accounts
-- API tokens
-- Trusted publisher configurations
-- Package namespaces
+**Risk:** `git checkout` does multiple unrelated things - switching commits, restoring files, and creating branches. Translating incorrectly causes data loss or unexpected behavior.
 
-**Consequences:**
-- Package name available on TestPyPI but taken on real PyPI
-- Trusted publisher must be configured on BOTH separately
-- Different tokens/credentials needed for each
+**What goes wrong:**
+- `git checkout <branch>` = switch to branch (sl goto)
+- `git checkout <file>` = restore file to HEAD (sl revert)
+- `git checkout <commit> -- <file>` = restore file to specific commit (sl revert -r)
+- `git checkout -b <branch>` = create and switch to new branch (sl bookmark + goto)
 
-**Prevention:**
-```yaml
-# Configure trusted publishing on BOTH:
-# 1. test.pypi.org/manage/account/publishing/
-# 2. pypi.org/manage/account/publishing/
+If gitsl guesses wrong about whether an argument is a branch/commit or a file, it either:
+- Switches to wrong commit instead of restoring file
+- Restores file when user wanted to switch commits
+- Both can cause work loss
 
-# Use separate workflow jobs or conditions:
-jobs:
-  publish-testpypi:
-    if: github.event_name == 'push'  # Every push
-    uses: pypa/gh-action-pypi-publish@release/v1
-    with:
-      repository-url: https://test.pypi.org/legacy/
-
-  publish-pypi:
-    if: startsWith(github.ref, 'refs/tags/')  # Only tags
-    uses: pypa/gh-action-pypi-publish@release/v1
-```
-
-**Warning signs:** Works on test, fails on production (or reverse)
-
-**Which phase should address:** Phase 1 (Release Workflow). Check package name availability on real PyPI first.
-
-**Source:** [Using TestPyPI - Python Packaging Guide](https://packaging.python.org/en/latest/guides/using-testpypi/) - HIGH confidence
-
----
-
-### Pitfall 4: pypa/gh-action-pypi-publish is Linux-Only
-
-**What goes wrong:** Publish job fails when using Windows or macOS runner.
-
-**Why it happens:** The official PyPI publish action is Docker-based and only runs on Linux runners.
-
-**Consequences:**
-- Build on Windows/macOS, but MUST publish from Linux job
-- Requires separate build and publish jobs with artifact transfer
-
-**Prevention:**
-```yaml
-jobs:
-  build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v4
-      - run: python -m build
-      - uses: actions/upload-artifact@v4
-        with:
-          name: dist-${{ matrix.os }}
-          path: dist/
-
-  publish:
-    needs: build
-    runs-on: ubuntu-latest  # MUST be Linux
-    steps:
-      - uses: actions/download-artifact@v4
-      - uses: pypa/gh-action-pypi-publish@release/v1
-```
-
-**Warning signs:** "Cannot run Docker-based action on this runner"
-
-**Which phase should address:** Phase 2 (CI Pipeline). Design job structure with Linux publish job.
-
-**Source:** [gh-action-pypi-publish README](https://github.com/pypa/gh-action-pypi-publish) - HIGH confidence
-
----
-
-### Pitfall 5: Build Artifacts Not in dist/ Directory
-
-**What goes wrong:** Publish action finds no files to upload.
-
-**Why it happens:**
-- Build output in wrong location
-- Artifact download doesn't preserve directory structure
-- `python -m build` outputs to `dist/` but action looks elsewhere
-
-**Consequences:**
-- Empty release
-- "No files to upload" error
-
-**Prevention:**
-```yaml
-# Ensure build creates dist/
-- run: python -m build
-  # Creates: dist/package-1.0.0.tar.gz and dist/package-1.0.0-py3-none-any.whl
-
-# When downloading artifacts, merge into single dist/
-- uses: actions/download-artifact@v4
-  with:
-    path: dist/
-    merge-multiple: true  # Combine all artifacts
-    pattern: dist-*
-
-# Verify before publish
-- run: ls -la dist/
-```
-
-**Warning signs:** Publish step completes instantly with no files uploaded
-
-**Which phase should address:** Phase 2 (CI Pipeline). Test artifact flow locally first.
-
-**Source:** [Python Packaging Guide - Publishing with GitHub Actions](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/) - HIGH confidence
-
----
-
-## Cross-Platform CI Pitfalls
-
-### Pitfall 6: Windows PowerShell `sl` Alias Conflict
-
-**What goes wrong:** `sl` command in Windows CI runs PowerShell's `Set-Location` instead of Sapling.
-
-**Why it happens:** PowerShell has a built-in alias `sl` for `Set-Location` (equivalent to `cd`). This alias takes precedence over the Sapling binary.
-
-**Consequences:**
-- Tests using `sl` commands fail mysteriously on Windows
-- Error messages about invalid paths instead of Sapling errors
-- Works locally if user removed alias, fails in CI
-
-**Prevention:**
-```powershell
-# Option 1: Remove the alias in workflow
-Remove-Alias -Name sl -Force -ErrorAction SilentlyContinue
-
-# Option 2: Use full path
-C:\Program Files\Sapling\sl.exe status
-
-# Option 3: In Python tests, always use full path on Windows
-import shutil
-sl_path = shutil.which('sl') or r'C:\Program Files\Sapling\sl.exe'
-```
-
-**Warning signs:** Windows tests fail with path-related errors, Linux/macOS pass
-
-**Which phase should address:** Phase 2 (CI Pipeline). Add alias removal to Windows setup.
-
-**Source:** [Sapling Installation Docs](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
-
----
-
-### Pitfall 7: Path Separator Differences
-
-**What goes wrong:** File paths in tests or output use wrong separator for platform.
-
-**Why it happens:**
-- Windows uses `\`, Unix uses `/`
-- Hardcoded paths break cross-platform
-- Git/Sapling output may normalize to `/` even on Windows
-
-**Consequences:**
-- Path comparisons fail
-- File operations fail
-- Tests pass on one OS, fail on others
+**Warning signs:**
+- Tests pass with clear branch names but fail with ambiguous arguments
+- User reports "file disappeared" or "ended up on wrong commit"
+- Arguments that look like paths but are also valid refs
 
 **Prevention:**
 ```python
-# WRONG - hardcoded separator
-expected = "src/gitsl/main.py"
+# Disambiguation strategy (match git's approach):
+def disambiguate_checkout_target(args):
+    # 1. If -- separator present, everything after is paths
+    if '--' in args:
+        return parse_with_separator(args)
 
-# CORRECT - use pathlib or os.path
-from pathlib import Path
-expected = Path("src/gitsl/main.py")  # Handles separators
-
-# For comparing git output (which uses /), normalize:
-output_path = output.replace('\\', '/')
+    # 2. Check if arg exists as file on disk
+    # 3. Check if arg exists as ref (commit/branch/bookmark)
+    # 4. If both, prefer ref (git behavior) but consider --
+    # 5. If neither, error
 ```
 
-**Warning signs:** String comparison failures in tests involving paths
+**Phase:** Checkout/Switch/Restore implementation. This is the most complex command to implement correctly.
 
-**Which phase should address:** Phase 2 (CI Pipeline). Review all path handling in tests.
-
-**Source:** [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
+**Source:** [Git Checkout Documentation](https://git-scm.com/docs/git-checkout), [Sapling goto](https://sapling-scm.com/docs/commands/goto/), [Sapling revert](https://sapling-scm.com/docs/commands/revert/) - HIGH confidence
 
 ---
 
-### Pitfall 8: Line Ending Differences (CRLF vs LF)
+### Pitfall 2: Bookmark vs Branch Model Mismatch
 
-**What goes wrong:** Tests comparing file contents or command output fail due to line endings.
+**Risk:** Git branches and Sapling bookmarks have fundamentally different semantics, causing confusion and incorrect behavior.
 
-**Why it happens:**
-- Windows defaults to CRLF (`\r\n`)
-- Unix uses LF (`\n`)
-- Git can auto-convert line endings
-- Text mode file reads may not preserve original endings
+**What goes wrong:**
+- **Git branches are mandatory** - you're always on a branch (or detached HEAD, which is a warning state)
+- **Sapling bookmarks are optional** - commits exist without bookmarks, visible in smartlog
+- **Rebase behavior differs** - Git rebasing affects only current branch; Sapling rebasing moves ALL bookmarks on affected commits
+- **Deletion semantics differ** - Deleting git branch makes commits hard to find; deleting Sapling bookmark doesn't hide commits
 
-**Consequences:**
-- String comparisons fail
-- Hash/checksum differences
-- Diff output shows entire file changed
+**Warning signs:**
+- User expects to be "on a branch" but Sapling shows no active bookmark
+- `git branch` output is empty when user expects to see branches
+- Rebase moves more bookmarks than expected
 
 **Prevention:**
 ```python
-# Normalize line endings in comparisons
-def normalize_newlines(text):
-    return text.replace('\r\n', '\n').replace('\r', '\n')
+# For `git branch` listing:
+# - Include all bookmarks from `sl bookmark`
+# - May need to indicate "no active bookmark" state differently than detached HEAD
 
-# Configure git to handle line endings
-# .gitattributes
-* text=auto eol=lf
+# For `git branch -d`:
+# - Warn that commits will still be visible (different from git)
+# - Map to `sl bookmark -d`
 
-# In subprocess, use text=True for automatic handling
-result = subprocess.run(cmd, capture_output=True, text=True)
+# Consider: Should we show "detached HEAD" warning when no bookmark active?
+# Git users expect this; Sapling users don't care
 ```
 
-**Warning signs:** Tests fail only on Windows with output comparison errors
+**Phase:** Branch/Bookmark implementation. Design decision needed about how to represent Sapling's bookmarkless state.
 
-**Which phase should address:** Phase 2 (CI Pipeline). Add .gitattributes and normalize in tests.
-
-**Source:** General cross-platform patterns - HIGH confidence
+**Source:** [Sapling Bookmarks Overview](https://sapling-scm.com/docs/overview/bookmarks/), [Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) - HIGH confidence
 
 ---
 
-### Pitfall 9: GitHub Actions Cache Key Mismatch Across OS
+### Pitfall 3: blame/annotate Output Format Incompatibility
 
-**What goes wrong:** Cache restored from wrong OS, causing failures or wasted time.
+**Risk:** Many tools parse `git blame` output programmatically. Sapling's `sl annotate` produces different output format, breaking these tools.
 
-**Why it happens:** Same cache key used across different operating systems. A cache saved on Linux cannot be used on Windows due to:
-- Different paths
-- Different compression
-- Binary incompatibility
-
-**Consequences:**
-- Cache restores but contents unusable
-- Subtle failures from wrong binaries
-- No cache benefit if key doesn't include OS
-
-**Prevention:**
-```yaml
-- uses: actions/cache@v4
-  with:
-    path: ~/.cache/pip
-    # MUST include runner.os in key
-    key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
-    restore-keys: |
-      ${{ runner.os }}-pip-
+**What goes wrong:**
+Git blame default format:
+```
+abc1234 (Author Name 2024-01-15 10:30:45 +0000 42) line content
 ```
 
-**Warning signs:** Cache hit but installation still runs, or strange import errors
-
-**Which phase should address:** Phase 2 (CI Pipeline). Always include OS in cache keys.
-
-**Source:** [GitHub Actions Cache Documentation](https://github.com/actions/cache) - HIGH confidence
-
----
-
-### Pitfall 10: Matrix Strategy fail-fast Behavior
-
-**What goes wrong:** One failing OS/Python combination cancels all other matrix jobs.
-
-**Why it happens:** `fail-fast: true` is the default. When one job fails, GitHub cancels pending and running jobs in the same matrix.
-
-**Consequences:**
-- Cannot see which platforms actually work
-- Intermittent failures cancel valid tests
-- Hard to debug platform-specific issues
-
-**Prevention:**
-```yaml
-strategy:
-  fail-fast: false  # Let all jobs complete
-  matrix:
-    os: [ubuntu-latest, windows-latest, macos-latest]
-    python-version: ['3.9', '3.10', '3.11', '3.12']
+Git blame --porcelain format includes structured headers:
+```
+abc1234567890123456789012345678901234567890 42 42 1
+author Author Name
+author-mail <author@example.com>
+author-time 1705315845
+...
 ```
 
-**Warning signs:** Jobs showing as "cancelled" rather than failed/passed
+Sapling annotate format differs - uses changeset IDs, different date formats, different spacing.
 
-**Which phase should address:** Phase 2 (CI Pipeline). Set fail-fast: false for test matrices.
+Tools that break:
+- IDE blame integrations
+- Code review tools
+- `git blame --porcelain | some-parser`
 
-**Source:** [GitHub Actions Matrix Documentation](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) - HIGH confidence
-
----
-
-## Sapling Installation in CI
-
-### Pitfall 11: No Official Sapling GitHub Action
-
-**What goes wrong:** Searching for `sapling-scm/setup-sapling` action finds nothing.
-
-**Why it happens:** Unlike many tools, Sapling doesn't provide an official GitHub Action for installation. Manual installation required.
-
-**Consequences:**
-- Must write custom installation steps
-- Different installation for each OS
-- Version pinning is manual
+**Warning signs:**
+- blame output "looks different" in visual inspection
+- Tools that parse blame output fail silently or crash
+- Date parsing fails due to format differences
 
 **Prevention:**
-```yaml
-jobs:
-  test:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
-
-    steps:
-      - name: Install Sapling (Ubuntu)
-        if: runner.os == 'Linux'
-        run: |
-          RELEASE="0.2.20250521-115337+25ed6ac4"
-          curl -L -o sapling.deb \
-            "https://github.com/facebook/sapling/releases/download/${RELEASE}/sapling_${RELEASE}_amd64.Ubuntu22.04.deb"
-          sudo dpkg -i sapling.deb
-
-      - name: Install Sapling (macOS)
-        if: runner.os == 'macOS'
-        run: brew install sapling
-
-      - name: Install Sapling (Windows)
-        if: runner.os == 'Windows'
-        run: |
-          # Download and extract Windows build
-          # Add to PATH
-```
-
-**Warning signs:** "sl: command not found" in CI
-
-**Which phase should address:** Phase 2 (CI Pipeline). Create reusable installation steps.
-
-**Source:** [Sapling Releases](https://github.com/facebook/sapling/releases) - HIGH confidence
-
----
-
-### Pitfall 12: Sapling Version Not Pinned
-
-**What goes wrong:** CI suddenly breaks when Sapling releases new version with breaking changes.
-
-**Why it happens:**
-- `brew install sapling` gets latest version
-- Releases may change command behavior
-- No version constraint in workflow
-
-**Consequences:**
-- Flaky CI (works sometimes, fails others)
-- Hard to reproduce failures locally
-- Unexpected behavior changes
-
-**Prevention:**
-```yaml
-# Pin to specific release version
-- name: Install Sapling (Ubuntu)
-  run: |
-    VERSION="0.2.20250521-115337+25ed6ac4"
-    curl -L -o sapling.deb \
-      "https://github.com/facebook/sapling/releases/download/${VERSION}/..."
-    sudo dpkg -i sapling.deb
-
-# For Homebrew, pin if possible
-- name: Install Sapling (macOS)
-  run: |
-    brew tap facebook/fb
-    brew install facebook/fb/sapling@0.2  # If available
-```
-
-**Warning signs:** CI fails on date X but passed before, no code changes
-
-**Which phase should address:** Phase 2 (CI Pipeline). Pin versions from the start.
-
-**Source:** [Sapling Releases](https://github.com/facebook/sapling/releases) - MEDIUM confidence
-
----
-
-### Pitfall 13: Missing Git Dependency for Sapling
-
-**What goes wrong:** Sapling commands fail in CI even though sl is installed.
-
-**Why it happens:** When using Sapling in git-compatible mode (working with .git repos), it requires git to be installed for certain operations.
-
-**Consequences:**
-- Tests fail with cryptic errors
-- Works locally where git is always present
-- Partial test failures
-
-**Prevention:**
-```yaml
-# Ensure git is installed (usually is by default, but verify)
-- name: Setup dependencies
-  run: |
-    git --version
-    sl --version
-```
-
-**Warning signs:** Some Sapling operations fail with "git not found" in logs
-
-**Which phase should address:** Phase 2 (CI Pipeline). Verify git presence in setup.
-
-**Source:** [Sapling Getting Started](https://sapling-scm.com/docs/introduction/getting-started/) - MEDIUM confidence
-
----
-
-### Pitfall 14: Windows Sapling PATH Not Set
-
-**What goes wrong:** Sapling installed on Windows but `sl` not found.
-
-**Why it happens:** Windows Sapling installer adds to PATH but:
-- GitHub Actions may not pick up PATH changes mid-job
-- Installer may require shell restart
-- PATH modification may not persist between steps
-
-**Consequences:**
-- Install succeeds, tests fail
-- Manual PATH addition required
-
-**Prevention:**
-```yaml
-- name: Install Sapling (Windows)
-  run: |
-    # Download and install
-    Invoke-WebRequest -Uri $URL -OutFile sapling.zip
-    Expand-Archive sapling.zip -DestinationPath C:\sapling
-
-    # Explicitly add to PATH for subsequent steps
-    echo "C:\sapling" >> $env:GITHUB_PATH
-```
-
-**Warning signs:** Windows install step passes, next step fails with "sl not found"
-
-**Which phase should address:** Phase 2 (CI Pipeline). Explicitly add to GITHUB_PATH.
-
-**Source:** [Sapling Installation Docs](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
-
----
-
-## Package Structure Pitfalls
-
-### Pitfall 15: Missing [build-system] Table
-
-**What goes wrong:** `pip install .` fails or uses legacy behavior with deprecation warnings.
-
-**Why it happens:** pyproject.toml without `[build-system]` table is treated as legacy. Modern pip requires explicit build system declaration.
-
-**Consequences:**
-- "No build backend configured" errors
-- Falls back to deprecated setup.py behavior
-- Installation may silently work differently than expected
-
-**Prevention:**
-```toml
-# pyproject.toml - ALWAYS include this
-[build-system]
-requires = ["setuptools>=61.0"]
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "gitsl"
-version = "1.0.0"
-# ...
-```
-
-**Warning signs:** DeprecationWarning about build backend during install
-
-**Which phase should address:** Phase 1 (Package Structure). Add from the start.
-
-**Source:** [Python Packaging Guide - Modernizing setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/) - HIGH confidence
-
----
-
-### Pitfall 16: Console Scripts Not Working After Install
-
-**What goes wrong:** `pip install .` succeeds but `gitsl` command not found.
-
-**Why it happens:**
-- `[project.scripts]` entry point syntax wrong
-- Module path doesn't match actual package structure
-- Function doesn't exist or has wrong signature
-
-**Consequences:**
-- Package installs but command unavailable
-- Command exists but fails immediately on import
-
-**Prevention:**
-```toml
-# pyproject.toml
-[project.scripts]
-gitsl = "gitsl:main"  # module:function
-
-# Verify:
-# 1. gitsl.py exists in package root OR gitsl/__init__.py
-# 2. main() function exists and is importable
-# 3. main() accepts no required arguments
-
-# Test locally:
-pip install -e .
-which gitsl  # Should show path
-gitsl --version  # Should work
-```
-
-**Warning signs:** "command not found" after successful install
-
-**Which phase should address:** Phase 1 (Package Structure). Test entry points before release.
-
-**Source:** [Setuptools Entry Points Documentation](https://setuptools.pypa.io/en/latest/userguide/entry_point.html) - HIGH confidence
-
----
-
-### Pitfall 17: Version String Duplication
-
-**What goes wrong:** Version in pyproject.toml doesn't match version in code, causing confusion.
-
-**Why it happens:**
-- Version hardcoded in multiple places
-- Forgot to update one when bumping version
-- `--version` flag shows different version than pip
-
-**Consequences:**
-- User confusion about actual version
-- Bug reports reference wrong version
-- Debugging nightmare
-
-**Prevention:**
-```toml
-# Option 1: Single source in pyproject.toml (simplest for small packages)
-[project]
-version = "1.0.0"
-
-# Access at runtime:
-from importlib.metadata import version
-VERSION = version("gitsl")
-```
-
 ```python
-# common.py - get version from package metadata
-try:
-    from importlib.metadata import version
-    VERSION = version("gitsl")
-except Exception:
-    VERSION = "0.0.0-dev"  # Fallback for development
+# Options for handling:
+
+# Option 1: Output transformation (HIGH effort)
+# Capture sl annotate output, transform to git format
+# Must handle: hash length, author format, date format, line numbers
+
+# Option 2: Pass-through with documentation (LOW effort)
+# Document that blame output format differs
+# Tools may need adjustment
+
+# Option 3: Support only git blame --porcelain
+# Easier to emit structured format from sl annotate data
+
+# Recommendation: Start with pass-through, add --porcelain support
+# if user feedback indicates need
 ```
 
-**Warning signs:** `--version` shows different version than `pip show`
+**Phase:** Blame implementation. Consider output transformation if tools depend on exact format.
 
-**Which phase should address:** Phase 1 (Package Structure). Establish single source of truth.
-
-**Source:** [Python Packaging Guide - Version Management](https://betterstack.com/community/guides/scaling-python/pyproject-explained/) - HIGH confidence
+**Source:** [Git blame Documentation](https://git-scm.com/docs/git-blame), [Sapling annotate](https://sapling-scm.com/docs/commands/annotate/) - HIGH confidence
 
 ---
 
-### Pitfall 18: Package Not Including All Necessary Files
+### Pitfall 4: stash/shelve Naming and Listing Differences
 
-**What goes wrong:** Installed package missing files that exist in source tree.
+**Risk:** `git stash list` format differs from `sl shelve --list`, breaking scripts that parse stash output.
 
-**Why it happens:**
-- Setuptools auto-discovery misses files
-- Non-.py files (configs, data) not included
-- Files outside package directory excluded
-
-**Consequences:**
-- ImportError for missing modules
-- FileNotFoundError for data files
-- Works in dev, fails when installed
-
-**Prevention:**
-```toml
-# pyproject.toml - be explicit about package structure
-[tool.setuptools]
-packages = ["gitsl"]  # Or use find:
-
-# For flat layout (files in root):
-[tool.setuptools]
-py-modules = ["gitsl", "common", "cmd_status", "cmd_log", "cmd_diff",
-              "cmd_init", "cmd_rev_parse", "cmd_add", "cmd_commit"]
-
-# Include non-Python files:
-[tool.setuptools.package-data]
-gitsl = ["*.json", "*.txt"]
+**What goes wrong:**
+Git stash list format:
+```
+stash@{0}: WIP on main: abc1234 Commit message
+stash@{1}: On feature: def5678 Another message
 ```
 
-**Warning signs:** "ModuleNotFoundError" after pip install
+Tools parse the `stash@{N}` syntax to reference stashes. Sapling shelve uses names:
+```
+name1           (1 hour ago) description
+name2           (2 days ago) another description
+```
 
-**Which phase should address:** Phase 1 (Package Structure). List modules explicitly.
+**Warning signs:**
+- Scripts using `git stash pop stash@{1}` fail
+- Parsing stash list for automation fails
+- Different default naming conventions
 
-**Source:** [Python Packaging Guide](https://www.pyopensci.org/python-package-guide/package-structure-code/pyproject-toml-python-package-metadata.html) - HIGH confidence
+**Prevention:**
+```python
+# For `git stash list`:
+# Transform sl shelve --list output to git format
+# Generate stash@{N} references from shelve list order
+
+def transform_shelve_list_to_stash_format(shelve_output):
+    lines = []
+    for i, shelf in enumerate(parse_shelves(shelve_output)):
+        # Format: stash@{N}: message or WIP description
+        lines.append(f"stash@{{i}}: {shelf.description or 'WIP'}")
+    return '\n'.join(lines)
+
+# For `git stash pop stash@{1}`:
+# Convert stash@{N} reference to shelve name
+# Get Nth shelve from list, use its name for unshelve
+```
+
+**Phase:** Stash/Shelve implementation. Output format transformation required.
+
+**Source:** [Git stash Documentation](https://git-scm.com/docs/git-stash), [Sapling shelve](https://sapling-scm.com/docs/commands/shelve/) - HIGH confidence
 
 ---
 
-### Pitfall 19: requires-python Not Set
+### Pitfall 5: stash pop Conflict Handling Differences
 
-**What goes wrong:** Package installed on unsupported Python version, then crashes with syntax errors.
+**Risk:** When `git stash pop` encounters conflicts, it keeps the stash. `sl unshelve` may behave differently, causing data loss or confusion.
 
-**Why it happens:** Without `requires-python`, pip allows installation on any Python version. Modern syntax (f-strings, walrus operator, etc.) then fails on older Python.
+**What goes wrong:**
+- Git: On conflict, stash is NOT dropped - use `git stash drop` after resolving
+- Sapling: On conflict, enters unfinished merge state, must use `--continue` or `--abort`
+- If gitsl doesn't handle this correctly, user may lose shelved changes
 
-**Consequences:**
-- SyntaxError on older Python
-- Confusing error messages
-- Users blame package, not their Python version
+**Warning signs:**
+- User reports "stash disappeared after conflict"
+- Conflict resolution workflow differs
+- `git stash list` shows different count than expected after conflict
 
 **Prevention:**
-```toml
-[project]
-name = "gitsl"
-requires-python = ">=3.9"
+```python
+# For `git stash pop`:
+# 1. Run sl unshelve
+# 2. Check for conflict state (exit code, output)
+# 3. If conflict:
+#    - Print message matching git's behavior
+#    - Ensure shelve is preserved (--keep behavior)
+# 4. If success:
+#    - Shelve is removed (default unshelve behavior matches git)
 
-# Also add classifiers for clarity (informational only)
-classifiers = [
-    "Programming Language :: Python :: 3.9",
-    "Programming Language :: Python :: 3.10",
-    "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12",
-]
+# Key: sl unshelve on conflict requires --continue or --abort
+# git stash pop on conflict leaves stash intact
+# Must detect conflict and NOT remove shelve
 ```
 
-**Warning signs:** Issues from users on old Python with syntax errors
+**Phase:** Stash/Shelve implementation. Critical to prevent data loss.
 
-**Which phase should address:** Phase 1 (Package Structure). Set minimum version explicitly.
-
-**Source:** [Writing pyproject.toml - Python Packaging Guide](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) - HIGH confidence
+**Source:** [Git stash pop behavior](https://www.geeksforgeeks.org/git/how-to-undo-git-stash-pop-that-results-in-merge-conflict/), [Sapling unshelve](https://sapling-scm.com/docs/commands/unshelve/) - HIGH confidence
 
 ---
 
-### Pitfall 20: Flat Layout Without Explicit Module List
+### Pitfall 6: clean/purge Data Loss Without Confirmation
 
-**What goes wrong:** gitsl uses flat layout (modules in repo root), but setuptools doesn't find all modules.
+**Risk:** `git clean` and `sl purge/clean` permanently delete untracked files. Incorrect flag translation or missing safety checks causes irreversible data loss.
 
-**Why it happens:**
-- Setuptools' auto-discovery is designed for src/ layout or package directories
-- Flat layout with multiple .py files in root needs explicit configuration
-- `find:` doesn't work well for flat layouts
+**What goes wrong:**
+- `git clean` requires `-f` to actually delete (safety mechanism)
+- `sl clean` deletes by default (requires `--print` for dry-run)
+- If gitsl passes through without requiring `-f`, user may lose files unexpectedly
 
-**Consequences:**
-- Only some modules included in wheel
-- ImportError for "helper" modules
-- Works locally (all files present), fails after install
+Flag differences:
+- Git: `-f` force (required), `-d` directories, `-x` ignored files, `-n` dry-run
+- Sapling: `--files` (default), `--dirs`, `--ignored`, `--print` (dry-run)
+
+**Warning signs:**
+- Files deleted without `-f` flag
+- Dry-run flag doesn't work as expected
+- Different files deleted than expected
 
 **Prevention:**
-```toml
-# For gitsl's flat layout, be EXPLICIT:
-[tool.setuptools]
-py-modules = [
-    "gitsl",
-    "common",
-    "cmd_status",
-    "cmd_log",
-    "cmd_diff",
-    "cmd_init",
-    "cmd_rev_parse",
-    "cmd_add",
-    "cmd_commit"
-]
+```python
+# For `git clean`:
+# CRITICAL: Do not execute deletion without -f flag (match git safety)
 
-# Test with:
-pip install . && python -c "import common; print('OK')"
+def handle_clean(args):
+    # Require -f for actual deletion (git behavior)
+    if '-f' not in args and '--force' not in args:
+        if '-n' not in args and '--dry-run' not in args:
+            print("fatal: clean.requireForce defaults to true", file=sys.stderr)
+            return 1
+
+    # Translate flags:
+    # -n, --dry-run -> --print
+    # -d -> --dirs
+    # -x -> --ignored
+    # -f -> (remove, it's default behavior in sl)
+
+    sl_args = translate_clean_flags(args)
+    return run_sl(['clean'] + sl_args)
 ```
 
-**Warning signs:** `pip show -f gitsl` shows fewer files than expected
+**Phase:** Clean implementation. Safety-critical - extensive testing required.
 
-**Which phase should address:** Phase 1 (Package Structure). Critical for gitsl's layout.
+**Source:** [Sapling clean](https://sapling-scm.com/docs/commands/clean/) - HIGH confidence
 
-**Source:** [Setuptools Package Discovery](https://setuptools.pypa.io/en/latest/userguide/package_discovery.html) - HIGH confidence
+---
+
+### Pitfall 7: checkout/goto with Uncommitted Changes
+
+**Risk:** `git checkout` and `sl goto` handle uncommitted changes differently, causing unexpected merges or blocked operations.
+
+**What goes wrong:**
+- Git checkout: Fails if uncommitted changes would be overwritten, allows if changes are in unaffected files
+- Sapling goto: By default, attempts to merge uncommitted changes if destination is ancestor/descendant; aborts otherwise
+
+Flag mapping:
+- `git checkout --force` / `-f` -> `sl goto --clean` (discards changes)
+- `git checkout --merge` / `-m` -> `sl goto --merge` (explicit merge)
+
+**Warning signs:**
+- User expects checkout to fail but it merges instead
+- User expects checkout to work but it aborts
+- Changes unexpectedly merged or lost
+
+**Prevention:**
+```python
+# For `git checkout <commit>`:
+# Consider: Should default behavior match git (fail) or sapling (merge if safe)?
+
+# Recommendation: Match git behavior for compatibility
+# Add warning when sapling would have merged but gitsl blocks
+
+def handle_checkout_commit(commit, args):
+    # Check for uncommitted changes
+    if has_uncommitted_changes():
+        if '--force' in args or '-f' in args:
+            return run_sl(['goto', '--clean', commit])
+        elif '--merge' in args or '-m' in args:
+            return run_sl(['goto', '--merge', commit])
+        else:
+            # Match git: check if changes would be overwritten
+            # This may require additional logic
+            pass
+```
+
+**Phase:** Checkout/Switch implementation. Behavior alignment decision needed.
+
+**Source:** [Sapling goto](https://sapling-scm.com/docs/commands/goto/), [Git checkout](https://git-scm.com/docs/git-checkout) - HIGH confidence
+
+---
+
+### Pitfall 8: config Scope Flag Differences
+
+**Risk:** `git config` and `sl config` have different scope flags and behaviors, causing configuration to be written to wrong location.
+
+**What goes wrong:**
+Git scopes:
+- `--global` - User-level (~/.gitconfig)
+- `--local` - Repository-level (.git/config)
+- `--system` - System-wide (/etc/gitconfig)
+- Default: local for writes, cascading for reads
+
+Sapling scopes:
+- `--user` / `-u` - User-level
+- `--local` / `-l` - Repository-level
+- `--system` / `-s` - System-wide
+
+If gitsl maps `--global` incorrectly, config written to wrong location.
+
+**Warning signs:**
+- Config setting doesn't take effect
+- Wrong config file modified
+- Config appears to disappear after repo change
+
+**Prevention:**
+```python
+# Flag mapping:
+# --global -> --user / -u
+# --local -> --local / -l (same)
+# --system -> --system / -s (same)
+
+# Additional differences:
+# - sl config with no args opens editor
+# - git config with no args shows help
+# - sl config section.name=value works
+# - git config section.name value works (space-separated)
+
+def translate_config_args(args):
+    translated = []
+    for arg in args:
+        if arg == '--global':
+            translated.append('--user')
+        elif arg.startswith('--global='):
+            translated.append('--user')
+        else:
+            translated.append(arg)
+    return translated
+```
+
+**Phase:** Config implementation. Flag translation required.
+
+**Source:** [Sapling config](https://sapling-scm.com/docs/commands/config/), [Git config](https://git-scm.com/docs/git-config) - HIGH confidence
+
+---
+
+### Pitfall 9: rm/remove with Unstaged Modifications
+
+**Risk:** `git rm` and `sl remove` behave differently when files have local modifications, potentially causing work loss.
+
+**What goes wrong:**
+Git rm behavior:
+- Fails if file has local modifications (safety)
+- Requires `-f` to force removal of modified files
+- `--cached` removes from index only, keeps file
+
+Sapling remove behavior matrix:
+| Options | Clean | Modified | Missing |
+|---------|-------|----------|---------|
+| None    | Remove | Warn    | Remove  |
+| -f      | Remove | Remove  | Remove  |
+
+**Warning signs:**
+- Modified file removed without warning
+- User expects removal to fail but file is deleted
+- `--cached` behavior not implemented
+
+**Prevention:**
+```python
+# For `git rm`:
+# 1. Check if file has local modifications
+# 2. If modified and no -f flag, fail with warning
+# 3. Handle --cached flag (may not have direct sl equivalent)
+
+# Note: sl remove has --mark for already-deleted files
+# git rm doesn't need this - it handles missing files
+
+# --cached handling options:
+# Option A: Use sl forget (stops tracking, keeps file)
+# Option B: Error "not supported"
+# Recommendation: Map --cached to sl forget
+```
+
+**Phase:** rm/mv implementation. Safety behavior must match git.
+
+**Source:** [Sapling remove](https://sapling-scm.com/docs/commands/remove/) - HIGH confidence
+
+---
+
+### Pitfall 10: mv/rename with Destination Conflicts
+
+**Risk:** File rename when destination exists behaves differently between git and sapling.
+
+**What goes wrong:**
+- Git mv: Fails if destination exists (unless -f)
+- Sapling rename: May have different conflict behavior
+
+Additionally:
+- Git tracks renames through content similarity
+- Sapling explicitly tracks copies/renames
+
+**Warning signs:**
+- Overwrite happens without -f flag
+- Rename history not preserved correctly
+- Directory rename edge cases
+
+**Prevention:**
+```python
+# For `git mv`:
+# 1. Check if destination exists
+# 2. If exists and no -f flag, fail
+# 3. Use sl rename (or sl mv alias)
+
+# Directory handling:
+# git mv dir1 dir2 - renames directory
+# sl rename dir1 dir2 - should work similarly
+
+# -n/--dry-run: Check if sl rename supports this
+# -f/--force: Force overwrite
+```
+
+**Phase:** rm/mv implementation.
+
+**Source:** [Sapling basic commands](https://sapling-scm.com/docs/overview/basic-commands/) - MEDIUM confidence
+
+---
+
+## Moderate Pitfalls
+
+### Pitfall 11: show Command Rev Specification Differences
+
+**Risk:** `git show <rev>` accepts various revision specifications that may not translate directly to Sapling.
+
+**What goes wrong:**
+Git revision specs:
+- `HEAD` -> `.` in Sapling
+- `HEAD^` -> `.^` in Sapling
+- `HEAD~3` -> Sapling equivalent needed
+- `branch:file` -> Different syntax
+- `@{n}` reflog references -> No direct Sapling equivalent
+
+**Warning signs:**
+- Complex rev specs fail
+- HEAD references not translated
+- Relative references fail
+
+**Prevention:**
+```python
+# Translation layer for common rev specs:
+def translate_revision(rev):
+    if rev == 'HEAD':
+        return '.'
+    if rev == 'HEAD^' or rev == 'HEAD~1':
+        return '.^'
+    if rev.startswith('HEAD~'):
+        n = rev[5:]
+        return f'.~{n}'  # May need different syntax
+    # Pass through for commit hashes
+    return rev
+```
+
+**Phase:** Show implementation. May need revision translation utility.
+
+**Source:** [Sapling show](https://sapling-scm.com/docs/commands/show/) - HIGH confidence
+
+---
+
+### Pitfall 12: grep Working Directory vs History Search
+
+**Risk:** `git grep` can search working directory or commit history. Flag translation may cause wrong search scope.
+
+**What goes wrong:**
+Git grep modes:
+- `git grep pattern` - Search working directory
+- `git grep pattern HEAD` - Search specific commit
+- `git grep pattern HEAD -- path` - Search commit with path filter
+
+Need to verify sl grep has equivalent modes.
+
+**Warning signs:**
+- Search returns unexpected results (wrong commit)
+- Path filtering doesn't work
+- Binary file handling differs
+
+**Prevention:**
+```python
+# Verify sl grep supports:
+# - Working directory search (default)
+# - Commit search with -r/--rev
+# - Path filtering
+
+# Flag translation:
+# -n (line numbers) -> may be default or need flag
+# -l (files only) -> --files-with-matches?
+# -c (count) -> --count?
+# -i (case insensitive) -> -i?
+```
+
+**Phase:** Grep implementation. Verify flag compatibility.
+
+**Source:** [Sapling basic commands](https://sapling-scm.com/docs/overview/basic-commands/) - MEDIUM confidence
+
+---
+
+### Pitfall 13: clone Depth and Filter Options
+
+**Risk:** `git clone --depth` and other clone options may not translate to Sapling, which has different lazy-fetch model.
+
+**What goes wrong:**
+Git clone options:
+- `--depth N` - Shallow clone
+- `--single-branch` - One branch only
+- `--branch` - Clone specific branch
+- `--mirror` - Mirror clone
+
+Sapling clone:
+- Lazy fetching by default (different model than shallow)
+- May not support all git clone options
+
+**Warning signs:**
+- Clone options silently ignored
+- Clone takes unexpected time (full vs shallow)
+- Branch options don't work
+
+**Prevention:**
+```python
+# Options to support:
+# --branch / -b -> Likely supported
+# --depth -> May not apply (Sapling uses lazy fetch)
+
+# Recommendation:
+# 1. Pass-through basic clone
+# 2. Warn on unsupported options
+# 3. Document differences in lazy fetch behavior
+
+def handle_clone(args):
+    unsupported = ['--depth', '--shallow-since', '--shallow-exclude']
+    for opt in unsupported:
+        if opt in ' '.join(args):
+            print(f"Warning: {opt} not supported, using Sapling lazy fetch",
+                  file=sys.stderr)
+```
+
+**Phase:** Clone implementation. Document limitations.
+
+**Source:** [Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) - MEDIUM confidence
+
+---
+
+### Pitfall 14: switch --create vs checkout -b Flag Differences
+
+**Risk:** `git switch -c` and `git checkout -b` create branches differently; translation must handle both.
+
+**What goes wrong:**
+- `git checkout -b newbranch` = create and switch
+- `git checkout -B newbranch` = create/reset and switch
+- `git switch -c newbranch` = create and switch
+- `git switch -C newbranch` = create/reset and switch
+
+All need to map to: `sl bookmark newbranch` + `sl goto newbranch`
+Or possibly: `sl goto --bookmark newbranch`
+
+**Warning signs:**
+- New bookmark not created
+- Not switched to new bookmark after creation
+- -B/-C reset behavior not implemented
+
+**Prevention:**
+```python
+# For git checkout -b:
+def handle_checkout_create_branch(branch_name, start_point=None):
+    # Create bookmark
+    if start_point:
+        run_sl(['bookmark', branch_name, '-r', start_point])
+    else:
+        run_sl(['bookmark', branch_name])
+    # Switch to it
+    return run_sl(['goto', branch_name])
+
+# For -B (force/reset):
+# May need to delete existing bookmark first, then recreate
+```
+
+**Phase:** Checkout/Switch implementation.
+
+**Source:** [Sapling bookmark](https://sapling-scm.com/docs/commands/bookmark/) - HIGH confidence
+
+---
+
+### Pitfall 15: restore --staged Flag (No Sapling Equivalent)
+
+**Risk:** `git restore --staged` removes files from staging area. Sapling has no staging area, making this meaningless.
+
+**What goes wrong:**
+- User runs `git restore --staged file`
+- In git: Removes file from staging, keeps working tree change
+- In Sapling: No staging area exists - what should happen?
+
+**Warning signs:**
+- `--staged` flag silently ignored
+- User confused about what happened
+- Different behavior than expected
+
+**Prevention:**
+```python
+# Options:
+# 1. Warn that --staged is not applicable
+# 2. Treat as no-op with message
+# 3. Map to some Sapling equivalent (uncommit?)
+
+# Recommendation:
+def handle_restore_staged(args):
+    if '--staged' in args or '-S' in args:
+        print("gitsl: --staged has no effect (Sapling has no staging area)",
+              file=sys.stderr)
+        # Remove flag and continue? Or exit?
+        # Depends on whether other args present
+```
+
+**Phase:** Restore implementation. Design decision needed.
+
+**Source:** [Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) - HIGH confidence
+
+---
+
+### Pitfall 16: branch -r and -a Remote Branch Listing
+
+**Risk:** `git branch -r` lists remote branches; Sapling has different remote model.
+
+**What goes wrong:**
+- `git branch` - Local branches
+- `git branch -r` - Remote branches
+- `git branch -a` - All branches
+
+Sapling: `sl bookmark --remote` or `sl bookmark -a` for all
+
+**Warning signs:**
+- Remote branches not showing
+- Different format than expected
+- Remote names not prefixed correctly (origin/)
+
+**Prevention:**
+```python
+# Flag mapping:
+# -r, --remotes -> --remote
+# -a, --all -> -a / --all
+
+# Output format:
+# Git: origin/main, origin/feature
+# Sapling: remote/main, remote/feature (verify format)
+
+# May need output transformation to match git format
+```
+
+**Phase:** Branch implementation.
+
+**Source:** [Sapling bookmark](https://sapling-scm.com/docs/commands/bookmark/) - HIGH confidence
+
+---
+
+### Pitfall 17: stash with Untracked Files
+
+**Risk:** `git stash -u` includes untracked files; `sl shelve` may handle this differently.
+
+**What goes wrong:**
+- `git stash` - Only tracked modified files
+- `git stash -u` / `--include-untracked` - Also untracked files
+- `git stash -a` / `--all` - Also ignored files
+
+Sapling shelve has `--unknown` flag for untracked files.
+
+**Warning signs:**
+- Untracked files not stashed when expected
+- Different default behavior
+- Flag translation incorrect
+
+**Prevention:**
+```python
+# Flag mapping:
+# -u, --include-untracked -> --unknown
+# -a, --all -> --unknown + (ignored handling?)
+
+# Verify sl shelve --unknown behavior matches expectations
+```
+
+**Phase:** Stash implementation.
+
+**Source:** [Sapling shelve](https://sapling-scm.com/docs/commands/shelve/) - MEDIUM confidence
+
+---
+
+### Pitfall 18: stash drop vs shelve --delete Syntax
+
+**Risk:** `git stash drop stash@{n}` uses special syntax; Sapling uses shelve names.
+
+**What goes wrong:**
+Git syntax:
+- `git stash drop` - Drop latest
+- `git stash drop stash@{2}` - Drop specific by index
+
+Sapling syntax:
+- `sl shelve --delete` - Delete all? Or prompt?
+- `sl shelve --delete name` - Delete specific by name
+
+**Warning signs:**
+- Wrong stash deleted
+- Index-based reference fails
+- All stashes accidentally deleted
+
+**Prevention:**
+```python
+# Need to:
+# 1. Parse stash@{n} syntax
+# 2. Get list of shelves
+# 3. Find Nth shelve
+# 4. Delete by name
+
+def handle_stash_drop(args):
+    if not args or args[0] == 'stash@{0}':
+        # Get first shelve name
+        name = get_first_shelve_name()
+    else:
+        # Parse stash@{n}
+        n = parse_stash_ref(args[0])
+        name = get_nth_shelve_name(n)
+
+    return run_sl(['shelve', '--delete', name])
+```
+
+**Phase:** Stash implementation.
+
+**Source:** [Sapling shelve](https://sapling-scm.com/docs/commands/shelve/) - HIGH confidence
+
+---
+
+### Pitfall 19: revert Semantic Confusion (git revert vs sl revert)
+
+**Risk:** `git revert` creates a new commit that undoes a previous commit. `sl revert` restores files to a previous state. These are completely different operations.
+
+**What goes wrong:**
+- User runs `git revert <commit>` expecting to undo that commit
+- If gitsl maps to `sl revert`, files change but no undo commit is created
+- User's mental model completely broken
+
+Note: The correct Sapling equivalent is `sl backout`.
+
+**Warning signs:**
+- No new commit created when expected
+- Changes appear in working directory instead of new commit
+- User confusion about what happened
+
+**Prevention:**
+```python
+# CRITICAL: Do NOT implement git revert mapping to sl revert
+# git revert <commit> -> sl backout <commit>
+# git checkout <file> -> sl revert <file>
+# git restore <file> -> sl revert <file>
+
+# Make this very clear in implementation:
+# These are DIFFERENT commands despite similar names
+```
+
+**Phase:** Command planning. Document this distinction clearly.
+
+**Source:** [Sapling revert](https://sapling-scm.com/docs/commands/revert/) - HIGH confidence (explicitly documented)
+
+---
+
+### Pitfall 20: Empty Stash/Shelve Operations
+
+**Risk:** Running stash operations when there's nothing to stash or no stashes exist.
+
+**What goes wrong:**
+- `git stash` with clean working tree - Creates nothing, no error
+- `git stash pop` with no stashes - Error
+- `git stash drop` with no stashes - Error
+
+Need to match these behaviors exactly.
+
+**Warning signs:**
+- No error when expected
+- Error when not expected
+- Different exit codes
+
+**Prevention:**
+```python
+# For git stash (save):
+# Check if there are changes first
+# If no changes, print "No local changes to save" and exit 0
+
+# For git stash pop/drop/apply:
+# Check if any shelves exist
+# If none, error: "No stash entries found"
+```
+
+**Phase:** Stash implementation.
+
+**Source:** [Git stash Documentation](https://git-scm.com/docs/git-stash) - HIGH confidence
+
+---
+
+## Minor Concerns
+
+### Pitfall 21: clone Output Progress Display
+
+**Risk:** Clone progress output format differs, potentially confusing users or breaking parsers.
+
+**Prevention:** Pass through sl clone output directly; document any format differences.
+
+**Phase:** Clone implementation.
+
+---
+
+### Pitfall 22: show --stat Format Differences
+
+**Risk:** `git show --stat` format may differ from `sl show --stat`.
+
+**Prevention:** Both support --stat; verify format compatibility or document differences.
+
+**Phase:** Show implementation.
+
+---
+
+### Pitfall 23: branch --merged/--no-merged Filtering
+
+**Risk:** `git branch --merged` shows branches merged into current; Sapling may not have direct equivalent.
+
+**Prevention:** Check if sl bookmark supports this filtering; warn if unsupported.
+
+**Phase:** Branch implementation.
+
+---
+
+### Pitfall 24: grep --cached vs Working Tree
+
+**Risk:** `git grep --cached` searches index (staged content); Sapling has no index.
+
+**Prevention:** Warn that --cached is not applicable or treat as no-op.
+
+**Phase:** Grep implementation.
+
+---
+
+### Pitfall 25: config --unset and --remove-section
+
+**Risk:** Config removal commands may have different syntax between git and sl.
+
+**Prevention:** Verify sl config --delete behavior; translate --unset appropriately.
+
+**Phase:** Config implementation.
 
 ---
 
 ## Phase-Specific Warning Summary
 
-| Phase | Topic | Critical Pitfalls | Prevention |
-|-------|-------|-------------------|------------|
-| Phase 1 | Package Structure | #15 (build-system), #16 (entry points), #18 (module list), #20 (flat layout) | Explicit pyproject.toml, test install early |
-| Phase 1 | Versioning | #1 (immutable), #17 (duplication) | Single source of truth, test on TestPyPI |
-| Phase 1 | PyPI Setup | #2 (trusted publisher), #3 (TestPyPI separation) | Configure both registries before first release |
-| Phase 2 | CI Matrix | #6 (sl alias), #7 (paths), #8 (line endings), #10 (fail-fast) | OS-specific handling, normalization |
-| Phase 2 | Sapling Install | #11 (no action), #12 (version pin), #14 (Windows PATH) | Custom install steps, pin versions |
-| Phase 2 | Publishing | #4 (Linux only), #5 (artifacts) | Separate build/publish jobs, artifact transfer |
+| Phase/Category | Critical Pitfalls | Moderate Pitfalls | Key Prevention |
+|----------------|-------------------|-------------------|----------------|
+| Checkout/Switch/Restore | #1 (overloading), #7 (uncommitted), #15 (--staged) | #14 (create flags), #19 (revert confusion) | Disambiguation logic, behavior alignment |
+| Branch/Bookmark | #2 (model mismatch) | #16 (remote listing), #23 (--merged) | Design decisions about bookmarkless state |
+| Stash/Shelve | #4 (list format), #5 (conflict handling) | #17 (untracked), #18 (drop syntax), #20 (empty) | Output transformation, conflict detection |
+| Blame/Show | #3 (output format) | #11 (rev specs), #22 (--stat) | Format transformation or documentation |
+| Clean/Purge | #6 (data loss) | - | Safety flag requirement |
+| Config | #8 (scope flags) | #25 (--unset) | Flag translation |
+| rm/mv | #9 (modifications), #10 (conflicts) | - | Safety checks |
+| Clone | - | #13 (depth options), #21 (progress) | Document lazy fetch differences |
+| Grep | - | #12 (history search), #24 (--cached) | Verify flag compatibility |
 
 ---
 
-## Recommended Workflow Structure
+## Implementation Priority Recommendation
 
-Based on pitfalls research, the CI/CD workflow should follow this structure:
+Based on pitfall severity and complexity:
 
-```
-1. Test Job (matrix: OS x Python)
-   - Install Sapling (OS-specific)
-   - Install package in editable mode
-   - Run tests
-   - fail-fast: false
+### Phase 1: Safe Direct Mappings
+Commands with minimal pitfall risk:
+- `git show` -> `sl show` (Pitfall #11 minor)
+- `git grep` -> `sl grep` (Pitfall #12, #24 minor)
+- `git clone` -> `sl clone` (Pitfall #13, #21 minor)
 
-2. Build Job (single Linux runner)
-   - Build sdist and wheel
-   - Upload as artifact
-   - Runs after test job passes
+### Phase 2: Moderate Complexity
+Commands requiring flag translation:
+- `git config` -> `sl config` (Pitfall #8)
+- `git rm` -> `sl remove` (Pitfall #9)
+- `git mv` -> `sl rename` (Pitfall #10)
+- `git clean` -> `sl clean` (Pitfall #6 - CRITICAL safety)
 
-3. Publish-TestPyPI Job (optional, Linux only)
-   - Download artifact
-   - Publish to test.pypi.org
-   - Runs on push to main
+### Phase 3: High Complexity - Stash
+Commands requiring output transformation:
+- `git stash` -> `sl shelve` (Pitfalls #4, #5, #17, #18, #20)
 
-4. Publish-PyPI Job (Linux only)
-   - Download artifact
-   - Publish to pypi.org
-   - Runs only on version tags
-   - Requires environment approval
-```
+### Phase 4: High Complexity - Checkout Family
+Commands requiring disambiguation and complex logic:
+- `git checkout` (Pitfalls #1, #7, #14)
+- `git switch` (Pitfall #14)
+- `git restore` (Pitfall #15)
+
+### Phase 5: Model Translation
+Commands exposing fundamental model differences:
+- `git branch` (Pitfalls #2, #16, #23)
+- `git blame` (Pitfall #3)
 
 ---
 
 ## Sources
 
-- [PyPI Trusted Publishers Documentation](https://docs.pypi.org/trusted-publishers/) - HIGH confidence
-- [Python Packaging Guide - Publishing with GitHub Actions](https://packaging.python.org/en/latest/guides/publishing-package-distribution-releases-using-github-actions-ci-cd-workflows/) - HIGH confidence
-- [Using TestPyPI](https://packaging.python.org/en/latest/guides/using-testpypi/) - HIGH confidence
-- [gh-action-pypi-publish](https://github.com/pypa/gh-action-pypi-publish) - HIGH confidence
-- [GitHub Actions Cache](https://github.com/actions/cache) - HIGH confidence
-- [GitHub Actions Matrix Strategy](https://docs.github.com/en/actions/using-jobs/using-a-matrix-for-your-jobs) - HIGH confidence
-- [Sapling Installation](https://sapling-scm.com/docs/introduction/getting-started/) - HIGH confidence
-- [Sapling Releases](https://github.com/facebook/sapling/releases) - HIGH confidence
-- [Python Packaging Guide - Modernizing setup.py](https://packaging.python.org/en/latest/guides/modernize-setup-py-project/) - HIGH confidence
-- [Setuptools Entry Points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html) - HIGH confidence
-- [Writing pyproject.toml](https://packaging.python.org/en/latest/guides/writing-pyproject-toml/) - HIGH confidence
-- [Python subprocess documentation](https://docs.python.org/3/library/subprocess.html) - HIGH confidence
+- [Sapling Differences from Git](https://sapling-scm.com/docs/introduction/differences-git/) - HIGH confidence
+- [Sapling Bookmarks Overview](https://sapling-scm.com/docs/overview/bookmarks/) - HIGH confidence
+- [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) - HIGH confidence
+- [Sapling goto Command](https://sapling-scm.com/docs/commands/goto/) - HIGH confidence
+- [Sapling revert Command](https://sapling-scm.com/docs/commands/revert/) - HIGH confidence
+- [Sapling annotate Command](https://sapling-scm.com/docs/commands/annotate/) - HIGH confidence
+- [Sapling shelve Command](https://sapling-scm.com/docs/commands/shelve/) - HIGH confidence
+- [Sapling unshelve Command](https://sapling-scm.com/docs/commands/unshelve/) - HIGH confidence
+- [Sapling clean Command](https://sapling-scm.com/docs/commands/clean/) - HIGH confidence
+- [Sapling config Command](https://sapling-scm.com/docs/commands/config/) - HIGH confidence
+- [Sapling remove Command](https://sapling-scm.com/docs/commands/remove/) - HIGH confidence
+- [Sapling bookmark Command](https://sapling-scm.com/docs/commands/bookmark/) - HIGH confidence
+- [Sapling show Command](https://sapling-scm.com/docs/commands/show/) - HIGH confidence
+- [Git blame Documentation](https://git-scm.com/docs/git-blame) - HIGH confidence
+- [Git checkout Documentation](https://git-scm.com/docs/git-checkout) - HIGH confidence
+- [Git stash Documentation](https://git-scm.com/docs/git-stash) - HIGH confidence
+- [Git config Documentation](https://git-scm.com/docs/git-config) - HIGH confidence
+- [Graphite: Git Checkout vs Switch](https://graphite.com/guides/git-checkout-vs-switch) - MEDIUM confidence
