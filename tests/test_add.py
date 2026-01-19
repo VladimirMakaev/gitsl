@@ -185,3 +185,64 @@ class TestAddUpdate:
         # Verify file is now marked as R (removed)
         status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
         assert "R README.md" in status.stdout
+
+
+class TestAddDot:
+    """Test git add . (current directory)."""
+
+    def test_add_dot_current_directory(self, sl_repo: Path):
+        """git add . stages all files in current directory."""
+        # Create multiple files
+        (sl_repo / "file1.txt").write_text("content1\n")
+        (sl_repo / "file2.txt").write_text("content2\n")
+
+        # Add with .
+        result = run_gitsl(["add", "."], cwd=sl_repo)
+        assert result.exit_code == 0
+
+        # Verify both files are staged
+        status = run_command(["sl", "status"], cwd=sl_repo)
+        assert "A file1.txt" in status.stdout
+        assert "A file2.txt" in status.stdout
+
+    def test_add_dot_in_subdirectory(self, sl_repo: Path):
+        """git add . from subdirectory adds files in that subdirectory."""
+        # Create a subdirectory with files
+        subdir = sl_repo / "subdir"
+        subdir.mkdir()
+        (subdir / "sub1.txt").write_text("sub content 1\n")
+        (subdir / "sub2.txt").write_text("sub content 2\n")
+
+        # Also create a file in root
+        (sl_repo / "root.txt").write_text("root content\n")
+
+        # Add with . from subdirectory
+        result = run_gitsl(["add", "."], cwd=subdir)
+        assert result.exit_code == 0
+
+        # Verify subdir files are staged
+        status = run_command(["sl", "status"], cwd=sl_repo)
+        assert "sub1.txt" in status.stdout
+        assert "sub2.txt" in status.stdout
+
+    def test_add_subdirectory_path(self, sl_repo: Path):
+        """git add subdir/ stages all files in subdirectory."""
+        # Create a subdirectory with files
+        subdir = sl_repo / "subdir"
+        subdir.mkdir()
+        (subdir / "a.txt").write_text("a\n")
+        (subdir / "b.txt").write_text("b\n")
+
+        # Also create file in root (should not be staged)
+        (sl_repo / "root.txt").write_text("root\n")
+
+        # Add with subdirectory path
+        result = run_gitsl(["add", "subdir/"], cwd=sl_repo)
+        assert result.exit_code == 0
+
+        # Verify subdir files are staged
+        status = run_command(["sl", "status"], cwd=sl_repo)
+        assert "subdir/a.txt" in status.stdout
+        assert "subdir/b.txt" in status.stdout
+        # Root file should still be untracked
+        assert "? root.txt" in status.stdout

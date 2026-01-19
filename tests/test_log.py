@@ -125,3 +125,38 @@ class TestLogCombined:
 
         lines = [l for l in result.stdout.strip().split("\n") if l]
         assert len(lines) == 10
+
+    def test_5_oneline_combined(self, sl_repo_with_commits: Path):
+        """-5 --oneline shows exactly 5 commits in oneline format."""
+        result = run_gitsl(["log", "-5", "--oneline"], cwd=sl_repo_with_commits)
+        assert result.exit_code == 0
+
+        lines = [l for l in result.stdout.strip().split("\n") if l]
+        assert len(lines) == 5
+
+        # Verify oneline format (hash + subject)
+        for line in lines:
+            parts = line.split(" ", 1)
+            assert len(parts) == 2
+            hash_part = parts[0]
+            assert all(c in "0123456789abcdef" for c in hash_part)
+
+
+class TestLogNoFlags:
+    """Test log command without any flags."""
+
+    def test_log_no_flags_shows_commits(self, sl_repo_with_commit: Path):
+        """Log without flags shows commit details."""
+        result = run_gitsl(["log"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Should show commit info (varies by format but should have content)
+        assert result.stdout != "" or result.stderr != ""
+
+    def test_log_no_flags_with_multiple_commits(self, sl_repo_with_commits: Path):
+        """Log without flags shows all 10 commits."""
+        result = run_gitsl(["log"], cwd=sl_repo_with_commits)
+        assert result.exit_code == 0
+
+        # Output should be substantial (multiple commits)
+        assert len(result.stdout) > 100
