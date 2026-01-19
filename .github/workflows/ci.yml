@@ -32,7 +32,8 @@ jobs:
         shell: bash
         run: |
           RELEASE_INFO=$(curl -s https://api.github.com/repos/facebook/sapling/releases/latest)
-          TAG_NAME=$(echo "$RELEASE_INFO" | python -c "import sys, json; print(json.load(sys.stdin)['tag_name'])")
+          # Use python3 explicitly (python may not exist on all platforms)
+          TAG_NAME=$(echo "$RELEASE_INFO" | python3 -c "import sys, json; print(json.load(sys.stdin)['tag_name'])")
           echo "version=$TAG_NAME" >> $GITHUB_OUTPUT
           TAG_ENCODED=$(echo "$TAG_NAME" | sed 's/+/%2B/g')
           echo "version_encoded=$TAG_ENCODED" >> $GITHUB_OUTPUT
