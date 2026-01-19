@@ -80,8 +80,8 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-01 | Phase 10 | Pending |
-| CLEAN-02 | Phase 10 | Pending |
+| CLEAN-01 | Phase 10 | Complete |
+| CLEAN-02 | Phase 10 | Complete |
 | TEST-01 | Phase 11 | Pending |
 | TEST-02 | Phase 11 | Pending |
 | TEST-03 | Phase 11 | Pending |
