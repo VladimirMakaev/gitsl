@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 16 of 19 (v1.2)
-Plan: 01 of 02 (Flag translation commands - handlers)
-Status: In progress
-Last activity: 2026-01-19 - Completed 16-01-PLAN.md
+Phase: 16 of 19 (v1.2) - Complete
+Plan: 02 of 02 (Flag translation commands - E2E tests)
+Status: Phase 16 complete
+Last activity: 2026-01-19 - Completed 16-02-PLAN.md
 
-Progress: [###.......] 30% (v1.2 - 1.5 of 5 phases)
+Progress: [####......] 40% (v1.2 - 2 of 5 phases)
 
 ## Milestones
 
@@ -27,7 +27,7 @@ Progress: [###.......] 30% (v1.2 - 1.5 of 5 phases)
 | Phase | Goal | Requirements | Status |
 |-------|------|--------------|--------|
 | 15 | Direct pass-through commands | 13 | Complete |
-| 16 | Flag translation commands | 8 | In progress |
+| 16 | Flag translation commands | 8 | Complete |
 | 17 | Branch and restore | 6 | Pending |
 | 18 | Stash operations | 7 | Pending |
 | 19 | Checkout command | 6 | Pending |
@@ -37,9 +37,9 @@ Progress: [###.......] 30% (v1.2 - 1.5 of 5 phases)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 23 (13 v1.0 + 7 v1.1 + 3 v1.2)
-- Total phases completed: 15
-- Total requirements validated: 21 v1.0 + 26 v1.1 + 13 v1.2
+- Total plans completed: 24 (13 v1.0 + 7 v1.1 + 4 v1.2)
+- Total phases completed: 16
+- Total requirements validated: 21 v1.0 + 26 v1.1 + 21 v1.2
 
 **By Milestone:**
 
@@ -47,7 +47,7 @@ Progress: [###.......] 30% (v1.2 - 1.5 of 5 phases)
 |-----------|--------|-------|------|
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 2 |
-| v1.2 Commands | 1.5 | 3 | - |
+| v1.2 Commands | 2 | 4 | - |
 
 ## Accumulated Context
 
@@ -58,12 +58,13 @@ All marked as "Good" during milestone completions.
 
 **Phase 16 decisions:**
 - Enforce git's safety model for clean (-f or -n required, exit 128 otherwise)
-- Filter -d flag for clean since sl purge handles dirs by default
+- Use --files --dirs for clean -d to properly remove directories (not just filter -d)
 - Default to --local scope for config writes when no scope specified
+- Combined short flags (e.g., -fd) must be parsed correctly
 
 ### Pending Todos
 
-- Complete 16-02-PLAN.md (E2E tests for flag translation commands)
+- Begin Phase 17: Branch and restore
 
 ### Blockers/Concerns
 
@@ -79,6 +80,6 @@ Key pitfalls to address:
 
 ## Session Continuity
 
-Last session: 2026-01-19T23:38:00Z
-Stopped at: Completed 16-01-PLAN.md
-Resume with: `/gsd:execute-phase 16-02`
+Last session: 2026-01-19T23:57:23Z
+Stopped at: Completed 16-02-PLAN.md (Phase 16 complete)
+Resume with: `/gsd:plan-phase 17`
