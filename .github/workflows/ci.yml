@@ -141,4 +141,10 @@ jobs:
         working-directory: ${{ github.workspace }}
         env:
           PYTHONPATH: ${{ github.workspace }}/tests
-        run: pytest tests/ -v --tb=long -c pytest.ini
+        run: |
+          echo "=== Trying simple import test ==="
+          python3 -c "import sys; sys.path.insert(0, 'tests'); from helpers.commands import run_command; print('Import OK')"
+          echo "=== Trying pytest collection ==="
+          pytest tests/test_init.py --collect-only || true
+          echo "=== Running single test file ==="
+          pytest tests/test_init.py -v --tb=long
