@@ -204,3 +204,14 @@ jobs:
         with:
           name: test-output-${{ matrix.os }}-${{ matrix.python-version }}
           path: test_output.log
+
+      - name: Show test output as annotation
+        if: failure()
+        shell: bash
+        run: |
+          echo "::group::Full test output"
+          cat test_output.log
+          echo "::endgroup::"
+          # Also show as error annotation (first 1000 chars)
+          OUTPUT=$(head -c 1000 test_output.log | tr '\n' ' ')
+          echo "::error::Test output: $OUTPUT"
