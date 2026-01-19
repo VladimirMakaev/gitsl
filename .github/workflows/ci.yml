@@ -118,9 +118,6 @@ jobs:
         run: Remove-Alias -Name sl -Force -Scope Global -ErrorAction SilentlyContinue
 
       # ==================== TESTS ====================
-      - name: Install test dependencies
-        run: pip install pytest
-
       - name: Verify Sapling installation
         shell: bash
         run: |
@@ -129,4 +126,11 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: pytest tests/test_init.py -v --tb=long
+        run: ./test --report test-results.xml -v
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
+          path: test-results.xml

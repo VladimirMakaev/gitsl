@@ -3,9 +3,10 @@
 Cross-platform test runner for gitsl.
 
 Usage:
-    ./test                  Run all tests
+    ./test                  Run all tests in parallel
     ./test <command>        Run tests for specific command (e.g., ./test status)
     ./test --report <file>  Generate JUnit XML report
+    ./test --no-parallel    Run tests sequentially (disable parallelism)
     ./test <pytest args>    Pass through additional pytest arguments
 
 The script automatically:
@@ -67,6 +68,14 @@ def get_venv_pytest() -> Path:
     return venv_dir / "bin" / "pytest"
 
 
+def get_venv_pip() -> Path:
+    """Get path to pip in the venv."""
+    venv_dir = get_venv_dir()
+    if is_windows():
+        return venv_dir / "Scripts" / "pip.exe"
+    return venv_dir / "bin" / "pip"
+
+
 def check_sl_installed() -> None:
     """Check if Sapling (sl) is installed and warn if not."""
     if shutil.which("sl") is None:
@@ -93,28 +102,45 @@ def ensure_venv() -> None:
 
 
 def ensure_pytest() -> None:
-    """Install pytest if not found in the venv."""
+    """Install pytest and pytest-xdist if not found in the venv."""
     pytest_path = get_venv_pytest()
+    pip_path = get_venv_pip()
 
     if not pytest_path.exists():
-        print("Installing pytest...")
+        print("Installing pytest and pytest-xdist...")
         python = get_venv_python()
         subprocess.run(
-            [str(python), "-m", "pip", "install", "pytest", "-q"],
+            [str(python), "-m", "pip", "install", "pytest", "pytest-xdist", "-q"],
             check=True,
         )
-        print("pytest installed.")
+        print("pytest and pytest-xdist installed.")
+    else:
+        # Check if pytest-xdist is installed
+        result = subprocess.run(
+            [str(pip_path), "show", "pytest-xdist"],
+            capture_output=True,
+            text=True,
+        )
+        if result.returncode != 0:
+            print("Installing pytest-xdist...")
+            python = get_venv_python()
+            subprocess.run(
+                [str(python), "-m", "pip", "install", "pytest-xdist", "-q"],
+                check=True,
+            )
+            print("pytest-xdist installed.")
 
 
-def parse_args(args: list[str]) -> tuple[str | None, str | None, list[str]]:
+def parse_args(args: list[str]) -> tuple[str | None, str | None, bool, list[str]]:
     """
     Parse command line arguments.
 
     Returns:
-        Tuple of (command_filter, report_file, extra_pytest_args)
+        Tuple of (command_filter, report_file, no_parallel, extra_pytest_args)
     """
     command_filter = None
     report_file = None
+    no_parallel = False
     extra_args = []
 
     i = 0
@@ -129,6 +155,8 @@ def parse_args(args: list[str]) -> tuple[str | None, str | None, list[str]]:
             else:
                 print("ERROR: --report requires a file path", file=sys.stderr)
                 sys.exit(1)
+        elif arg == "--no-parallel":
+            no_parallel = True
         elif arg in COMMAND_MARKERS:
             command_filter = arg
         else:
@@ -136,17 +164,22 @@ def parse_args(args: list[str]) -> tuple[str | None, str | None, list[str]]:
 
         i += 1
 
-    return command_filter, report_file, extra_args
+    return command_filter, report_file, no_parallel, extra_args
 
 
 def build_pytest_command(
     command_filter: str | None,
     report_file: str | None,
+    no_parallel: bool,
     extra_args: list[str],
 ) -> list[str]:
     """Build the pytest command line."""
     pytest_path = get_venv_pytest()
     cmd = [str(pytest_path)]
+
+    # Add parallel execution unless disabled
+    if not no_parallel:
+        cmd.extend(["-n", "auto"])
 
     # Add marker filter if specified
     if command_filter:
@@ -173,10 +206,10 @@ def main() -> int:
 
     # Parse arguments
     args = sys.argv[1:]
-    command_filter, report_file, extra_args = parse_args(args)
+    command_filter, report_file, no_parallel, extra_args = parse_args(args)
 
     # Build and run pytest command
-    cmd = build_pytest_command(command_filter, report_file, extra_args)
+    cmd = build_pytest_command(command_filter, report_file, no_parallel, extra_args)
 
     # Change to project root for pytest to find tests
     os.chdir(get_project_root())
