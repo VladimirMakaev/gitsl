@@ -71,7 +71,7 @@
 
 ## E2E Flow Verification
 
-### Flow 1: GSD Workflow (status --porcelain -> add -> commit -> log --oneline)
+### Flow 1: Git Workflow (status --porcelain -> add -> commit -> log --oneline)
 
 | Step | Command | Handler | Output | Status |
 |------|---------|---------|--------|--------|
@@ -103,7 +103,7 @@
 | `gitsl fetch --all` | (empty) | `gitsl: unsupported command: git fetch --all` | 0 | PASS |
 | `gitsl checkout -b feature` | (empty) | `gitsl: unsupported command: git checkout -b feature` | 0 | PASS |
 
-**Verification:** Exit code 0 ensures calling tools (get-shit-done) don't break.
+**Verification:** Exit code 0 ensures calling tools don't break.
 
 ### Flow 4: Entry Point Special Cases
 
@@ -209,7 +209,7 @@ All expected phase-to-phase connections are present:
 ## Broken Flows: NONE
 
 All 4 E2E flows complete without breaks:
-1. GSD workflow completes successfully
+1. Git workflow completes successfully
 2. Debug mode works for all command types
 3. Unsupported commands exit gracefully
 4. Entry point handles special cases correctly

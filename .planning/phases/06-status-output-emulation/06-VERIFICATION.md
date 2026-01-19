@@ -102,11 +102,11 @@ No anti-patterns detected:
 | # | Test | Expected | Why Human |
 |---|------|----------|-----------|
 | 1 | Run `git status --porcelain` in sl repo with modified file | Output: ` M filename` (space + M + space + filename) | Verify exact byte format matches git (no extra whitespace or characters) |
-| 2 | Test with get-shit-done workflow | GSD parses status output without errors | Integration test with actual tooling that depends on format |
+| 2 | Test with external workflow | External tool parses status output without errors | Integration test with actual tooling that depends on format |
 
 These items require human verification because:
 1. Exact byte-for-byte format matching needs visual inspection with `cat -A` or similar
-2. Integration with get-shit-done requires running the actual workflow
+2. Integration with external tools requires running the actual workflow
 
 ### Test Coverage Summary
 
@@ -135,4 +135,4 @@ These items require human verification because:
 ---
 
 *Verified: 2026-01-18T04:58:56Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*

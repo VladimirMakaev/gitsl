@@ -125,4 +125,4 @@ All 4 must-have truths verified. All artifacts exist, are substantive, and are p
 ---
 
 *Verified: 2026-01-18T22:00:00Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*

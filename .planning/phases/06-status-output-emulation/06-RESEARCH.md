@@ -241,7 +241,7 @@ This is semantically correct and tools typically handle both representations.
 **What goes wrong:** Using `M ` instead of ` M` for modified files
 **Why it happens:** Thinking sl's modified = git's staged modified
 **How to avoid:** Remember sl has no staging - modified means working tree change only
-**Warning signs:** Tools like get-shit-done skip `git add` step incorrectly
+**Warning signs:** Tools parsing porcelain skip `git add` step incorrectly
 
 ### Pitfall 3: Breaking Passthrough for Normal Status
 **What goes wrong:** All status commands go through transformation
@@ -420,12 +420,12 @@ Both sl and git output should be empty string.
 
 2. **-v Flag Handling**
    - What we know: git status -v shows diff content with status
-   - What's unclear: Whether this is needed for get-shit-done
+   - What's unclear: Whether this is needed for git workflow tools
    - Recommendation: Out of scope for Phase 6, passthrough to sl
 
 3. **Branch Header (-b flag)**
    - What we know: git status -sb shows branch info: `## branch...tracking`
-   - What's unclear: Whether get-shit-done uses this
+   - What's unclear: Whether git workflow tools use this
    - Recommendation: Out of scope for Phase 6 MVP
 
 ## Sources

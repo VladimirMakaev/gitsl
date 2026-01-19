@@ -116,4 +116,4 @@ None. All truths are verifiable programmatically through the E2E tests:
 ---
 
 *Verified: 2026-01-18T14:30:00Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*

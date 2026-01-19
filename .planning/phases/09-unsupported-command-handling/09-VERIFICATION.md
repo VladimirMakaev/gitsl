@@ -86,4 +86,4 @@ All 91 tests pass with no regressions. This is the final phase of the GitSL proj
 ---
 
 *Verified: 2026-01-18T23:30:00Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*

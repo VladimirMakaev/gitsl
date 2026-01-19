@@ -63,4 +63,4 @@ None.
 
 Last session: 2026-01-19
 Stopped at: v1.1 roadmap created
-Resume with: `/gsd:plan-phase 10`
+Resume with: Plan phase 10

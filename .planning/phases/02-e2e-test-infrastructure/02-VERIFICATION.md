@@ -101,4 +101,4 @@ All 35 tests pass, validating:
 ---
 
 *Verified: 2026-01-18T00:45:00Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*

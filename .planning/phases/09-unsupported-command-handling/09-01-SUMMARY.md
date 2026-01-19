@@ -29,7 +29,7 @@ key-files:
 
 key-decisions:
   - "Message format: gitsl: unsupported command: git <cmd> [args]"
-  - "Exit code 0 to not break calling tools (get-shit-done integration)"
+  - "Exit code 0 to not break calling tools"
 
 patterns-established:
   - "Unsupported commands use shlex.join for safe argument reconstruction"
@@ -72,7 +72,7 @@ Each task was committed atomically:
 - Message format follows standard CLI pattern: `gitsl: unsupported command: {original_command}`
 - Use shlex.join() for args to handle spaces and special characters correctly
 - Print to stderr only, keeping stdout empty for tool parsing compatibility
-- Exit code 0 per UNSUP-02 to not break get-shit-done integration
+- Exit code 0 per UNSUP-02 to not break calling tools
 
 ## Deviations from Plan
 None - plan executed exactly as written.

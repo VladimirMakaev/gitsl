@@ -8,7 +8,7 @@
 
 Phase 9 transforms the existing stub fallback in gitsl.py into a proper unsupported command handler. The current code (lines 81-82) already prints a debug-style message to stderr and returns 0, but needs refinement to meet UNSUP-01 and UNSUP-02 requirements.
 
-The key insight is that gitsl is designed for a specific use case (get-shit-done integration), so unsupported commands should:
+The key insight is that gitsl is designed for tooling integration, so unsupported commands should:
 1. Not crash the calling tool (exit 0)
 2. Inform the user what command was attempted (print to stderr)
 3. Leave stdout empty (so parsing tools don't get confused)
@@ -82,7 +82,7 @@ else:
 
 ### Anti-Patterns to Avoid
 
-- **Exit non-zero on unsupported commands:** This would cause get-shit-done to think the git command failed, which breaks the integration use case.
+- **Exit non-zero on unsupported commands:** This would cause calling tools to think the git command failed, which breaks the integration use case.
 
 - **Print to stdout:** Calling tools may parse stdout. Error/info messages should go to stderr.
 
@@ -105,7 +105,7 @@ Problems that look simple but have existing solutions:
 
 ### Pitfall 1: Returning Non-Zero Exit Code
 
-**What goes wrong:** Calling tool (get-shit-done) treats the command as failed
+**What goes wrong:** Calling tool treats the command as failed
 **Why it happens:** Instinct to return 1 for "error" conditions
 **How to avoid:** Requirement UNSUP-02 explicitly requires exit 0
 **Warning signs:** `echo $?` returns non-zero after unsupported commands

@@ -2,7 +2,7 @@
 
 ## v1.0 MVP (Shipped: 2026-01-18)
 
-**Delivered:** Git-to-Sapling CLI shim enabling tools like get-shit-done to work transparently with Sapling repositories.
+**Delivered:** Git-to-Sapling CLI shim enabling git workflow tools to work transparently with Sapling repositories.
 
 **Phases completed:** 1-9 (12 plans total)
 

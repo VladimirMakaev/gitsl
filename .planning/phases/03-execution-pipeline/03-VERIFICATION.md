@@ -128,4 +128,4 @@ All tests pass, including:
 ---
 
 *Verified: 2026-01-18T03:30:00Z*
-*Verifier: Claude (gsd-verifier)*
+*Verifier: Claude*
