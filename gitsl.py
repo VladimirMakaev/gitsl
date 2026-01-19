@@ -18,6 +18,12 @@ import cmd_init
 import cmd_rev_parse
 import cmd_add
 import cmd_commit
+import cmd_show
+import cmd_blame
+import cmd_rm
+import cmd_mv
+import cmd_clone
+import cmd_grep
 
 
 def main(argv: List[str] = None) -> int:
@@ -77,6 +83,24 @@ def main(argv: List[str] = None) -> int:
 
     if parsed.command == "commit":
         return cmd_commit.handle(parsed)
+
+    if parsed.command == "show":
+        return cmd_show.handle(parsed)
+
+    if parsed.command == "blame":
+        return cmd_blame.handle(parsed)
+
+    if parsed.command == "rm":
+        return cmd_rm.handle(parsed)
+
+    if parsed.command == "mv":
+        return cmd_mv.handle(parsed)
+
+    if parsed.command == "clone":
+        return cmd_clone.handle(parsed)
+
+    if parsed.command == "grep":
+        return cmd_grep.handle(parsed)
 
     # Unsupported command handling (UNSUP-01, UNSUP-02)
     if parsed.args:
