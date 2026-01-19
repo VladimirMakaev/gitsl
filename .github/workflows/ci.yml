@@ -126,7 +126,7 @@ jobs:
 
       - name: Run tests
         shell: bash
-        run: ./test --report test-results.xml -v
+        run: python test --report test-results.xml -v
 
       - name: Upload test results
         uses: actions/upload-artifact@v4

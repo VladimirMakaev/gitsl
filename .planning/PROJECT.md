@@ -98,6 +98,31 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 - **Sapling installed**: Assume `sl` command is available in PATH
 - **Cross-platform**: Must work on MacOS, Linux, Windows
 
+## Development Guidelines
+
+**When making changes that affect compatibility or features:**
+
+1. **Update README.md command support matrix** — When adding/modifying/removing command support, update the compatibility matrix in README.md
+2. **Update Python version compatibility** — When using new Python features, verify they work on all supported versions (3.9+) and update docs if min version changes
+3. **Update CI matrix** — When platform behavior differs (e.g., OSS vs Homebrew Sapling), ensure CI tests cover all variants
+4. **Use Optional[X] not X | None** — For Python 3.9 compatibility (union operator added in 3.10)
+5. **Test with OSS Sapling** — Local testing may use different Sapling version than CI; OSS Sapling creates `.sl`, Homebrew creates `.hg`
+
+**Checking CI Status (GitHub Actions):**
+
+```bash
+# List recent workflow runs
+curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs?per_page=5" | \
+  python3 -c "import json,sys; [print(f\"{r['id']} | {r['status']:12} | {r['conclusion'] or 'pending':10} | {r['head_sha'][:7]}\") for r in json.load(sys.stdin).get('workflow_runs',[])]"
+
+# Check specific run's jobs
+curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>/jobs" | \
+  python3 -c "import json,sys; [print(f\"{j['name']:40} | {j['status']:12} | {j['conclusion'] or 'pending'}\") for j in json.load(sys.stdin).get('jobs',[])]"
+
+# Web URL for CI runs
+# https://github.com/VladimirMakaev/gitsl/actions
+```
+
 ## Key Decisions
 
 | Decision | Rationale | Outcome |
