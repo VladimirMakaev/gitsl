@@ -17,7 +17,10 @@ from helpers.commands import run_command
 
 
 sl_available = shutil.which("sl") is not None
-pytestmark = pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed")
+pytestmark = [
+    pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed"),
+    pytest.mark.commit,
+]
 
 
 class TestCommitBasic:

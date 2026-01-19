@@ -9,7 +9,10 @@ from conftest import run_gitsl
 
 
 sl_available = shutil.which("sl") is not None
-pytestmark = pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed")
+pytestmark = [
+    pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed"),
+    pytest.mark.rev_parse,
+]
 
 
 class TestRevParseShortHead:

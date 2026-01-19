@@ -4,7 +4,12 @@ E2E tests for unsupported command handling (UNSUP-01, UNSUP-02).
 
 from pathlib import Path
 
+import pytest
+
 from conftest import run_gitsl
+
+
+pytestmark = pytest.mark.unsupported
 
 
 class TestUnsupportedCommands:

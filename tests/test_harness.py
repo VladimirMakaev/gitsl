@@ -19,6 +19,9 @@ from helpers.comparison import (
 from conftest import run_git, run_gitsl
 
 
+pytestmark = pytest.mark.harness
+
+
 # ============================================================
 # TestCommandResult - Test the dataclass
 # ============================================================

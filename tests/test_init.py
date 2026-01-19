@@ -17,7 +17,10 @@ from conftest import run_gitsl
 
 # Skip all tests if sl is not installed
 sl_available = shutil.which("sl") is not None
-pytestmark = pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed")
+pytestmark = [
+    pytest.mark.skipif(not sl_available, reason="Sapling (sl) not installed"),
+    pytest.mark.init,
+]
 
 
 class TestInitBasic:
