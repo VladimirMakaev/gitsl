@@ -99,3 +99,51 @@ All flags passed through to sl equivalents unchanged.
 |------|-----------|-------------|
 | `--short HEAD` | Yes | `sl whereami` (truncated to 7 chars) |
 | other variants | No | Returns error |
+
+## Unsupported Commands
+
+Commands not listed above will print a message to stderr and exit with code 0:
+
+```
+gitsl: unsupported command: git checkout main
+```
+
+This exit behavior prevents gitsl from breaking tools that expect git commands to succeed.
+
+For unsupported operations, use Sapling commands directly. See the [Sapling Git Cheat Sheet](https://sapling-scm.com/docs/introduction/git-cheat-sheet/) for translations.
+
+### Why Some Commands Are Unsupported
+
+| Command | Reason |
+|---------|--------|
+| `checkout` | Sapling uses `goto` with different semantics |
+| `branch` | Sapling uses bookmarks, different model |
+| `merge` | Sapling prefers rebase workflow |
+| `rebase` | Complex flag translation, use `sl rebase` directly |
+| `stash` | Use `sl shelve` / `sl unshelve` directly |
+| `push` / `pull` / `fetch` | Remote operations differ significantly |
+
+## Debug Mode
+
+Set `GITSL_DEBUG=1` to see what command would be executed without running it:
+
+```bash
+$ GITSL_DEBUG=1 gitsl status --porcelain
+[DEBUG] Command: status
+[DEBUG] Args: ['--porcelain']
+[DEBUG] Would execute: sl status
+```
+
+## How It Works
+
+gitsl intercepts git commands and translates them to Sapling equivalents:
+1. Parses the git command and flags
+2. Translates to corresponding sl command
+3. Transforms output to git-compatible format where needed (status, log)
+4. Returns sl's exit code
+
+For commands without translation, gitsl prints a message to stderr and exits 0.
+
+## License
+
+MIT
