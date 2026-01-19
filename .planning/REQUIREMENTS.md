@@ -24,10 +24,10 @@ Requirements for v1.1 Polish & Documentation release. Each maps to roadmap phase
 
 ### Packaging
 
-- [ ] **PACK-01**: pyproject.toml defines package metadata and entry points
+- [x] **PACK-01**: pyproject.toml defines package metadata and entry points
 - [ ] **PACK-02**: `pip install gitsl` installs package from PyPI
-- [ ] **PACK-03**: `gitsl` command available in PATH after install
-- [ ] **PACK-04**: Package version matches git tag
+- [x] **PACK-03**: `gitsl` command available in PATH after install
+- [x] **PACK-04**: Package version matches git tag
 
 ### CI/CD
 
@@ -89,10 +89,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TEST-05 | Phase 11 | Complete |
 | TEST-06 | Phase 11 | Complete |
 | TEST-07 | Phase 11 | Complete |
-| PACK-01 | Phase 12 | Pending |
-| PACK-02 | Phase 12 | Pending |
-| PACK-03 | Phase 12 | Pending |
-| PACK-04 | Phase 12 | Pending |
+| PACK-01 | Phase 12 | Complete |
+| PACK-02 | Phase 12 | Pending (Phase 13) |
+| PACK-03 | Phase 12 | Complete |
+| PACK-04 | Phase 12 | Complete |
 | CI-01 | Phase 13 | Pending |
 | CI-02 | Phase 13 | Pending |
 | CI-03 | Phase 13 | Pending |
