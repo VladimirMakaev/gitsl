@@ -4,7 +4,7 @@
 
 - **v1.0 MVP** - Phases 01-09 (shipped 2026-01-18)
 - **v1.1 Polish & Documentation** - Phases 10-14 (shipped 2026-01-19)
-- **v1.2 More Commands Support** - Phases 15-19 (in progress)
+- **v1.2 More Commands Support** - Phases 15-19 (shipped 2026-01-20)
 
 ## Phases
 
@@ -75,7 +75,7 @@
 </details>
 
 <details open>
-<summary>v1.2 More Commands Support (Phases 15-19) - IN PROGRESS</summary>
+<summary>v1.2 More Commands Support (Phases 15-19) - SHIPPED 2026-01-20</summary>
 
 ### Phase 15: Direct Pass-through Commands
 
@@ -194,8 +194,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 19-01-PLAN.md - Create checkout command handler with disambiguation logic
-- [ ] 19-02-PLAN.md - E2E tests for all 6 checkout requirements
+- [x] 19-01-PLAN.md - Create checkout command handler with disambiguation logic
+- [x] 19-02-PLAN.md - E2E tests for all 6 checkout requirements
 
 **Requirements**:
 - CHECKOUT-01 (checkout commit)
@@ -238,4 +238,4 @@ Phases execute in numeric order.
 | 16. Flag Translation | v1.2 | 2/2 | Complete | 2026-01-19 |
 | 17. Branch and Restore | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 18. Stash Operations | v1.2 | 2/2 | Complete | 2026-01-20 |
-| 19. Checkout Command | v1.2 | 0/2 | Planned | - |
+| 19. Checkout Command | v1.2 | 2/2 | Complete | 2026-01-20 |

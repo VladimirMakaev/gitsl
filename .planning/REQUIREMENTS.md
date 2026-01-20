@@ -41,12 +41,12 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 
 ### Checkout/Switch/Restore
 
-- [ ] **CHECKOUT-01**: `git checkout <commit>` translates to `sl goto <commit>`
-- [ ] **CHECKOUT-02**: `git checkout <branch>` translates to `sl goto <bookmark>`
-- [ ] **CHECKOUT-03**: `git checkout <file>` translates to `sl revert <file>`
-- [ ] **CHECKOUT-04**: `git checkout -- <file>` translates to `sl revert <file>`
-- [ ] **CHECKOUT-05**: `git checkout -b <name>` creates bookmark and switches to it
-- [ ] **CHECKOUT-06**: Checkout disambiguates between commit/branch/file correctly
+- [x] **CHECKOUT-01**: `git checkout <commit>` translates to `sl goto <commit>`
+- [x] **CHECKOUT-02**: `git checkout <branch>` translates to `sl goto <bookmark>`
+- [x] **CHECKOUT-03**: `git checkout <file>` translates to `sl revert <file>`
+- [x] **CHECKOUT-04**: `git checkout -- <file>` translates to `sl revert <file>`
+- [x] **CHECKOUT-05**: `git checkout -b <name>` creates bookmark and switches to it
+- [x] **CHECKOUT-06**: Checkout disambiguates between commit/branch/file correctly
 - [x] **SWITCH-01**: `git switch <branch>` translates to `sl goto <bookmark>`
 - [x] **SWITCH-02**: `git switch -c <name>` translates to `sl bookmark <name>`
 - [x] **RESTORE-01**: `git restore <file>` translates to `sl revert <file>`
