@@ -223,6 +223,11 @@ Plans:
 
 **Dependencies**: None (safety-critical, must be first)
 
+**Plans**: 1 plan
+
+Plans:
+- [ ] 20-01-PLAN.md - Implement safety fixes for commit -a, checkout -f/-m, verify branch -D
+
 **Requirements**:
 - SAFE-01: `commit -a` removes the flag rather than translating to sl -A
 - SAFE-02: `checkout -f/--force` translates to `sl goto -C`
@@ -567,7 +572,7 @@ Phases execute in numeric order.
 | 17. Branch and Restore | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 18. Stash Operations | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 19. Checkout Command | v1.2 | 2/2 | Complete | 2026-01-20 |
-| 20. Critical Safety Fixes | v1.3 | 0/? | Pending | — |
+| 20. Critical Safety Fixes | v1.3 | 0/1 | Pending | — |
 | 21. Rev-Parse Expansion | v1.3 | 0/? | Pending | — |
 | 22. Log Flags | v1.3 | 0/? | Pending | — |
 | 23. Diff and Show Flags | v1.3 | 0/? | Pending | — |
