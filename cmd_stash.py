@@ -2,10 +2,11 @@
 
 import subprocess
 import sys
+from typing import Optional
 from common import ParsedCommand, run_sl
 
 
-def _get_most_recent_shelve() -> str | None:
+def _get_most_recent_shelve() -> Optional[str]:
     """Get the name of the most recent shelve, or None if no shelves exist."""
     result = subprocess.run(
         ["sl", "shelve", "--list"],
