@@ -1,0 +1,308 @@
+# Requirements: GitSL v1.3 Flag Compatibility
+
+**Defined:** 2026-01-20
+**Core Value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
+
+## v1.3 Requirements
+
+Exhaustive flag coverage for all 25 supported git commands. Requirements organized by command category.
+
+### Safety Fixes
+
+Critical behavioral corrections for flags with semantic differences.
+
+- [ ] **SAFE-01**: `commit -a` removes the flag rather than translating to sl -A (prevents adding untracked files)
+- [ ] **SAFE-02**: `checkout -f/--force` translates to `sl goto -C` for forcing switch with uncommitted changes
+- [ ] **SAFE-03**: `checkout -m/--merge` translates to `sl goto -m` to merge local changes during switch
+- [ ] **SAFE-04**: Verify `branch -D` → `-d` translation is complete (already implemented, needs test coverage)
+
+### Log Flags
+
+Git log flag support and translation.
+
+- [ ] **LOG-01**: `--graph` translates to `sl log -G`
+- [ ] **LOG-02**: `--stat` passes through to `sl log --stat`
+- [ ] **LOG-03**: `--patch/-p` passes through to `sl log -p`
+- [ ] **LOG-04**: `--author=<pattern>` translates to `sl log -u <pattern>`
+- [ ] **LOG-05**: `--grep=<pattern>` translates to `sl log -k <pattern>`
+- [ ] **LOG-06**: `--no-merges` translates to `sl log --no-merges`
+- [ ] **LOG-07**: `--all` translates to `sl log --all`
+- [ ] **LOG-08**: `--follow` translates to `sl log -f`
+- [ ] **LOG-09**: `--since/--after` translates to `sl log -d` with date format handling
+- [ ] **LOG-10**: `--until/--before` translates to `sl log -d` with date format handling
+- [ ] **LOG-11**: `--name-only` produces filename-only output
+- [ ] **LOG-12**: `--name-status` produces status+filename output
+- [ ] **LOG-13**: `--decorate` shows branch/bookmark names on commits
+- [ ] **LOG-14**: `--pretty/--format` maps to `sl log -T` template
+- [ ] **LOG-15**: `--first-parent` follows only first parent of merges
+- [ ] **LOG-16**: `--reverse` shows commits in reverse chronological order
+- [ ] **LOG-17**: `-S<string>` searches for string changes in diffs (pickaxe)
+- [ ] **LOG-18**: `-G<regex>` searches for regex changes in diffs
+- [ ] **LOG-19**: Document `-n/--max-count` already implemented (translate to `-l`)
+- [ ] **LOG-20**: Document `--oneline` already implemented
+
+### Diff Flags
+
+Git diff flag support.
+
+- [ ] **DIFF-01**: `--stat` passes through to `sl diff --stat`
+- [ ] **DIFF-02**: `-w/--ignore-all-space` passes through to `sl diff -w`
+- [ ] **DIFF-03**: `-b/--ignore-space-change` passes through to `sl diff -b`
+- [ ] **DIFF-04**: `-U<n>/--unified=<n>` passes through to `sl diff -U`
+- [ ] **DIFF-05**: `--name-only` produces filename-only output
+- [ ] **DIFF-06**: `--name-status` produces status+filename output
+- [ ] **DIFF-07**: `--staged/--cached` warns that Sapling has no staging area
+- [ ] **DIFF-08**: `--raw` produces raw format output
+- [ ] **DIFF-09**: `-M/--find-renames` enables rename detection
+- [ ] **DIFF-10**: `-C/--find-copies` enables copy detection
+- [ ] **DIFF-11**: `--word-diff` shows word-level differences
+- [ ] **DIFF-12**: `--color-moved` highlights moved lines
+
+### Status Flags
+
+Git status flag support.
+
+- [ ] **STAT-01**: `--ignored` translates to `sl status -i`
+- [ ] **STAT-02**: `-b/--branch` adds branch info to output
+- [ ] **STAT-03**: `-v/--verbose` passes through for verbose output
+- [ ] **STAT-04**: Verify `--porcelain` and `--short` emulation covers all status codes
+- [ ] **STAT-05**: `-u/--untracked-files[=<mode>]` controls untracked file display
+
+### Commit Flags
+
+Git commit flag support.
+
+- [ ] **COMM-01**: `--amend` translates to `sl amend` command
+- [ ] **COMM-02**: `--no-edit` combined with amend uses existing message
+- [ ] **COMM-03**: `-F <file>/--file=<file>` translates to `sl commit -l <file>`
+- [ ] **COMM-04**: `--author=<author>` translates to `sl commit -u <author>`
+- [ ] **COMM-05**: `--date=<date>` translates to `sl commit -d <date>`
+- [ ] **COMM-06**: `-v/--verbose` shows diff in commit message editor
+- [ ] **COMM-07**: `-s/--signoff` adds Signed-off-by trailer
+- [ ] **COMM-08**: `-n/--no-verify` bypasses pre-commit hooks
+
+### Stash Flags
+
+Git stash flag support.
+
+- [ ] **STSH-01**: `-u/--include-untracked` translates to `sl shelve -u`
+- [ ] **STSH-02**: `-m/--message` translates to `sl shelve -m`
+- [ ] **STSH-03**: `stash show --stat` displays shelve diff statistics
+- [ ] **STSH-04**: `stash@{n}` reference syntax maps to shelve names
+- [ ] **STSH-05**: `-p/--patch` interactive mode passes through to `sl shelve -i`
+- [ ] **STSH-06**: `-k/--keep-index` warns about no staging area
+- [ ] **STSH-07**: `-a/--all` stashes all files including ignored
+- [ ] **STSH-08**: `-q/--quiet` suppresses output
+- [ ] **STSH-09**: `stash push <pathspec>` supports selective file stashing
+- [ ] **STSH-10**: `stash branch <name>` creates branch from stash
+
+### Branch Flags
+
+Git branch flag support.
+
+- [ ] **BRAN-01**: `-m <old> <new>` translates to `sl bookmark -m <old> <new>`
+- [ ] **BRAN-02**: `-a/--all` shows all bookmarks including remote
+- [ ] **BRAN-03**: `-r/--remotes` shows remote bookmarks only
+- [ ] **BRAN-04**: `-v/--verbose` shows commit info with each branch
+- [ ] **BRAN-05**: `-l/--list` lists branches matching pattern
+- [ ] **BRAN-06**: `--show-current` shows current branch name
+- [ ] **BRAN-07**: `-t/--track` sets up upstream tracking
+- [ ] **BRAN-08**: `-f/--force` forces branch operations
+- [ ] **BRAN-09**: `-c/--copy` copies a branch
+
+### Checkout/Switch/Restore Flags
+
+Git checkout, switch, and restore flag support.
+
+- [ ] **CHKT-01**: `switch -c/--create` translates to `sl bookmark` + `sl goto`
+- [ ] **CHKT-02**: `switch -C/--force-create` force creates bookmark if exists
+- [ ] **CHKT-03**: `restore --source=<tree>/-s <tree>` translates to `sl revert -r <rev>`
+- [ ] **CHKT-04**: `restore --staged/-S` warns about no staging area
+- [ ] **CHKT-05**: `checkout --detach` passes through (sl doesn't have attached concept)
+- [ ] **CHKT-06**: `checkout -t/--track` sets up upstream tracking for new branch
+- [ ] **CHKT-07**: `switch -d/--detach` switches to commit without branch
+- [ ] **CHKT-08**: `switch -f/--force/--discard-changes` discards local changes
+- [ ] **CHKT-09**: `switch -m/--merge` merges local changes during switch
+- [ ] **CHKT-10**: `restore -q/--quiet` suppresses output
+- [ ] **CHKT-11**: `restore -W/--worktree` explicitly restores working tree
+
+### Show Flags
+
+Git show flag support.
+
+- [ ] **SHOW-01**: `--stat` passes through to `sl show --stat`
+- [ ] **SHOW-02**: `-U<n>` passes through for context lines
+- [ ] **SHOW-03**: `-w` passes through to ignore whitespace
+- [ ] **SHOW-04**: `--name-only` produces filename-only output
+- [ ] **SHOW-05**: `--name-status` produces status+filename output
+- [ ] **SHOW-06**: `--pretty/--format` maps to template formatting
+- [ ] **SHOW-07**: `-s/--no-patch` suppresses diff output
+- [ ] **SHOW-08**: `--oneline` produces short format output
+
+### Blame Flags
+
+Git blame flag support.
+
+- [ ] **BLAM-01**: `-w` passes through to `sl annotate -w` (ignore whitespace)
+- [ ] **BLAM-02**: `-b` passes through to `sl annotate -b` (ignore space changes)
+- [ ] **BLAM-03**: `-L <start>,<end>` line range support
+- [ ] **BLAM-04**: `-e/--show-email` shows author email
+- [ ] **BLAM-05**: `-p/--porcelain` produces machine-readable output
+- [ ] **BLAM-06**: `-l` shows long revision hash
+- [ ] **BLAM-07**: `-n/--show-number` shows original line numbers
+
+### Grep Flags
+
+Git grep flag support.
+
+- [ ] **GREP-01**: `-n` passes through to `sl grep -n` (line numbers)
+- [ ] **GREP-02**: `-i` passes through to `sl grep -i` (case insensitive)
+- [ ] **GREP-03**: `-l` passes through to `sl grep -l` (files only)
+- [ ] **GREP-04**: `-c` passes through to `sl grep -c` (count)
+- [ ] **GREP-05**: `-w` passes through to `sl grep -w` (word match)
+- [ ] **GREP-06**: `-v` passes through for inverted match
+- [ ] **GREP-07**: `-A <num>` shows trailing context lines
+- [ ] **GREP-08**: `-B <num>` shows leading context lines
+- [ ] **GREP-09**: `-C <num>` shows both context lines
+- [ ] **GREP-10**: `-h` suppresses filename output
+- [ ] **GREP-11**: `-H` forces filename output
+- [ ] **GREP-12**: `-o/--only-matching` shows only matched parts
+- [ ] **GREP-13**: `-q/--quiet` suppresses output, exit status only
+- [ ] **GREP-14**: `-F/--fixed-strings` treats pattern as literal string
+
+### Clean Flags
+
+Git clean flag support.
+
+- [ ] **CLEN-01**: `-x` translates to `sl purge --all` (remove ignored too)
+- [ ] **CLEN-02**: `-X` removes only ignored files
+- [ ] **CLEN-03**: `-e <pattern>` translates to `sl purge -X` exclude pattern
+- [ ] **CLEN-04**: Verify `-f`, `-d`, `-n` already implemented correctly
+
+### Config Flags
+
+Git config flag support.
+
+- [ ] **CONF-01**: `--get` for reading specific key
+- [ ] **CONF-02**: `--unset` for removing a key
+- [ ] **CONF-03**: `--list/-l` shows all configuration
+- [ ] **CONF-04**: Verify `--global` → `--user` translation
+- [ ] **CONF-05**: `--local` scopes to repository config
+- [ ] **CONF-06**: `--system` scopes to system-wide config
+- [ ] **CONF-07**: `--show-origin` displays where value comes from
+- [ ] **CONF-08**: `--all` gets all values for multi-valued keys
+
+### Rev-Parse Flags
+
+Git rev-parse flag support.
+
+- [ ] **REVP-01**: `--show-toplevel` translates to `sl root`
+- [ ] **REVP-02**: `--git-dir` returns `.sl` directory path
+- [ ] **REVP-03**: `--is-inside-work-tree` returns true/false
+- [ ] **REVP-04**: `--abbrev-ref HEAD` returns current bookmark name
+- [ ] **REVP-05**: `--verify` validates object reference
+- [ ] **REVP-06**: `--symbolic` outputs in symbolic form
+- [ ] **REVP-07**: Document `--short HEAD` already implemented
+
+### Add Flags
+
+Git add flag support.
+
+- [ ] **ADD-01**: Verify `-A/--all` → `addremove` translation
+- [ ] **ADD-02**: Verify `-u/--update` emulation for modified tracked files
+- [ ] **ADD-03**: `--dry-run/-n` shows what would be added
+- [ ] **ADD-04**: `-f/--force` adds ignored files
+- [ ] **ADD-05**: `-v/--verbose` shows files as they are added
+
+### Clone Flags
+
+Git clone flag support.
+
+- [ ] **CLON-01**: `-b <branch>/--branch` translates to `sl clone -u <bookmark>`
+- [ ] **CLON-02**: `--depth` translates to `sl clone --shallow`
+- [ ] **CLON-03**: `--single-branch` behavior with shallow clone
+- [ ] **CLON-04**: `-o/--origin <name>` sets custom remote name
+- [ ] **CLON-05**: `-n/--no-checkout` skips checkout after clone
+- [ ] **CLON-06**: `--recursive/--recurse-submodules` clones with submodules
+- [ ] **CLON-07**: `--no-tags` skips tag cloning
+- [ ] **CLON-08**: `-q/--quiet` suppresses output
+- [ ] **CLON-09**: `-v/--verbose` increases output verbosity
+
+### Rm Flags
+
+Git rm flag support.
+
+- [ ] **RM-01**: `-f/--force` passes through for forced removal
+- [ ] **RM-02**: `--cached` warns about no staging area
+- [ ] **RM-03**: `-n/--dry-run` previews removal without executing
+- [ ] **RM-04**: `-q/--quiet` suppresses output
+- [ ] **RM-05**: Verify `-r/--recursive` filtering (sl remove is recursive by default)
+
+### Mv Flags
+
+Git mv flag support.
+
+- [ ] **MV-01**: `-f/--force` passes through for forced move
+- [ ] **MV-02**: `-k` skip errors and continue
+- [ ] **MV-03**: `-v/--verbose` shows files as they are moved
+- [ ] **MV-04**: `-n/--dry-run` previews move without executing
+
+### Documentation
+
+Flag compatibility documentation updates.
+
+- [ ] **DOC-01**: Create comprehensive flag compatibility matrix in README
+- [ ] **DOC-02**: Document all staging-related flags as unsupported with explanation
+- [ ] **DOC-03**: Document interactive mode limitations (`-i`, `-p` for patch selection)
+- [ ] **DOC-04**: Add helpful error messages for unsupported flags
+- [ ] **DOC-05**: Document already-implemented flags that were missing from docs
+
+## Future Requirements (v2+)
+
+Deferred to future releases.
+
+### Advanced Formatting
+- **FMT-01**: `log --pretty=format:` custom format templates (complex)
+- **FMT-02**: `status --porcelain=v2` format support
+- **FMT-03**: `blame --porcelain` machine-readable output (complex)
+
+### Interactive Modes
+- **INTR-01**: Full parity for `-p/--patch` interactive selection
+- **INTR-02**: `add -i` interactive staging
+
+### Edge Cases
+- **EDGE-01**: `stash export/import` commands
+- **EDGE-02**: `branch --contains/--merged/--no-merged` filtering
+- **EDGE-03**: `checkout --orphan` for new root commits
+- **EDGE-04**: `stash --index` on pop/apply (staging required)
+
+## Out of Scope
+
+| Feature | Reason |
+|---------|--------|
+| `--staged`/`--cached` flags | Sapling has no staging area — cannot emulate |
+| `--index` on stash pop/apply | Staging area required |
+| `commit --fixup/--squash` | Different workflow in Sapling (use sl fold) |
+| Interactive rebase | Completely different model |
+| `diff --diff-filter` | No sl equivalent |
+| `log --walk-reflogs` | Sapling reflog differs |
+| `stash --keep-index` | Staging area required (warn only) |
+
+## Traceability
+
+Populated during roadmap creation.
+
+| Requirement | Phase | Status |
+|-------------|-------|--------|
+| SAFE-01 | — | Pending |
+| SAFE-02 | — | Pending |
+| ... | — | Pending |
+
+**Coverage:**
+- v1.3 requirements: 111 total
+- Mapped to phases: 0 (pending roadmap)
+- Unmapped: 111 ⚠️
+
+---
+*Requirements defined: 2026-01-20*
+*Last updated: 2026-01-20 after verification with parallel agents*
