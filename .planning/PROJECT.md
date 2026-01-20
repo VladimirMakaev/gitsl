@@ -75,7 +75,21 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 ### Active
 
-*No active requirements. Next milestone to be defined.*
+**v1.3 Flag Compatibility:**
+- [ ] Complete flag audit for all 25 supported git commands
+- [ ] Document compatibility status for every git flag
+- [ ] Test coverage for each supported flag
+- [ ] Implement emulation where sl behavior differs from git
+
+## Current Milestone: v1.3 Flag Compatibility
+
+**Goal:** Exhaustive flag-by-flag compatibility for all 25 git commands — research, document, test, and implement/emulate where needed.
+
+**Target scope:**
+- Research all flags from official git documentation for each command
+- Document which flags are supported, pass-through, emulated, or unsupported
+- Add tests for each flag we claim to support
+- Implement emulation for flags where sl behavior differs from git
 
 ### Out of Scope
 
@@ -176,4 +190,4 @@ curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>
 | Error on ambiguity (file=revision) | Explicit error better than silent priority | ✓ Good |
 
 ---
-*Last updated: 2026-01-20 after v1.2 milestone complete*
+*Last updated: 2026-01-20 after v1.3 milestone started*
