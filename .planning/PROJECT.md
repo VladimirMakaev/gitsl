@@ -15,10 +15,10 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 ## Current State
 
-**Shipped:** v1.1 (2026-01-19)
+**Shipped:** v1.2 (2026-01-20)
 **PyPI:** https://pypi.org/project/gitsl/
-**Lines of Code:** 3,131 Python
-**Tests:** 124 passing (parallel, cross-platform)
+**Lines of Code:** 4,282 Python
+**Tests:** 191 passing (parallel, cross-platform)
 
 ## Requirements
 
@@ -49,38 +49,33 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 - ✓ PyPI trusted publishing with OIDC — v1.1
 - ✓ Production README with badges and command documentation — v1.1
 
+**v1.2 More Commands Support:**
+- ✓ `git show [commit]` translates to `sl show` — v1.2
+- ✓ `git blame <file>` translates to `sl annotate` — v1.2
+- ✓ `git rm <files>` translates to `sl remove` — v1.2
+- ✓ `git mv <src> <dst>` translates to `sl rename` — v1.2
+- ✓ `git clean -f [-d]` translates to `sl purge` with safety validation — v1.2
+- ✓ `git clone <url> [dir]` translates to `sl clone` — v1.2
+- ✓ `git grep <pattern>` translates to `sl grep` — v1.2
+- ✓ `git config [options]` translates to `sl config` — v1.2
+- ✓ `git stash` translates to `sl shelve` — v1.2
+- ✓ `git stash pop` translates to `sl unshelve` — v1.2
+- ✓ `git stash list` translates to `sl shelve --list` — v1.2
+- ✓ `git stash drop` translates to `sl shelve --delete` — v1.2
+- ✓ `git stash apply` translates to `sl unshelve --keep` — v1.2
+- ✓ `git checkout <commit>` translates to `sl goto` — v1.2
+- ✓ `git checkout <file>` translates to `sl revert <file>` — v1.2
+- ✓ `git checkout -b <branch>` translates to `sl bookmark <name>` + `sl goto` — v1.2
+- ✓ `git switch <branch>` translates to `sl goto` — v1.2
+- ✓ `git restore <file>` translates to `sl revert <file>` — v1.2
+- ✓ `git branch` lists bookmarks via `sl bookmark` — v1.2
+- ✓ `git branch <name>` creates bookmark via `sl bookmark <name>` — v1.2
+- ✓ `git branch -d/-D <name>` deletes bookmark safely (D→d translation) — v1.2
+- ✓ Checkout disambiguates between commit/branch/file correctly — v1.2
+
 ### Active
 
-**v1.2 More Commands Support:**
-
-**Direct Mappings:**
-- [ ] `git show [commit]` translates to `sl show`
-- [ ] `git blame <file>` translates to `sl annotate`
-- [ ] `git rm <files>` translates to `sl remove`
-- [ ] `git mv <src> <dst>` translates to `sl rename`
-- [ ] `git clean -f [-d]` translates to `sl purge`
-- [ ] `git clone <url> [dir]` translates to `sl clone`
-- [ ] `git grep <pattern>` translates to `sl grep`
-- [ ] `git config [options]` translates to `sl config`
-
-**Stash/Shelve:**
-- [ ] `git stash` translates to `sl shelve`
-- [ ] `git stash pop` translates to `sl unshelve`
-- [ ] `git stash list` translates to `sl shelve --list`
-- [ ] `git stash drop` translates to `sl shelve --delete`
-- [ ] `git stash apply` translates to `sl unshelve --keep`
-
-**Checkout/Switch/Restore:**
-- [ ] `git checkout <commit>` translates to `sl goto`
-- [ ] `git checkout <file>` translates to `sl revert <file>`
-- [ ] `git checkout -b <branch>` translates to `sl bookmark <name>` + `sl goto`
-- [ ] `git switch <branch>` translates to `sl goto`
-- [ ] `git restore <file>` translates to `sl revert <file>`
-
-**Branch/Bookmark:**
-- [ ] `git branch` lists bookmarks via `sl bookmark`
-- [ ] `git branch <name>` creates bookmark via `sl bookmark <name>`
-- [ ] `git branch -d <name>` deletes bookmark via `sl bookmark -d <name>`
+*No active requirements. Next milestone to be defined.*
 
 ### Out of Scope
 
@@ -174,6 +169,11 @@ curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>
 | pyproject.toml with setuptools | Modern packaging, flat layout | ✓ Good |
 | OIDC trusted publishing | No API tokens in secrets | ✓ Good |
 | Parallel tests with pytest-xdist | 4x faster test execution | ✓ Good |
+| Safety validation for clean | Enforce -f/-n before sl purge | ✓ Good |
+| Translate -D to -d for branch delete | Prevent sl bookmark -D from stripping commits | ✓ Good |
+| Subcommand dispatch for stash | Handle push/pop/apply/list/drop patterns | ✓ Good |
+| Checkout disambiguation via sl log -r | Use exit code to validate revision | ✓ Good |
+| Error on ambiguity (file=revision) | Explicit error better than silent priority | ✓ Good |
 
 ---
-*Last updated: 2026-01-19 after v1.2 milestone start*
+*Last updated: 2026-01-20 after v1.2 milestone complete*

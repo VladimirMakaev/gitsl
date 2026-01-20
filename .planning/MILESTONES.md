@@ -1,5 +1,33 @@
 # Project Milestones: GitSL
 
+## v1.2 More Commands Support (Shipped: 2026-01-20)
+
+**Delivered:** Extended command support with 13 additional git commands translated to Sapling equivalents, including checkout disambiguation.
+
+**Phases completed:** 15-19 (10 plans total)
+
+**Key accomplishments:**
+
+- Added 6 direct pass-through commands (show, blame, rm, mv, clone, grep) with flag filtering
+- Implemented 3 flag translation commands (clean, config, switch) with safety validation
+- Created branch/bookmark management with critical -D to -d safety translation
+- Built stash/shelve operations with subcommand dispatch for full workflow support
+- Implemented checkout disambiguation to correctly handle branches, files, and commits
+
+**Stats:**
+
+- 59 files created/modified
+- 4,282 lines of Python
+- 191 tests passing
+- 5 phases, 10 plans, 47 commits
+- 2 days from start to ship
+
+**Git range:** `feat(15-01)` → `docs(19-02)`
+
+**What's next:** User feedback and usage-driven improvements
+
+---
+
 ## v1.1 Polish & Documentation (Shipped: 2026-01-19)
 
 **Delivered:** Production-ready package with comprehensive CI/CD, cross-platform testing, PyPI publishing, and documentation.
