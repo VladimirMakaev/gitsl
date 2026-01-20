@@ -29,6 +29,7 @@ import cmd_config
 import cmd_switch
 import cmd_branch
 import cmd_restore
+import cmd_stash
 
 
 def main(argv: List[str] = None) -> int:
@@ -121,6 +122,9 @@ def main(argv: List[str] = None) -> int:
 
     if parsed.command == "restore":
         return cmd_restore.handle(parsed)
+
+    if parsed.command == "stash":
+        return cmd_stash.handle(parsed)
 
     # Unsupported command handling (UNSUP-01, UNSUP-02)
     if parsed.args:
