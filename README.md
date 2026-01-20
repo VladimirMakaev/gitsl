@@ -43,6 +43,19 @@ gitsl translates these to equivalent Sapling commands automatically.
 | `add` | Full | `sl add` / `sl addremove` |
 | `commit` | Full | `sl commit` |
 | `rev-parse` | Partial | Only `--short HEAD` via `sl whereami` |
+| `show` | Full | `sl show` |
+| `blame` | Full | `sl annotate` |
+| `rm` | Full | `sl remove` |
+| `mv` | Full | `sl rename` |
+| `clone` | Full | `sl clone` |
+| `grep` | Full | `sl grep` |
+| `clean` | Full | `sl purge` (requires `-f` or `-n`) |
+| `config` | Full | `sl config` |
+| `switch` | Full | `sl goto` / `sl bookmark` |
+| `branch` | Full | `sl bookmark` |
+| `restore` | Full | `sl revert` |
+| `stash` | Full | `sl shelve` / `sl unshelve` |
+| `checkout` | Full | `sl goto` / `sl revert` / `sl bookmark` |
 
 Commands not listed are unsupported.
 
@@ -93,6 +106,99 @@ Commands not listed are unsupported.
 
 All flags passed through to sl equivalents unchanged.
 
+### git show, git clone, git grep
+
+All flags passed through to sl equivalents unchanged.
+
+### git blame
+
+Translates to `sl annotate`. All flags passed through.
+
+### git rm
+
+Translates to `sl remove`. The `-r` flag is filtered (sl remove is recursive by default).
+
+### git mv
+
+Translates to `sl rename`. All flags passed through.
+
+### git clean
+
+Translates to `sl purge`. **Requires `-f` or `-n` flag** (safety validation).
+
+| Flag | Supported | Translation |
+|------|-----------|-------------|
+| `-f` | Yes | `sl purge` |
+| `-n` / `--dry-run` | Yes | `sl purge --print` |
+| `-d` | Yes | Included by default in sl purge |
+| `-fd` | Yes | `sl purge` |
+
+### git config
+
+Translates to `sl config`.
+
+| Flag | Supported | Translation |
+|------|-----------|-------------|
+| `<key>` | Yes | `sl config <key>` |
+| `<key> <value>` | Yes | `sl config --local <key> <value>` |
+| `--list` | Yes | `sl config` |
+| `--global` | Yes | `sl config --user` |
+| `--local` | Yes | `sl config --local` |
+
+### git switch
+
+| Flag | Supported | Translation |
+|------|-----------|-------------|
+| `<branch>` | Yes | `sl goto <branch>` |
+| `-c <name>` | Yes | `sl bookmark <name>` |
+
+### git branch
+
+Translates to `sl bookmark`.
+
+| Flag | Supported | Translation |
+|------|-----------|-------------|
+| (none) | Yes | `sl bookmark` (list) |
+| `<name>` | Yes | `sl bookmark <name>` (create) |
+| `-d <name>` | Yes | `sl bookmark -d <name>` |
+| `-D <name>` | Yes | `sl bookmark -d <name>` (safety: -D is translated to -d) |
+
+### git restore
+
+Translates to `sl revert`.
+
+| Flag | Supported | Translation |
+|------|-----------|-------------|
+| `<file>` | Yes | `sl revert <file>` |
+| `.` | Yes | `sl revert --all` |
+
+### git stash
+
+Translates to `sl shelve` / `sl unshelve`.
+
+| Subcommand | Supported | Translation |
+|------------|-----------|-------------|
+| (none) | Yes | `sl shelve` |
+| `push` | Yes | `sl shelve` |
+| `-m <msg>` | Yes | `sl shelve -m <msg>` |
+| `pop` | Yes | `sl unshelve` |
+| `apply` | Yes | `sl unshelve --keep` |
+| `list` | Yes | `sl shelve --list` |
+| `drop` | Yes | `sl shelve --delete <name>` |
+
+### git checkout
+
+Disambiguates between branches, files, and commits.
+
+| Usage | Supported | Translation |
+|-------|-----------|-------------|
+| `<branch>` | Yes | `sl goto <branch>` |
+| `<commit>` | Yes | `sl goto <commit>` |
+| `<file>` | Yes | `sl revert <file>` |
+| `-- <file>` | Yes | `sl revert <file>` |
+| `-b <name>` | Yes | `sl bookmark <name>` + `sl goto <name>` |
+| `-B <name>` | Yes | `sl bookmark -f <name>` + `sl goto <name>` |
+
 ### git rev-parse
 
 | Flag | Supported | Translation |
@@ -116,12 +222,10 @@ For unsupported operations, use Sapling commands directly. See the [Sapling Git 
 
 | Command | Reason |
 |---------|--------|
-| `checkout` | Sapling uses `goto` with different semantics |
-| `branch` | Sapling uses bookmarks, different model |
 | `merge` | Sapling prefers rebase workflow |
 | `rebase` | Complex flag translation, use `sl rebase` directly |
-| `stash` | Use `sl shelve` / `sl unshelve` directly |
 | `push` / `pull` / `fetch` | Remote operations differ significantly |
+| `revert` | Maps to `sl backout`, not `sl revert` - semantic confusion |
 
 ## Debug Mode
 
