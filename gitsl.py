@@ -27,6 +27,8 @@ import cmd_grep
 import cmd_clean
 import cmd_config
 import cmd_switch
+import cmd_branch
+import cmd_restore
 
 
 def main(argv: List[str] = None) -> int:
@@ -113,6 +115,12 @@ def main(argv: List[str] = None) -> int:
 
     if parsed.command == "switch":
         return cmd_switch.handle(parsed)
+
+    if parsed.command == "branch":
+        return cmd_branch.handle(parsed)
+
+    if parsed.command == "restore":
+        return cmd_restore.handle(parsed)
 
     # Unsupported command handling (UNSUP-01, UNSUP-02)
     if parsed.args:
