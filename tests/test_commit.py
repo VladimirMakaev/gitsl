@@ -65,3 +65,41 @@ class TestWorkflow:
         # Status should be clean
         status = run_command(["sl", "status"], cwd=sl_repo)
         assert status.stdout.strip() == ""
+
+
+class TestCommitSafety:
+    """SAFE-01: git commit -a should not add untracked files."""
+
+    def test_commit_a_does_not_add_untracked(self, sl_repo_with_commit: Path):
+        """git commit -a ignores untracked files (removes flag)."""
+        # Create untracked file
+        (sl_repo_with_commit / "untracked.txt").write_text("new content\n")
+
+        # Modify tracked file
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("modified content\n")
+
+        # Add the modified file (so we have something to commit)
+        run_command(["sl", "add", "README.md"], cwd=sl_repo_with_commit)
+
+        # Commit with -a - should NOT add untracked.txt
+        result = run_gitsl(["commit", "-a", "-m", "Test commit"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Untracked file should still be untracked
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "untracked.txt" in status.stdout, \
+            "untracked.txt was added by commit -a (should remain untracked)"
+
+    def test_commit_all_flag_removed(self, sl_repo_with_commit: Path):
+        """git commit --all (long form) also ignores untracked files."""
+        (sl_repo_with_commit / "untracked2.txt").write_text("new\n")
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("modified\n")
+        run_command(["sl", "add", "README.md"], cwd=sl_repo_with_commit)
+
+        result = run_gitsl(["commit", "--all", "-m", "Test"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        status = run_command(["sl", "status"], cwd=sl_repo_with_commit)
+        assert "untracked2.txt" in status.stdout

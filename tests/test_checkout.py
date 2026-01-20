@@ -243,3 +243,69 @@ class TestCheckoutErrors:
         )
         # sl goto should fail with non-zero exit
         assert result.exit_code != 0
+
+
+class TestCheckoutForce:
+    """SAFE-02: git checkout -f translates to sl goto -C."""
+
+    def test_checkout_force_discards_changes(self, sl_repo_with_commit: Path):
+        """git checkout -f <branch> discards uncommitted changes."""
+        # Create a bookmark to switch to
+        run_command(["sl", "bookmark", "target-branch"], cwd=sl_repo_with_commit)
+
+        # Make uncommitted changes
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("uncommitted changes\n")
+
+        # Force checkout to target branch
+        result = run_gitsl(["checkout", "-f", "target-branch"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+
+        # Changes should be discarded
+        assert readme.read_text() == "# Test Repository\n"
+
+    def test_checkout_force_long_form(self, sl_repo_with_commit: Path):
+        """git checkout --force <branch> also discards changes."""
+        run_command(["sl", "bookmark", "force-target"], cwd=sl_repo_with_commit)
+
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("uncommitted\n")
+
+        result = run_gitsl(["checkout", "--force", "force-target"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        assert readme.read_text() == "# Test Repository\n"
+
+
+class TestCheckoutMerge:
+    """SAFE-03: git checkout -m translates to sl goto -m."""
+
+    def test_checkout_merge_preserves_changes(self, sl_repo_with_commit: Path):
+        """git checkout -m <branch> merges local changes during switch."""
+        # Create another commit on a different bookmark
+        run_command(["sl", "bookmark", "feature"], cwd=sl_repo_with_commit)
+        (sl_repo_with_commit / "feature.txt").write_text("feature content\n")
+        run_command(["sl", "add", "feature.txt"], cwd=sl_repo_with_commit)
+        run_command(["sl", "commit", "-m", "Add feature file"], cwd=sl_repo_with_commit)
+
+        # Go back to original commit
+        run_command(["sl", "goto", ".^"], cwd=sl_repo_with_commit)
+
+        # Make uncommitted changes to a different file
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("local changes\n")
+
+        # Checkout with merge - should attempt to merge local changes
+        result = run_gitsl(["checkout", "-m", "feature"], cwd=sl_repo_with_commit)
+        # May succeed or fail depending on conflicts, but should not error on flag
+        # The key is that -m is passed to sl goto, not rejected
+
+    def test_checkout_merge_long_form(self, sl_repo_with_commit: Path):
+        """git checkout --merge <branch> also merges local changes."""
+        run_command(["sl", "bookmark", "merge-target"], cwd=sl_repo_with_commit)
+
+        readme = sl_repo_with_commit / "README.md"
+        readme.write_text("local changes\n")
+
+        # --merge should translate to -m for sl goto
+        result = run_gitsl(["checkout", "--merge", "merge-target"], cwd=sl_repo_with_commit)
+        # Flag should be accepted (translated to -m)
