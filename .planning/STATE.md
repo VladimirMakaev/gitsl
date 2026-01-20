@@ -11,11 +11,11 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 Milestone: v1.3 Flag Compatibility
 Phase: 20 - Critical Safety Fixes
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-20 — Roadmap created
+Plan: 01 of 1 complete
+Status: Phase complete
+Last activity: 2026-01-20 — Completed 20-01-PLAN.md
 
-Progress: [..........] 0/10 phases
+Progress: [#.........] 1/10 phases
 
 ## Milestones
 
@@ -27,9 +27,9 @@ Progress: [..........] 0/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 30 (13 v1.0 + 7 v1.1 + 10 v1.2)
-- Total phases completed: 19
-- Total requirements validated: 87 (21 v1.0 + 26 v1.1 + 40 v1.2)
+- Total plans completed: 31 (13 v1.0 + 7 v1.1 + 10 v1.2 + 1 v1.3)
+- Total phases completed: 20
+- Total requirements validated: 91 (21 v1.0 + 26 v1.1 + 40 v1.2 + 4 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [..........] 0/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 10 | — | — |
+| v1.3 Flags | 1 | 1 | — |
 
 ## Accumulated Context
 
@@ -47,9 +47,14 @@ Progress: [..........] 0/10 phases
 All decisions logged in PROJECT.md Key Decisions table.
 All marked as "Good" during milestone completions.
 
+**Phase 20-01 Decisions:**
+- Remove -a/--all from commit entirely rather than translate (semantic difference too dangerous)
+- Translate -f/--force to -C for goto paths (matches sl goto -C semantics)
+- Pass through -m/--merge to -m for goto paths (same semantics in sl)
+
 ### Pending Todos
 
-None — ready to start Phase 20.
+None — ready for Phase 21.
 
 ### Blockers/Concerns
 
@@ -57,6 +62,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-20
-Stopped at: Roadmap created for v1.3
-Resume with: `/gsd:plan-phase 20` to plan Critical Safety Fixes phase
+Last session: 2026-01-20T23:40:42Z
+Stopped at: Completed 20-01-PLAN.md
+Resume with: `/gsd:plan-phase 21` to plan Push/Pull/Fetch Safety phase
