@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 17 of 19 (v1.2) - In progress
-Plan: 01 of 02 (Branch and restore handlers)
-Status: Plan 01 complete
-Last activity: 2026-01-20 - Completed 17-01-PLAN.md
+Phase: 17 of 19 (v1.2) - Complete
+Plan: 02 of 02 (E2E tests for branch and restore)
+Status: Phase complete
+Last activity: 2026-01-20 - Completed 17-02-PLAN.md
 
-Progress: [#####.....] 50% (v1.2 - 2.5 of 5 phases)
+Progress: [######....] 60% (v1.2 - 3 of 5 phases)
 
 ## Milestones
 
@@ -28,7 +28,7 @@ Progress: [#####.....] 50% (v1.2 - 2.5 of 5 phases)
 |-------|------|--------------|--------|
 | 15 | Direct pass-through commands | 13 | Complete |
 | 16 | Flag translation commands | 8 | Complete |
-| 17 | Branch and restore | 6 | In progress (1/2) |
+| 17 | Branch and restore | 6 | Complete |
 | 18 | Stash operations | 7 | Pending |
 | 19 | Checkout command | 6 | Pending |
 
@@ -37,9 +37,9 @@ Progress: [#####.....] 50% (v1.2 - 2.5 of 5 phases)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24 (13 v1.0 + 7 v1.1 + 4 v1.2)
-- Total phases completed: 16
-- Total requirements validated: 21 v1.0 + 26 v1.1 + 21 v1.2
+- Total plans completed: 25 (13 v1.0 + 7 v1.1 + 5 v1.2)
+- Total phases completed: 17
+- Total requirements validated: 21 v1.0 + 26 v1.1 + 27 v1.2
 
 **By Milestone:**
 
@@ -47,7 +47,7 @@ Progress: [#####.....] 50% (v1.2 - 2.5 of 5 phases)
 |-----------|--------|-------|------|
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 2 |
-| v1.2 Commands | 2 | 5 | - |
+| v1.2 Commands | 3 | 6 | - |
 
 ## Accumulated Context
 
@@ -64,10 +64,12 @@ All marked as "Good" during milestone completions.
 
 **Phase 17 decisions:**
 - CRITICAL: Translate -D to -d for sl bookmark to prevent commit stripping (git -D only removes label, sl -D strips commits)
+- Accept sl bookmark's update-on-duplicate behavior (silently updates existing bookmarks)
+- Accept sl revert's exit 0 with stderr warning for nonexistent files
 
 ### Pending Todos
 
-- Continue Phase 17: Execute 17-02 E2E tests plan
+- Continue Phase 18: Stash operations
 
 ### Blockers/Concerns
 
@@ -79,10 +81,10 @@ Key pitfalls to address:
 1. **Checkout disambiguation** - Phase 19 must handle branch/file/commit ambiguity
 2. ~~**Clean data safety** - Phase 16 must enforce `-f` requirement before passing to sl purge~~ DONE in 16-01
 3. **Stash conflict handling** - Phase 18 must detect conflict state on pop
-4. **Bookmark model mismatch** - Phase 17 should document git branch vs sl bookmark differences
+4. ~~**Bookmark model mismatch** - Phase 17 should document git branch vs sl bookmark differences~~ DONE in 17-01/17-02
 
 ## Session Continuity
 
-Last session: 2026-01-20T00:15:00Z
-Stopped at: Completed 17-01-PLAN.md
-Resume with: `/gsd:execute-plan 17-02`
+Last session: 2026-01-20
+Stopped at: Completed 17-02-PLAN.md (Phase 17 complete)
+Resume with: `/gsd:plan-phase 18`
