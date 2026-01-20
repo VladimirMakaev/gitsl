@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 16 of 19 (v1.2) - Complete
-Plan: 02 of 02 (Flag translation commands - E2E tests)
-Status: Phase 16 complete
-Last activity: 2026-01-19 - Completed 16-02-PLAN.md
+Phase: 17 of 19 (v1.2) - In progress
+Plan: 01 of 02 (Branch and restore handlers)
+Status: Plan 01 complete
+Last activity: 2026-01-20 - Completed 17-01-PLAN.md
 
-Progress: [####......] 40% (v1.2 - 2 of 5 phases)
+Progress: [#####.....] 50% (v1.2 - 2.5 of 5 phases)
 
 ## Milestones
 
@@ -28,7 +28,7 @@ Progress: [####......] 40% (v1.2 - 2 of 5 phases)
 |-------|------|--------------|--------|
 | 15 | Direct pass-through commands | 13 | Complete |
 | 16 | Flag translation commands | 8 | Complete |
-| 17 | Branch and restore | 6 | Pending |
+| 17 | Branch and restore | 6 | In progress (1/2) |
 | 18 | Stash operations | 7 | Pending |
 | 19 | Checkout command | 6 | Pending |
 
@@ -47,7 +47,7 @@ Progress: [####......] 40% (v1.2 - 2 of 5 phases)
 |-----------|--------|-------|------|
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 2 |
-| v1.2 Commands | 2 | 4 | - |
+| v1.2 Commands | 2 | 5 | - |
 
 ## Accumulated Context
 
@@ -62,9 +62,12 @@ All marked as "Good" during milestone completions.
 - Default to --local scope for config writes when no scope specified
 - Combined short flags (e.g., -fd) must be parsed correctly
 
+**Phase 17 decisions:**
+- CRITICAL: Translate -D to -d for sl bookmark to prevent commit stripping (git -D only removes label, sl -D strips commits)
+
 ### Pending Todos
 
-- Begin Phase 17: Branch and restore
+- Continue Phase 17: Execute 17-02 E2E tests plan
 
 ### Blockers/Concerns
 
@@ -80,6 +83,6 @@ Key pitfalls to address:
 
 ## Session Continuity
 
-Last session: 2026-01-19T23:57:23Z
-Stopped at: Completed 16-02-PLAN.md (Phase 16 complete)
-Resume with: `/gsd:plan-phase 17`
+Last session: 2026-01-20T00:15:00Z
+Stopped at: Completed 17-01-PLAN.md
+Resume with: `/gsd:execute-plan 17-02`
