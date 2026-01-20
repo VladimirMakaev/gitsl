@@ -18,16 +18,16 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 - [x] **RM-03**: `git rm -r` translates to `sl remove` (recursive by default)
 - [x] **MV-01**: `git mv <src> <dst>` translates to `sl rename <src> <dst>`
 - [x] **MV-02**: `git mv -f` translates to `sl rename -f`
-- [ ] **CLEAN-01**: `git clean -f` translates to `sl purge`
-- [ ] **CLEAN-02**: `git clean -fd` translates to `sl purge` (dirs included by default)
-- [ ] **CLEAN-03**: `git clean -n` translates to `sl purge --print` (dry run)
+- [x] **CLEAN-01**: `git clean -f` translates to `sl purge`
+- [x] **CLEAN-02**: `git clean -fd` translates to `sl purge` (dirs included by default)
+- [x] **CLEAN-03**: `git clean -n` translates to `sl purge --print` (dry run)
 - [x] **CLONE-01**: `git clone <url>` translates to `sl clone <url>`
 - [x] **CLONE-02**: `git clone <url> <dir>` translates to `sl clone <url> <dir>`
 - [x] **GREP-01**: `git grep <pattern>` translates to `sl grep <pattern>`
 - [x] **GREP-02**: `git grep` passes through common flags (-n, -i, -l)
-- [ ] **CONFIG-01**: `git config <key>` translates to `sl config <key>`
-- [ ] **CONFIG-02**: `git config <key> <value>` translates to `sl config <key> <value>`
-- [ ] **CONFIG-03**: `git config --list` translates to `sl config`
+- [x] **CONFIG-01**: `git config <key>` translates to `sl config <key>`
+- [x] **CONFIG-02**: `git config <key> <value>` translates to `sl config <key> <value>`
+- [x] **CONFIG-03**: `git config --list` translates to `sl config`
 
 ### Stash/Shelve
 
@@ -47,8 +47,8 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 - [ ] **CHECKOUT-04**: `git checkout -- <file>` translates to `sl revert <file>`
 - [ ] **CHECKOUT-05**: `git checkout -b <name>` creates bookmark and switches to it
 - [ ] **CHECKOUT-06**: Checkout disambiguates between commit/branch/file correctly
-- [ ] **SWITCH-01**: `git switch <branch>` translates to `sl goto <bookmark>`
-- [ ] **SWITCH-02**: `git switch -c <name>` translates to `sl bookmark <name>`
+- [x] **SWITCH-01**: `git switch <branch>` translates to `sl goto <bookmark>`
+- [x] **SWITCH-02**: `git switch -c <name>` translates to `sl bookmark <name>`
 - [ ] **RESTORE-01**: `git restore <file>` translates to `sl revert <file>`
 - [ ] **RESTORE-02**: `git restore .` translates to `sl revert --all`
 
@@ -112,14 +112,14 @@ Phase mappings for v1.2 requirements.
 | CLONE-02 | Phase 15 | Complete |
 | GREP-01 | Phase 15 | Complete |
 | GREP-02 | Phase 15 | Complete |
-| CLEAN-01 | Phase 16 | Pending |
-| CLEAN-02 | Phase 16 | Pending |
-| CLEAN-03 | Phase 16 | Pending |
-| CONFIG-01 | Phase 16 | Pending |
-| CONFIG-02 | Phase 16 | Pending |
-| CONFIG-03 | Phase 16 | Pending |
-| SWITCH-01 | Phase 16 | Pending |
-| SWITCH-02 | Phase 16 | Pending |
+| CLEAN-01 | Phase 16 | Complete |
+| CLEAN-02 | Phase 16 | Complete |
+| CLEAN-03 | Phase 16 | Complete |
+| CONFIG-01 | Phase 16 | Complete |
+| CONFIG-02 | Phase 16 | Complete |
+| CONFIG-03 | Phase 16 | Complete |
+| SWITCH-01 | Phase 16 | Complete |
+| SWITCH-02 | Phase 16 | Complete |
 | BRANCH-01 | Phase 17 | Pending |
 | BRANCH-02 | Phase 17 | Pending |
 | BRANCH-03 | Phase 17 | Pending |
