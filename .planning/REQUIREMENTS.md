@@ -11,10 +11,10 @@ Exhaustive flag coverage for all 25 supported git commands. Requirements organiz
 
 Critical behavioral corrections for flags with semantic differences.
 
-- [ ] **SAFE-01**: `commit -a` removes the flag rather than translating to sl -A (prevents adding untracked files)
-- [ ] **SAFE-02**: `checkout -f/--force` translates to `sl goto -C` for forcing switch with uncommitted changes
-- [ ] **SAFE-03**: `checkout -m/--merge` translates to `sl goto -m` to merge local changes during switch
-- [ ] **SAFE-04**: Verify `branch -D` → `-d` translation is complete (already implemented, needs test coverage)
+- [x] **SAFE-01**: `commit -a` removes the flag rather than translating to sl -A (prevents adding untracked files)
+- [x] **SAFE-02**: `checkout -f/--force` translates to `sl goto -C` for forcing switch with uncommitted changes
+- [x] **SAFE-03**: `checkout -m/--merge` translates to `sl goto -m` to merge local changes during switch
+- [x] **SAFE-04**: Verify `branch -D` → `-d` translation is complete (already implemented, needs test coverage)
 
 ### Log Flags
 

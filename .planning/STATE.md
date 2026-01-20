@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 20 (Critical Safety Fixes)
+**Current focus:** v1.3 Flag Compatibility — Phase 21 (Rev-Parse Expansion)
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 20 - Critical Safety Fixes
-Plan: 01 of 1 complete
-Status: Phase complete
-Last activity: 2026-01-20 — Completed 20-01-PLAN.md
+Phase: 21 - Rev-Parse Expansion
+Plan: Not started
+Status: Ready for planning
+Last activity: 2026-01-20 — Phase 20 verified and complete
 
 Progress: [#.........] 1/10 phases
 
@@ -62,6 +62,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-20T23:40:42Z
-Stopped at: Completed 20-01-PLAN.md
-Resume with: `/gsd:plan-phase 21` to plan Push/Pull/Fetch Safety phase
+Last session: 2026-01-20
+Stopped at: Phase 20 verified and complete
+Resume with: `/gsd:plan-phase 21` to plan Rev-Parse Expansion phase
