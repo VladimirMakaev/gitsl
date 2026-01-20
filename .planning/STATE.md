@@ -9,12 +9,12 @@ See: .planning/PROJECT.md (updated 2026-01-19)
 
 ## Current Position
 
-Phase: 18 of 19 (v1.2) - Complete
-Plan: 02 of 02 (E2E tests for stash)
-Status: Phase complete
-Last activity: 2026-01-20 - Completed 18-02-PLAN.md
+Phase: 19 of 19 (v1.2) - In Progress
+Plan: 01 of 02 (Checkout command handler)
+Status: In progress
+Last activity: 2026-01-20 - Completed 19-01-PLAN.md
 
-Progress: [########..] 80% (v1.2 - 4 of 5 phases)
+Progress: [#########.] 90% (v1.2 - 4.5 of 5 phases)
 
 ## Milestones
 
@@ -30,15 +30,15 @@ Progress: [########..] 80% (v1.2 - 4 of 5 phases)
 | 16 | Flag translation commands | 8 | Complete |
 | 17 | Branch and restore | 6 | Complete |
 | 18 | Stash operations | 7 | Complete |
-| 19 | Checkout command | 6 | Pending |
+| 19 | Checkout command | 6 | In Progress |
 
 **Total v1.2 requirements:** 40
-**Validated:** 34 of 40
+**Validated:** 34 of 40 (6 pending E2E tests in 19-02)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28 (13 v1.0 + 7 v1.1 + 8 v1.2)
+- Total plans completed: 29 (13 v1.0 + 7 v1.1 + 9 v1.2)
 - Total phases completed: 18
 - Total requirements validated: 21 v1.0 + 26 v1.1 + 34 v1.2
 
@@ -48,7 +48,7 @@ Progress: [########..] 80% (v1.2 - 4 of 5 phases)
 |-----------|--------|-------|------|
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 2 |
-| v1.2 Commands | 4 | 8 | - |
+| v1.2 Commands | 4 | 9 | - |
 
 ## Accumulated Context
 
@@ -73,9 +73,13 @@ All marked as "Good" during milestone completions.
 - Output capture with subprocess.run for _get_most_recent_shelve()
 - Git-compatible error message for drop with no stashes
 
+**Phase 19 decisions:**
+- Use sl log -r exit code to validate revision instead of parsing output
+- Error on ambiguity (both file and revision match) rather than silent priority
+
 ### Pending Todos
 
-- Start Phase 19: Checkout command (research, implementation, tests)
+- Complete Phase 19-02: E2E tests for checkout command
 
 ### Blockers/Concerns
 
@@ -84,13 +88,13 @@ None.
 ### Research Notes (from v1.2 research)
 
 Key pitfalls to address:
-1. **Checkout disambiguation** - Phase 19 must handle branch/file/commit ambiguity
+1. ~~**Checkout disambiguation** - Phase 19 must handle branch/file/commit ambiguity~~ DONE in 19-01
 2. ~~**Clean data safety** - Phase 16 must enforce `-f` requirement before passing to sl purge~~ DONE in 16-01
 3. ~~**Stash conflict handling** - Phase 18 must detect conflict state on pop~~ DONE in 18-01/18-02
 4. ~~**Bookmark model mismatch** - Phase 17 should document git branch vs sl bookmark differences~~ DONE in 17-01/17-02
 
 ## Session Continuity
 
-Last session: 2026-01-20
-Stopped at: Completed 18-02-PLAN.md (Phase 18 complete)
-Resume with: `/gsd:plan-phase 19`
+Last session: 2026-01-20 01:53 UTC
+Stopped at: Completed 19-01-PLAN.md
+Resume with: `/gsd:execute-phase 19-02`
