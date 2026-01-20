@@ -191,6 +191,12 @@ Plans:
 
 **Dependencies**: Phase 17 (branch pattern), Phase 16 (switch pattern), Phase 17 (restore pattern)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 19-01-PLAN.md - Create checkout command handler with disambiguation logic
+- [ ] 19-02-PLAN.md - E2E tests for all 6 checkout requirements
+
 **Requirements**:
 - CHECKOUT-01 (checkout commit)
 - CHECKOUT-02 (checkout branch)
@@ -232,4 +238,4 @@ Phases execute in numeric order.
 | 16. Flag Translation | v1.2 | 2/2 | Complete | 2026-01-19 |
 | 17. Branch and Restore | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 18. Stash Operations | v1.2 | 2/2 | Complete | 2026-01-20 |
-| 19. Checkout Command | v1.2 | 0/? | Pending | - |
+| 19. Checkout Command | v1.2 | 0/2 | Planned | - |
