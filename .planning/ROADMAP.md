@@ -138,6 +138,12 @@ Plans:
 
 **Dependencies**: Phase 16 (switch establishes goto pattern)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 17-01-PLAN.md - Create branch and restore command handlers with dispatch routing
+- [ ] 17-02-PLAN.md - E2E tests for all 6 requirements
+
 **Requirements**:
 - BRANCH-01, BRANCH-02, BRANCH-03, BRANCH-04 (git branch)
 - RESTORE-01, RESTORE-02 (git restore)
@@ -218,6 +224,6 @@ Phases execute in numeric order.
 | 14. Documentation | v1.1 | 1/1 | Complete | 2026-01-19 |
 | 15. Direct Pass-through | v1.2 | 2/2 | Complete | 2026-01-19 |
 | 16. Flag Translation | v1.2 | 2/2 | Complete | 2026-01-19 |
-| 17. Branch and Restore | v1.2 | 0/? | Pending | - |
+| 17. Branch and Restore | v1.2 | 0/2 | Planned | - |
 | 18. Stash Operations | v1.2 | 0/? | Pending | - |
 | 19. Checkout Command | v1.2 | 0/? | Pending | - |
