@@ -7,7 +7,7 @@ on:
     branches: [main, master]
 
 env:
-  SAPLING_CACHE_VERSION: "3"  # Bump to invalidate cache
+  SAPLING_CACHE_VERSION: "4"  # Bump to invalidate cache
 
 jobs:
   test:
