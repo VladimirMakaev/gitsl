@@ -290,19 +290,169 @@ Deferred to future releases.
 
 ## Traceability
 
-Populated during roadmap creation.
-
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAFE-01 | — | Pending |
-| SAFE-02 | — | Pending |
-| ... | — | Pending |
+| SAFE-01 | 20 | Pending |
+| SAFE-02 | 20 | Pending |
+| SAFE-03 | 20 | Pending |
+| SAFE-04 | 20 | Pending |
+| REVP-01 | 21 | Pending |
+| REVP-02 | 21 | Pending |
+| REVP-03 | 21 | Pending |
+| REVP-04 | 21 | Pending |
+| REVP-05 | 21 | Pending |
+| REVP-06 | 21 | Pending |
+| REVP-07 | 21 | Pending |
+| LOG-01 | 22 | Pending |
+| LOG-02 | 22 | Pending |
+| LOG-03 | 22 | Pending |
+| LOG-04 | 22 | Pending |
+| LOG-05 | 22 | Pending |
+| LOG-06 | 22 | Pending |
+| LOG-07 | 22 | Pending |
+| LOG-08 | 22 | Pending |
+| LOG-09 | 22 | Pending |
+| LOG-10 | 22 | Pending |
+| LOG-11 | 22 | Pending |
+| LOG-12 | 22 | Pending |
+| LOG-13 | 22 | Pending |
+| LOG-14 | 22 | Pending |
+| LOG-15 | 22 | Pending |
+| LOG-16 | 22 | Pending |
+| LOG-17 | 22 | Pending |
+| LOG-18 | 22 | Pending |
+| LOG-19 | 22 | Pending |
+| LOG-20 | 22 | Pending |
+| DIFF-01 | 23 | Pending |
+| DIFF-02 | 23 | Pending |
+| DIFF-03 | 23 | Pending |
+| DIFF-04 | 23 | Pending |
+| DIFF-05 | 23 | Pending |
+| DIFF-06 | 23 | Pending |
+| DIFF-07 | 23 | Pending |
+| DIFF-08 | 23 | Pending |
+| DIFF-09 | 23 | Pending |
+| DIFF-10 | 23 | Pending |
+| DIFF-11 | 23 | Pending |
+| DIFF-12 | 23 | Pending |
+| SHOW-01 | 23 | Pending |
+| SHOW-02 | 23 | Pending |
+| SHOW-03 | 23 | Pending |
+| SHOW-04 | 23 | Pending |
+| SHOW-05 | 23 | Pending |
+| SHOW-06 | 23 | Pending |
+| SHOW-07 | 23 | Pending |
+| SHOW-08 | 23 | Pending |
+| STAT-01 | 24 | Pending |
+| STAT-02 | 24 | Pending |
+| STAT-03 | 24 | Pending |
+| STAT-04 | 24 | Pending |
+| STAT-05 | 24 | Pending |
+| ADD-01 | 24 | Pending |
+| ADD-02 | 24 | Pending |
+| ADD-03 | 24 | Pending |
+| ADD-04 | 24 | Pending |
+| ADD-05 | 24 | Pending |
+| COMM-01 | 25 | Pending |
+| COMM-02 | 25 | Pending |
+| COMM-03 | 25 | Pending |
+| COMM-04 | 25 | Pending |
+| COMM-05 | 25 | Pending |
+| COMM-06 | 25 | Pending |
+| COMM-07 | 25 | Pending |
+| COMM-08 | 25 | Pending |
+| BRAN-01 | 25 | Pending |
+| BRAN-02 | 25 | Pending |
+| BRAN-03 | 25 | Pending |
+| BRAN-04 | 25 | Pending |
+| BRAN-05 | 25 | Pending |
+| BRAN-06 | 25 | Pending |
+| BRAN-07 | 25 | Pending |
+| BRAN-08 | 25 | Pending |
+| BRAN-09 | 25 | Pending |
+| STSH-01 | 26 | Pending |
+| STSH-02 | 26 | Pending |
+| STSH-03 | 26 | Pending |
+| STSH-04 | 26 | Pending |
+| STSH-05 | 26 | Pending |
+| STSH-06 | 26 | Pending |
+| STSH-07 | 26 | Pending |
+| STSH-08 | 26 | Pending |
+| STSH-09 | 26 | Pending |
+| STSH-10 | 26 | Pending |
+| CHKT-01 | 26 | Pending |
+| CHKT-02 | 26 | Pending |
+| CHKT-03 | 26 | Pending |
+| CHKT-04 | 26 | Pending |
+| CHKT-05 | 26 | Pending |
+| CHKT-06 | 26 | Pending |
+| CHKT-07 | 26 | Pending |
+| CHKT-08 | 26 | Pending |
+| CHKT-09 | 26 | Pending |
+| CHKT-10 | 26 | Pending |
+| CHKT-11 | 26 | Pending |
+| GREP-01 | 27 | Pending |
+| GREP-02 | 27 | Pending |
+| GREP-03 | 27 | Pending |
+| GREP-04 | 27 | Pending |
+| GREP-05 | 27 | Pending |
+| GREP-06 | 27 | Pending |
+| GREP-07 | 27 | Pending |
+| GREP-08 | 27 | Pending |
+| GREP-09 | 27 | Pending |
+| GREP-10 | 27 | Pending |
+| GREP-11 | 27 | Pending |
+| GREP-12 | 27 | Pending |
+| GREP-13 | 27 | Pending |
+| GREP-14 | 27 | Pending |
+| BLAM-01 | 27 | Pending |
+| BLAM-02 | 27 | Pending |
+| BLAM-03 | 27 | Pending |
+| BLAM-04 | 27 | Pending |
+| BLAM-05 | 27 | Pending |
+| BLAM-06 | 27 | Pending |
+| BLAM-07 | 27 | Pending |
+| CLON-01 | 28 | Pending |
+| CLON-02 | 28 | Pending |
+| CLON-03 | 28 | Pending |
+| CLON-04 | 28 | Pending |
+| CLON-05 | 28 | Pending |
+| CLON-06 | 28 | Pending |
+| CLON-07 | 28 | Pending |
+| CLON-08 | 28 | Pending |
+| CLON-09 | 28 | Pending |
+| RM-01 | 28 | Pending |
+| RM-02 | 28 | Pending |
+| RM-03 | 28 | Pending |
+| RM-04 | 28 | Pending |
+| RM-05 | 28 | Pending |
+| MV-01 | 28 | Pending |
+| MV-02 | 28 | Pending |
+| MV-03 | 28 | Pending |
+| MV-04 | 28 | Pending |
+| CLEN-01 | 28 | Pending |
+| CLEN-02 | 28 | Pending |
+| CLEN-03 | 28 | Pending |
+| CLEN-04 | 28 | Pending |
+| CONF-01 | 28 | Pending |
+| CONF-02 | 28 | Pending |
+| CONF-03 | 28 | Pending |
+| CONF-04 | 28 | Pending |
+| CONF-05 | 28 | Pending |
+| CONF-06 | 28 | Pending |
+| CONF-07 | 28 | Pending |
+| CONF-08 | 28 | Pending |
+| DOC-01 | 29 | Pending |
+| DOC-02 | 29 | Pending |
+| DOC-03 | 29 | Pending |
+| DOC-04 | 29 | Pending |
+| DOC-05 | 29 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 111 total
-- Mapped to phases: 0 (pending roadmap)
-- Unmapped: 111 ⚠️
+- Mapped to phases: 111
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-01-20*
-*Last updated: 2026-01-20 after verification with parallel agents*
+*Last updated: 2026-01-20 after roadmap creation*
