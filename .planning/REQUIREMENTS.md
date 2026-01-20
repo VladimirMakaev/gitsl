@@ -31,13 +31,13 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 
 ### Stash/Shelve
 
-- [ ] **STASH-01**: `git stash` translates to `sl shelve`
-- [ ] **STASH-02**: `git stash push` translates to `sl shelve`
-- [ ] **STASH-03**: `git stash -m "msg"` translates to `sl shelve -m "msg"`
-- [ ] **STASH-04**: `git stash pop` translates to `sl unshelve`
-- [ ] **STASH-05**: `git stash apply` translates to `sl unshelve --keep`
-- [ ] **STASH-06**: `git stash list` translates to `sl shelve --list`
-- [ ] **STASH-07**: `git stash drop` translates to `sl shelve --delete`
+- [x] **STASH-01**: `git stash` translates to `sl shelve`
+- [x] **STASH-02**: `git stash push` translates to `sl shelve`
+- [x] **STASH-03**: `git stash -m "msg"` translates to `sl shelve -m "msg"`
+- [x] **STASH-04**: `git stash pop` translates to `sl unshelve`
+- [x] **STASH-05**: `git stash apply` translates to `sl unshelve --keep`
+- [x] **STASH-06**: `git stash list` translates to `sl shelve --list`
+- [x] **STASH-07**: `git stash drop` translates to `sl shelve --delete`
 
 ### Checkout/Switch/Restore
 
@@ -120,19 +120,19 @@ Phase mappings for v1.2 requirements.
 | CONFIG-03 | Phase 16 | Complete |
 | SWITCH-01 | Phase 16 | Complete |
 | SWITCH-02 | Phase 16 | Complete |
-| BRANCH-01 | Phase 17 | Pending |
-| BRANCH-02 | Phase 17 | Pending |
-| BRANCH-03 | Phase 17 | Pending |
-| BRANCH-04 | Phase 17 | Pending |
-| RESTORE-01 | Phase 17 | Pending |
-| RESTORE-02 | Phase 17 | Pending |
-| STASH-01 | Phase 18 | Pending |
-| STASH-02 | Phase 18 | Pending |
-| STASH-03 | Phase 18 | Pending |
-| STASH-04 | Phase 18 | Pending |
-| STASH-05 | Phase 18 | Pending |
-| STASH-06 | Phase 18 | Pending |
-| STASH-07 | Phase 18 | Pending |
+| BRANCH-01 | Phase 17 | Complete |
+| BRANCH-02 | Phase 17 | Complete |
+| BRANCH-03 | Phase 17 | Complete |
+| BRANCH-04 | Phase 17 | Complete |
+| RESTORE-01 | Phase 17 | Complete |
+| RESTORE-02 | Phase 17 | Complete |
+| STASH-01 | Phase 18 | Complete |
+| STASH-02 | Phase 18 | Complete |
+| STASH-03 | Phase 18 | Complete |
+| STASH-04 | Phase 18 | Complete |
+| STASH-05 | Phase 18 | Complete |
+| STASH-06 | Phase 18 | Complete |
+| STASH-07 | Phase 18 | Complete |
 | CHECKOUT-01 | Phase 19 | Pending |
 | CHECKOUT-02 | Phase 19 | Pending |
 | CHECKOUT-03 | Phase 19 | Pending |

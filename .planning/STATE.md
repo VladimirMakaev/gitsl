@@ -93,4 +93,4 @@ Key pitfalls to address:
 
 Last session: 2026-01-20
 Stopped at: Completed 18-02-PLAN.md (Phase 18 complete)
-Resume with: `/gsd:execute-phase 19`
+Resume with: `/gsd:plan-phase 19`

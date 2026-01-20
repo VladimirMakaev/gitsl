@@ -166,8 +166,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 18-01-PLAN.md - Create stash command handler with subcommand dispatch
-- [ ] 18-02-PLAN.md - E2E tests for all 7 stash requirements
+- [x] 18-01-PLAN.md - Create stash command handler with subcommand dispatch
+- [x] 18-02-PLAN.md - E2E tests for all 7 stash requirements
 
 **Requirements**:
 - STASH-01, STASH-02, STASH-03 (stash save)
@@ -231,5 +231,5 @@ Phases execute in numeric order.
 | 15. Direct Pass-through | v1.2 | 2/2 | Complete | 2026-01-19 |
 | 16. Flag Translation | v1.2 | 2/2 | Complete | 2026-01-19 |
 | 17. Branch and Restore | v1.2 | 2/2 | Complete | 2026-01-20 |
-| 18. Stash Operations | v1.2 | 0/2 | Planned | - |
+| 18. Stash Operations | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 19. Checkout Command | v1.2 | 0/? | Pending | - |
