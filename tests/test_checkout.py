@@ -209,19 +209,20 @@ class TestCheckoutDisambiguation:
 
     def test_checkout_file_priority(self, sl_repo_with_commit: Path):
         """When only file matches (no revision), revert is used."""
-        # Create and commit a file
-        test_file = sl_repo_with_commit / "only-file.txt"
+        # Create and commit a file with a unique name that won't match any revision
+        # Note: sl has title-matching that can match filenames to commit messages
+        test_file = sl_repo_with_commit / "xyz789data.txt"
         test_file.write_text("original\n")
-        run_command(["sl", "add", "only-file.txt"], cwd=sl_repo_with_commit)
+        run_command(["sl", "add", "xyz789data.txt"], cwd=sl_repo_with_commit)
         run_command(
-            ["sl", "commit", "-m", "Add only-file.txt"], cwd=sl_repo_with_commit
+            ["sl", "commit", "-m", "Add test file"], cwd=sl_repo_with_commit
         )
 
         # Modify it
         test_file.write_text("modified\n")
 
         # Checkout - should use revert since it's only a file, not a revision
-        result = run_gitsl(["checkout", "only-file.txt"], cwd=sl_repo_with_commit)
+        result = run_gitsl(["checkout", "xyz789data.txt"], cwd=sl_repo_with_commit)
         assert result.exit_code == 0
         assert test_file.read_text() == "original\n"
 

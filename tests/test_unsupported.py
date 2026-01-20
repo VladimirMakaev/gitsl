@@ -52,9 +52,3 @@ class TestUnsupportedCommands:
         result = run_gitsl(["fetch", "--all"], cwd=sl_repo)
         assert result.exit_code == 0
         assert "git fetch --all" in result.stderr
-
-    def test_checkout_unsupported(self, sl_repo: Path):
-        """checkout is unsupported."""
-        result = run_gitsl(["checkout", "-b", "feature"], cwd=sl_repo)
-        assert result.exit_code == 0
-        assert "git checkout -b feature" in result.stderr
