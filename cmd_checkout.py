@@ -27,6 +27,21 @@ def _is_valid_revision(arg: str, cwd: Optional[str] = None) -> bool:
     return result.returncode == 0
 
 
+def _translate_goto_flags(args: List[str]) -> List[str]:
+    """Translate git checkout flags to sl goto flags."""
+    result = []
+    for arg in args:
+        if arg in ('-f', '--force'):
+            # SAFE-02: git checkout -f -> sl goto -C (clean)
+            result.append('-C')
+        elif arg in ('-m', '--merge'):
+            # SAFE-03: git checkout -m -> sl goto -m (same semantics)
+            result.append('-m')
+        else:
+            result.append(arg)
+    return result
+
+
 def _split_at_separator(args: List[str]) -> Tuple[List[str], List[str]]:
     """
     Split args at -- separator.
@@ -144,7 +159,7 @@ def handle(parsed: ParsedCommand) -> int:
 
     # Valid revision - switch to it (CHECKOUT-01, CHECKOUT-02)
     if is_revision:
-        return run_sl(["goto"] + args)
+        return run_sl(["goto"] + _translate_goto_flags(args))
 
     # File exists - restore it (CHECKOUT-03)
     if is_file:
@@ -152,4 +167,4 @@ def handle(parsed: ParsedCommand) -> int:
 
     # Neither valid revision nor existing file
     # Let sl goto handle the error (better error message about what's wrong)
-    return run_sl(["goto"] + args)
+    return run_sl(["goto"] + _translate_goto_flags(args))

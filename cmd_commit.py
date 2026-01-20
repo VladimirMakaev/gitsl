@@ -7,6 +7,13 @@ def handle(parsed: ParsedCommand) -> int:
     """
     Handle 'git commit' command.
 
-    Translates to 'sl commit' and passes through all arguments.
+    Translates to 'sl commit' and passes through arguments.
     """
-    return run_sl(["commit"] + parsed.args)
+    args = list(parsed.args)
+
+    # SAFE-01: Remove -a/--all flags
+    # git -a: stages tracked modified/deleted files only
+    # sl -A: adds untracked files too (DANGEROUS semantic difference)
+    args = [a for a in args if a not in ('-a', '--all')]
+
+    return run_sl(["commit"] + args)
