@@ -49,15 +49,15 @@ Requirements for v1.2 More Commands Support. Each maps to roadmap phases.
 - [ ] **CHECKOUT-06**: Checkout disambiguates between commit/branch/file correctly
 - [x] **SWITCH-01**: `git switch <branch>` translates to `sl goto <bookmark>`
 - [x] **SWITCH-02**: `git switch -c <name>` translates to `sl bookmark <name>`
-- [ ] **RESTORE-01**: `git restore <file>` translates to `sl revert <file>`
-- [ ] **RESTORE-02**: `git restore .` translates to `sl revert --all`
+- [x] **RESTORE-01**: `git restore <file>` translates to `sl revert <file>`
+- [x] **RESTORE-02**: `git restore .` translates to `sl revert --all`
 
 ### Branch/Bookmark
 
-- [ ] **BRANCH-01**: `git branch` lists bookmarks via `sl bookmark`
-- [ ] **BRANCH-02**: `git branch <name>` creates bookmark via `sl bookmark <name>`
-- [ ] **BRANCH-03**: `git branch -d <name>` deletes bookmark via `sl bookmark -d <name>`
-- [ ] **BRANCH-04**: `git branch -D <name>` force deletes via `sl bookmark -d <name>`
+- [x] **BRANCH-01**: `git branch` lists bookmarks via `sl bookmark`
+- [x] **BRANCH-02**: `git branch <name>` creates bookmark via `sl bookmark <name>`
+- [x] **BRANCH-03**: `git branch -d <name>` deletes bookmark via `sl bookmark -d <name>`
+- [x] **BRANCH-04**: `git branch -D <name>` force deletes via `sl bookmark -d <name>`
 
 ## v2 Requirements
 
