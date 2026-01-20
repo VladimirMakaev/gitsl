@@ -130,20 +130,20 @@ jobs:
           # Debug: show Python info
           python --version
           python -c "import sys; print(sys.executable)"
-          # Run tests (use --no-parallel on Windows due to potential issues)
-          # Add --tb=short for shorter traceback on failures
+          # Run tests with output capture for debugging
+          # Use --no-parallel on Windows due to potential issues
           if [[ "$RUNNER_OS" == "Windows" ]]; then
             python test --report test-results.xml -v --no-parallel --tb=short 2>&1 | tee test-output.log || true
-            TEST_EXIT=$?
-            echo "=== Test Exit Code: $TEST_EXIT ==="
-            if [ $TEST_EXIT -ne 0 ]; then
-              echo "=== Last 100 lines of test output ==="
-              tail -100 test-output.log
-            fi
-            exit $TEST_EXIT
           else
-            python test --report test-results.xml -v
+            python test --report test-results.xml -v --tb=short 2>&1 | tee test-output.log || true
           fi
+          TEST_EXIT=${PIPESTATUS[0]}
+          echo "=== Test Exit Code: $TEST_EXIT ==="
+          if [ $TEST_EXIT -ne 0 ]; then
+            echo "=== Last 200 lines of test output ==="
+            tail -200 test-output.log
+          fi
+          exit $TEST_EXIT
 
       - name: Upload test results
         uses: actions/upload-artifact@v4
@@ -152,14 +152,17 @@ jobs:
           name: test-results-${{ matrix.os }}-py${{ matrix.python-version }}
           path: test-results.xml
 
-      - name: Display test failures (Windows debug)
-        if: failure() && runner.os == 'Windows'
+      - name: Display test failures
+        if: failure()
         shell: bash
         run: |
-          echo "=== Test Results ==="
+          echo "=== Test Results XML ==="
           cat test-results.xml || echo "No test results file"
           echo ""
           echo "=== Environment ==="
-          which sl
-          sl --version
+          which sl || echo "sl not found"
+          sl --version || echo "sl version failed"
           echo "PATH: $PATH"
+          echo ""
+          echo "=== Test Output Log ==="
+          cat test-output.log || echo "No test output log"
