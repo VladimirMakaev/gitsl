@@ -60,6 +60,8 @@ def handle(parsed: ParsedCommand) -> int:
     remaining_args = []
     use_oneline = False
     limit = None
+    since_date = None
+    until_date = None
 
     i = 0
     while i < len(parsed.args):
@@ -99,6 +101,24 @@ def handle(parsed: ParsedCommand) -> int:
         elif arg in ('--patch', '-p'):
             sl_args.append('-p')
 
+        # LOG-04: --author=<pattern> -> -u <pattern>
+        elif arg.startswith('--author='):
+            pattern = arg.split('=', 1)[1]
+            sl_args.extend(['-u', pattern])
+        elif arg == '--author':
+            if i + 1 < len(parsed.args):
+                i += 1
+                sl_args.extend(['-u', parsed.args[i]])
+
+        # LOG-05: --grep=<pattern> -> -k <pattern>
+        elif arg.startswith('--grep='):
+            pattern = arg.split('=', 1)[1]
+            sl_args.extend(['-k', pattern])
+        elif arg == '--grep':
+            if i + 1 < len(parsed.args):
+                i += 1
+                sl_args.extend(['-k', parsed.args[i]])
+
         # LOG-06: --no-merges passes through
         elif arg == '--no-merges':
             sl_args.append('--no-merges')
@@ -110,6 +130,22 @@ def handle(parsed: ParsedCommand) -> int:
         # LOG-08: --follow -> -f
         elif arg == '--follow':
             sl_args.append('-f')
+
+        # LOG-09: --since/--after -> -d ">date"
+        elif arg.startswith('--since=') or arg.startswith('--after='):
+            since_date = arg.split('=', 1)[1]
+        elif arg in ('--since', '--after'):
+            if i + 1 < len(parsed.args):
+                i += 1
+                since_date = parsed.args[i]
+
+        # LOG-10: --until/--before -> -d "<date"
+        elif arg.startswith('--until=') or arg.startswith('--before='):
+            until_date = arg.split('=', 1)[1]
+        elif arg in ('--until', '--before'):
+            if i + 1 < len(parsed.args):
+                i += 1
+                until_date = parsed.args[i]
 
         # Everything else passes through
         else:
@@ -123,6 +159,14 @@ def handle(parsed: ParsedCommand) -> int:
 
     if limit is not None:
         sl_args.extend(["-l", limit])
+
+    # Build date filter for sl -d
+    if since_date and until_date:
+        sl_args.extend(['-d', f'{since_date} to {until_date}'])
+    elif since_date:
+        sl_args.extend(['-d', f'>{since_date}'])
+    elif until_date:
+        sl_args.extend(['-d', f'<{until_date}'])
 
     sl_args.extend(remaining_args)
 
