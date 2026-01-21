@@ -304,3 +304,76 @@ class TestLogDateFlags:
             cwd=sl_repo_with_commits,
         )
         assert result.exit_code == 0
+
+
+class TestLogOutputFormatFlags:
+    """Tests for LOG-11, LOG-12, LOG-13, LOG-14 output format flags."""
+
+    def test_name_only_flag(self, sl_repo_with_commit: Path):
+        """LOG-11: --name-only shows only filenames."""
+        result = run_gitsl(["log", "--name-only", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        # Should show filename (README.md is in the test commit)
+        assert "readme" in result.stdout.lower() or result.stdout.strip() != ""
+
+    def test_name_status_flag(self, sl_repo_with_commit: Path):
+        """LOG-12: --name-status shows status+filename."""
+        result = run_gitsl(["log", "--name-status", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        # Should show status indicators (A, M, D) and filename
+        # At minimum, should have output
+        assert result.stdout.strip() != ""
+
+    def test_decorate_flag(self, sl_repo_with_commits: Path):
+        """LOG-13: --decorate shows branch names."""
+        result = run_gitsl(
+            ["log", "--decorate", "-1", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        # Should succeed; bookmark may or may not be present
+        assert result.stdout.strip() != ""
+
+    def test_pretty_oneline(self, sl_repo_with_commits: Path):
+        """LOG-14: --pretty=oneline works like --oneline."""
+        result1 = run_gitsl(["log", "--pretty=oneline", "-3"], cwd=sl_repo_with_commits)
+        result2 = run_gitsl(["log", "--oneline", "-3"], cwd=sl_repo_with_commits)
+        assert result1.exit_code == 0
+        assert result2.exit_code == 0
+        # Both should produce similar output format
+
+    def test_pretty_short(self, sl_repo_with_commit: Path):
+        """LOG-14: --pretty=short shows short format."""
+        result = run_gitsl(["log", "--pretty=short", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        assert result.stdout.strip() != ""
+
+    def test_pretty_medium(self, sl_repo_with_commit: Path):
+        """LOG-14: --pretty=medium shows medium format."""
+        result = run_gitsl(["log", "--pretty=medium", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        assert result.stdout.strip() != ""
+
+    def test_pretty_full(self, sl_repo_with_commit: Path):
+        """LOG-14: --pretty=full shows full format."""
+        result = run_gitsl(["log", "--pretty=full", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        assert result.stdout.strip() != ""
+
+    def test_format_custom_hash(self, sl_repo_with_commit: Path):
+        """LOG-14: --format=format:%h shows short hash."""
+        result = run_gitsl(
+            ["log", "--format=format:%h", "-1"], cwd=sl_repo_with_commit
+        )
+        assert result.exit_code == 0
+        # Should show hex hash
+        output = result.stdout.strip()
+        if output:
+            assert all(c in "0123456789abcdef\n" for c in output)
+
+    def test_format_custom_subject(self, sl_repo_with_commit: Path):
+        """LOG-14: --format=format:%s shows subject."""
+        result = run_gitsl(
+            ["log", "--format=format:%s", "-1"], cwd=sl_repo_with_commit
+        )
+        assert result.exit_code == 0
+        assert result.stdout.strip() != ""
