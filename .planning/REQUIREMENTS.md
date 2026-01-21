@@ -20,26 +20,26 @@ Critical behavioral corrections for flags with semantic differences.
 
 Git log flag support and translation.
 
-- [ ] **LOG-01**: `--graph` translates to `sl log -G`
-- [ ] **LOG-02**: `--stat` passes through to `sl log --stat`
-- [ ] **LOG-03**: `--patch/-p` passes through to `sl log -p`
-- [ ] **LOG-04**: `--author=<pattern>` translates to `sl log -u <pattern>`
-- [ ] **LOG-05**: `--grep=<pattern>` translates to `sl log -k <pattern>`
-- [ ] **LOG-06**: `--no-merges` translates to `sl log --no-merges`
-- [ ] **LOG-07**: `--all` translates to `sl log --all`
-- [ ] **LOG-08**: `--follow` translates to `sl log -f`
-- [ ] **LOG-09**: `--since/--after` translates to `sl log -d` with date format handling
-- [ ] **LOG-10**: `--until/--before` translates to `sl log -d` with date format handling
-- [ ] **LOG-11**: `--name-only` produces filename-only output
-- [ ] **LOG-12**: `--name-status` produces status+filename output
-- [ ] **LOG-13**: `--decorate` shows branch/bookmark names on commits
-- [ ] **LOG-14**: `--pretty/--format` maps to `sl log -T` template
-- [ ] **LOG-15**: `--first-parent` follows only first parent of merges
-- [ ] **LOG-16**: `--reverse` shows commits in reverse chronological order
-- [ ] **LOG-17**: `-S<string>` searches for string changes in diffs (pickaxe)
-- [ ] **LOG-18**: `-G<regex>` searches for regex changes in diffs
-- [ ] **LOG-19**: Document `-n/--max-count` already implemented (translate to `-l`)
-- [ ] **LOG-20**: Document `--oneline` already implemented
+- [x] **LOG-01**: `--graph` translates to `sl log -G`
+- [x] **LOG-02**: `--stat` passes through to `sl log --stat`
+- [x] **LOG-03**: `--patch/-p` passes through to `sl log -p`
+- [x] **LOG-04**: `--author=<pattern>` translates to `sl log -u <pattern>`
+- [x] **LOG-05**: `--grep=<pattern>` translates to `sl log -k <pattern>`
+- [x] **LOG-06**: `--no-merges` translates to `sl log --no-merges`
+- [x] **LOG-07**: `--all` translates to `sl log --all`
+- [x] **LOG-08**: `--follow` translates to `sl log -f`
+- [x] **LOG-09**: `--since/--after` translates to `sl log -d` with date format handling
+- [x] **LOG-10**: `--until/--before` translates to `sl log -d` with date format handling
+- [x] **LOG-11**: `--name-only` produces filename-only output
+- [x] **LOG-12**: `--name-status` produces status+filename output
+- [x] **LOG-13**: `--decorate` shows branch/bookmark names on commits
+- [x] **LOG-14**: `--pretty/--format` maps to `sl log -T` template
+- [x] **LOG-15**: `--first-parent` follows only first parent of merges
+- [x] **LOG-16**: `--reverse` shows commits in reverse chronological order
+- [x] **LOG-17**: `-S<string>` searches for string changes in diffs (pickaxe)
+- [x] **LOG-18**: `-G<regex>` searches for regex changes in diffs
+- [x] **LOG-19**: Document `-n/--max-count` already implemented (translate to `-l`)
+- [x] **LOG-20**: Document `--oneline` already implemented
 
 ### Diff Flags
 
@@ -303,26 +303,26 @@ Deferred to future releases.
 | REVP-05 | 21 | Complete |
 | REVP-06 | 21 | Complete |
 | REVP-07 | 21 | Complete |
-| LOG-01 | 22 | Pending |
-| LOG-02 | 22 | Pending |
-| LOG-03 | 22 | Pending |
-| LOG-04 | 22 | Pending |
-| LOG-05 | 22 | Pending |
-| LOG-06 | 22 | Pending |
-| LOG-07 | 22 | Pending |
-| LOG-08 | 22 | Pending |
-| LOG-09 | 22 | Pending |
-| LOG-10 | 22 | Pending |
-| LOG-11 | 22 | Pending |
-| LOG-12 | 22 | Pending |
-| LOG-13 | 22 | Pending |
-| LOG-14 | 22 | Pending |
-| LOG-15 | 22 | Pending |
-| LOG-16 | 22 | Pending |
-| LOG-17 | 22 | Pending |
-| LOG-18 | 22 | Pending |
-| LOG-19 | 22 | Pending |
-| LOG-20 | 22 | Pending |
+| LOG-01 | 22 | Complete |
+| LOG-02 | 22 | Complete |
+| LOG-03 | 22 | Complete |
+| LOG-04 | 22 | Complete |
+| LOG-05 | 22 | Complete |
+| LOG-06 | 22 | Complete |
+| LOG-07 | 22 | Complete |
+| LOG-08 | 22 | Complete |
+| LOG-09 | 22 | Complete |
+| LOG-10 | 22 | Complete |
+| LOG-11 | 22 | Complete |
+| LOG-12 | 22 | Complete |
+| LOG-13 | 22 | Complete |
+| LOG-14 | 22 | Complete |
+| LOG-15 | 22 | Complete |
+| LOG-16 | 22 | Complete |
+| LOG-17 | 22 | Complete |
+| LOG-18 | 22 | Complete |
+| LOG-19 | 22 | Complete |
+| LOG-20 | 22 | Complete |
 | DIFF-01 | 23 | Pending |
 | DIFF-02 | 23 | Pending |
 | DIFF-03 | 23 | Pending |
