@@ -87,8 +87,10 @@ def _handle_abbrev_ref(ref: str) -> int:
 
 def _handle_verify(ref: str) -> int:
     """REVP-05: --verify validates object reference exists."""
+    # Translate HEAD to . for Sapling
+    sl_ref = "." if ref.upper() == "HEAD" else ref
     result = subprocess.run(
-        ["sl", "log", "-r", ref, "-T", "{node}", "-l", "1"],
+        ["sl", "log", "-r", sl_ref, "-T", "{node}", "-l", "1"],
         capture_output=True,
         text=True
     )
