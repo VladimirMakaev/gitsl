@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 25 (Commit and Branch Flags)
+**Current focus:** v1.3 Flag Compatibility — Phase 25 complete, ready for Phase 26
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 25 - Commit and Branch Flags
-Plan: 01 complete, ready for 02 (tests)
-Status: In progress
-Last activity: 2026-01-21 — Completed 25-01-PLAN.md
+Phase: 25 of 29 (Commit and Branch Flags) - COMPLETE
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-01-21 — Completed 25-02-PLAN.md
 
-Progress: [#####.....] 5/10 phases
+Progress: [######....] 6/10 phases
 
 ## Milestones
 
@@ -27,9 +27,9 @@ Progress: [#####.....] 5/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 39 (13 v1.0 + 7 v1.1 + 10 v1.2 + 9 v1.3)
-- Total phases completed: 24
-- Total requirements validated: 194 (21 v1.0 + 26 v1.1 + 40 v1.2 + 107 v1.3)
+- Total plans completed: 40 (13 v1.0 + 7 v1.1 + 10 v1.2 + 10 v1.3)
+- Total phases completed: 25
+- Total requirements validated: 211 (21 v1.0 + 26 v1.1 + 40 v1.2 + 124 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [#####.....] 5/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 5 | 9 | — |
+| v1.3 Flags | 6 | 10 | — |
 
 ## Accumulated Context
 
@@ -86,9 +86,14 @@ All marked as "Good" during milestone completions.
 - branch -c uses two-step: get commit hash, create new bookmark
 - verbose branch uses template instead of sl -v flag
 
+**Phase 25-02 Decisions:**
+- Skip -e flag when message provided via -m or -F with --amend (bug fix)
+- Test verbose by checking for colon in output (template format)
+- Test track flag by verifying command acceptance, not tracking behavior
+
 ### Pending Todos
 
-None — ready for Phase 25-02 tests.
+None — Phase 25 complete, ready for Phase 26.
 
 ### Blockers/Concerns
 
@@ -97,5 +102,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 25-01-PLAN.md
-Resume with: `/gsd:execute-phase .planning/phases/25-commit-and-branch-flags/25-02-PLAN.md` for tests
+Stopped at: Completed 25-02-PLAN.md (Phase 25 complete)
+Resume with: Phase 26 research and planning
