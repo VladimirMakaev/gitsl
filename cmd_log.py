@@ -32,6 +32,51 @@ from common import ParsedCommand, run_sl
 # Uses sl's {node|short} (12 chars) - semantic match per ROADMAP
 ONELINE_TEMPLATE = "{node|short} {desc|firstline}\\n"
 
+# Template for --name-only format
+NAME_ONLY_TEMPLATE = "{node|short} {desc|firstline}\\n{files}\\n"
+
+# Template for --name-status format (shows add/delete/modify status)
+NAME_STATUS_TEMPLATE = ("{node|short} {desc|firstline}\\n"
+                        "{file_adds % 'A\\t{file}\\n'}"
+                        "{file_dels % 'D\\t{file}\\n'}"
+                        "{file_copies % 'C\\t{file}\\n'}\\n")
+
+# Template for --decorate (shows bookmarks on commits)
+DECORATE_TEMPLATE = "{node|short} ({bookmarks}) {desc|firstline}\\n"
+
+# Preset formats for --pretty
+PRETTY_PRESETS = {
+    'oneline': "{node|short} {desc|firstline}\\n",
+    'short': "commit {node|short}\\nAuthor: {author}\\n\\n    {desc|firstline}\\n\\n",
+    'medium': "commit {node|short}\\nAuthor: {author}\\nDate:   {date|isodate}\\n\\n    {desc|firstline}\\n\\n",
+    'full': "commit {node}\\nAuthor: {author}\\nCommit: {author}\\n\\n    {desc}\\n\\n",
+}
+
+# Git format placeholders to sl template keywords
+GIT_TO_SL_PLACEHOLDERS = {
+    '%H': '{node}',
+    '%h': '{node|short}',
+    '%s': '{desc|firstline}',
+    '%b': '{desc}',
+    '%an': '{author|person}',
+    '%ae': '{author|email}',
+    '%ad': '{date|isodate}',
+    '%ar': '{date|age}',
+    '%d': '{bookmarks}',
+    '%n': '\\n',
+}
+
+
+def translate_format_placeholders(git_format: str) -> str:
+    """Translate git format placeholders to sl template keywords."""
+    result = git_format
+    for git_placeholder, sl_keyword in GIT_TO_SL_PLACEHOLDERS.items():
+        result = result.replace(git_placeholder, sl_keyword)
+    # Ensure newline at end
+    if not result.endswith('\\n'):
+        result += '\\n'
+    return result
+
 
 def handle(parsed: ParsedCommand) -> int:
     """
@@ -62,6 +107,10 @@ def handle(parsed: ParsedCommand) -> int:
     limit = None
     since_date = None
     until_date = None
+    name_only = False
+    name_status = False
+    decorate = False
+    custom_template = None
 
     i = 0
     while i < len(parsed.args):
@@ -147,15 +196,63 @@ def handle(parsed: ParsedCommand) -> int:
                 i += 1
                 until_date = parsed.args[i]
 
+        # LOG-11: --name-only -> template with file names
+        elif arg == '--name-only':
+            name_only = True
+
+        # LOG-12: --name-status -> template with file status
+        elif arg == '--name-status':
+            name_status = True
+
+        # LOG-13: --decorate -> template with bookmarks
+        elif arg == '--decorate':
+            decorate = True
+
+        # LOG-14: --pretty/--format -> -T template
+        elif arg.startswith('--pretty=') or arg.startswith('--format='):
+            format_spec = arg.split('=', 1)[1]
+            # Handle preset names
+            if format_spec in PRETTY_PRESETS:
+                custom_template = PRETTY_PRESETS[format_spec]
+            # Handle format:... custom format
+            elif format_spec.startswith('format:'):
+                custom_template = translate_format_placeholders(format_spec[7:])
+            # Handle raw format string (no format: prefix)
+            else:
+                custom_template = translate_format_placeholders(format_spec)
+        elif arg in ('--pretty', '--format'):
+            if i + 1 < len(parsed.args):
+                i += 1
+                format_spec = parsed.args[i]
+                if format_spec in PRETTY_PRESETS:
+                    custom_template = PRETTY_PRESETS[format_spec]
+                elif format_spec.startswith('format:'):
+                    custom_template = translate_format_placeholders(format_spec[7:])
+                else:
+                    custom_template = translate_format_placeholders(format_spec)
+
         # Everything else passes through
         else:
             remaining_args.append(arg)
 
         i += 1
 
-    # Build sl command
-    if use_oneline:
-        sl_args.extend(["-T", ONELINE_TEMPLATE])
+    # Build sl command - determine template to use
+    # Priority: custom_template > name_status > name_only > decorate > oneline
+    template = None
+    if custom_template:
+        template = custom_template
+    elif name_status:
+        template = NAME_STATUS_TEMPLATE
+    elif name_only:
+        template = NAME_ONLY_TEMPLATE
+    elif decorate:
+        template = DECORATE_TEMPLATE
+    elif use_oneline:
+        template = ONELINE_TEMPLATE
+
+    if template:
+        sl_args.extend(["-T", template])
 
     if limit is not None:
         sl_args.extend(["-l", limit])
