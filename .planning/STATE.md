@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 Milestone: v1.3 Flag Compatibility
 Phase: 25 - Commit and Branch Flags
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-21 — Phase 24 verified and complete
+Plan: 01 complete, ready for 02 (tests)
+Status: In progress
+Last activity: 2026-01-21 — Completed 25-01-PLAN.md
 
 Progress: [#####.....] 5/10 phases
 
@@ -27,7 +27,7 @@ Progress: [#####.....] 5/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 38 (13 v1.0 + 7 v1.1 + 10 v1.2 + 8 v1.3)
+- Total plans completed: 39 (13 v1.0 + 7 v1.1 + 10 v1.2 + 9 v1.3)
 - Total phases completed: 24
 - Total requirements validated: 194 (21 v1.0 + 26 v1.1 + 40 v1.2 + 107 v1.3)
 
@@ -38,7 +38,7 @@ Progress: [#####.....] 5/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 5 | 8 | — |
+| v1.3 Flags | 5 | 9 | — |
 
 ## Accumulated Context
 
@@ -80,9 +80,15 @@ All marked as "Good" during milestone completions.
 - Test -v/--verbose by verifying files get added, not by checking output (sl add has no verbose output)
 - Use sl_repo_with_ignored and sl_repo_with_bookmark fixtures for specialized test scenarios
 
+**Phase 25-01 Decisions:**
+- sl amend defaults to no-edit, so add -e flag for git's default editor behavior
+- signoff implemented via custom trailer appending, not sl config
+- branch -c uses two-step: get commit hash, create new bookmark
+- verbose branch uses template instead of sl -v flag
+
 ### Pending Todos
 
-None — ready for Phase 25.
+None — ready for Phase 25-02 tests.
 
 ### Blockers/Concerns
 
@@ -91,5 +97,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Phase 24 verified and complete
-Resume with: `/gsd:plan-phase 25` to plan Commit and Branch Flags phase
+Stopped at: Completed 25-01-PLAN.md
+Resume with: `/gsd:execute-phase .planning/phases/25-commit-and-branch-flags/25-02-PLAN.md` for tests
