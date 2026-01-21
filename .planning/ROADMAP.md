@@ -277,6 +277,12 @@ Plans:
 
 **Dependencies**: Phase 21 (rev-parse provides commit resolution)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 22-01-PLAN.md - Implement 18 new log flags (display, filter, format, complex)
+- [ ] 22-02-PLAN.md - E2E tests for all 20 LOG requirements
+
 **Requirements**:
 - LOG-01: `--graph` translates to `sl log -G`
 - LOG-02: `--stat` passes through to `sl log --stat`
@@ -579,7 +585,7 @@ Phases execute in numeric order.
 | 19. Checkout Command | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 20. Critical Safety Fixes | v1.3 | 1/1 | Complete | 2026-01-20 |
 | 21. Rev-Parse Expansion | v1.3 | 1/1 | Complete | 2026-01-21 |
-| 22. Log Flags | v1.3 | 0/? | Pending | — |
+| 22. Log Flags | v1.3 | 0/2 | Planned | — |
 | 23. Diff and Show Flags | v1.3 | 0/? | Pending | — |
 | 24. Status and Add Flags | v1.3 | 0/? | Pending | — |
 | 25. Commit and Branch Flags | v1.3 | 0/? | Pending | — |
