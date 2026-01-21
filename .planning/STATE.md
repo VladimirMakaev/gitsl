@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 24 complete
+**Current focus:** v1.3 Flag Compatibility — Phase 25 (Commit and Branch Flags)
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 24 - Status and Add Flags (complete)
-Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-01-21 — Completed 24-02-PLAN.md
+Phase: 25 - Commit and Branch Flags
+Plan: Not started
+Status: Ready for planning
+Last activity: 2026-01-21 — Phase 24 verified and complete
 
 Progress: [#####.....] 5/10 phases
 
@@ -91,5 +91,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
-Resume with: `/gsd:execute-phase` to continue with Phase 25
+Stopped at: Phase 24 verified and complete
+Resume with: `/gsd:plan-phase 25` to plan Commit and Branch Flags phase

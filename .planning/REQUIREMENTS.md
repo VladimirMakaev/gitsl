@@ -62,11 +62,11 @@ Git diff flag support.
 
 Git status flag support.
 
-- [ ] **STAT-01**: `--ignored` translates to `sl status -i`
-- [ ] **STAT-02**: `-b/--branch` adds branch info to output
-- [ ] **STAT-03**: `-v/--verbose` passes through for verbose output
-- [ ] **STAT-04**: Verify `--porcelain` and `--short` emulation covers all status codes
-- [ ] **STAT-05**: `-u/--untracked-files[=<mode>]` controls untracked file display
+- [x] **STAT-01**: `--ignored` translates to `sl status -i`
+- [x] **STAT-02**: `-b/--branch` adds branch info to output
+- [x] **STAT-03**: `-v/--verbose` passes through for verbose output
+- [x] **STAT-04**: Verify `--porcelain` and `--short` emulation covers all status codes
+- [x] **STAT-05**: `-u/--untracked-files[=<mode>]` controls untracked file display
 
 ### Commit Flags
 
@@ -208,11 +208,11 @@ Git rev-parse flag support.
 
 Git add flag support.
 
-- [ ] **ADD-01**: Verify `-A/--all` → `addremove` translation
-- [ ] **ADD-02**: Verify `-u/--update` emulation for modified tracked files
-- [ ] **ADD-03**: `--dry-run/-n` shows what would be added
-- [ ] **ADD-04**: `-f/--force` adds ignored files
-- [ ] **ADD-05**: `-v/--verbose` shows files as they are added
+- [x] **ADD-01**: Verify `-A/--all` → `addremove` translation
+- [x] **ADD-02**: Verify `-u/--update` emulation for modified tracked files
+- [x] **ADD-03**: `--dry-run/-n` shows what would be added
+- [x] **ADD-04**: `-f/--force` adds ignored files
+- [x] **ADD-05**: `-v/--verbose` shows files as they are added
 
 ### Clone Flags
 
@@ -323,36 +323,36 @@ Deferred to future releases.
 | LOG-18 | 22 | Complete |
 | LOG-19 | 22 | Complete |
 | LOG-20 | 22 | Complete |
-| DIFF-01 | 23 | Pending |
-| DIFF-02 | 23 | Pending |
-| DIFF-03 | 23 | Pending |
-| DIFF-04 | 23 | Pending |
-| DIFF-05 | 23 | Pending |
-| DIFF-06 | 23 | Pending |
-| DIFF-07 | 23 | Pending |
-| DIFF-08 | 23 | Pending |
-| DIFF-09 | 23 | Pending |
-| DIFF-10 | 23 | Pending |
-| DIFF-11 | 23 | Pending |
-| DIFF-12 | 23 | Pending |
-| SHOW-01 | 23 | Pending |
-| SHOW-02 | 23 | Pending |
-| SHOW-03 | 23 | Pending |
-| SHOW-04 | 23 | Pending |
-| SHOW-05 | 23 | Pending |
-| SHOW-06 | 23 | Pending |
-| SHOW-07 | 23 | Pending |
-| SHOW-08 | 23 | Pending |
-| STAT-01 | 24 | Pending |
-| STAT-02 | 24 | Pending |
-| STAT-03 | 24 | Pending |
-| STAT-04 | 24 | Pending |
-| STAT-05 | 24 | Pending |
-| ADD-01 | 24 | Pending |
-| ADD-02 | 24 | Pending |
-| ADD-03 | 24 | Pending |
-| ADD-04 | 24 | Pending |
-| ADD-05 | 24 | Pending |
+| DIFF-01 | 23 | Complete |
+| DIFF-02 | 23 | Complete |
+| DIFF-03 | 23 | Complete |
+| DIFF-04 | 23 | Complete |
+| DIFF-05 | 23 | Complete |
+| DIFF-06 | 23 | Complete |
+| DIFF-07 | 23 | Complete |
+| DIFF-08 | 23 | Complete |
+| DIFF-09 | 23 | Complete |
+| DIFF-10 | 23 | Complete |
+| DIFF-11 | 23 | Complete |
+| DIFF-12 | 23 | Complete |
+| SHOW-01 | 23 | Complete |
+| SHOW-02 | 23 | Complete |
+| SHOW-03 | 23 | Complete |
+| SHOW-04 | 23 | Complete |
+| SHOW-05 | 23 | Complete |
+| SHOW-06 | 23 | Complete |
+| SHOW-07 | 23 | Complete |
+| SHOW-08 | 23 | Complete |
+| STAT-01 | 24 | Complete |
+| STAT-02 | 24 | Complete |
+| STAT-03 | 24 | Complete |
+| STAT-04 | 24 | Complete |
+| STAT-05 | 24 | Complete |
+| ADD-01 | 24 | Complete |
+| ADD-02 | 24 | Complete |
+| ADD-03 | 24 | Complete |
+| ADD-04 | 24 | Complete |
+| ADD-05 | 24 | Complete |
 | COMM-01 | 25 | Pending |
 | COMM-02 | 25 | Pending |
 | COMM-03 | 25 | Pending |
