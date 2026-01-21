@@ -111,6 +111,8 @@ def handle(parsed: ParsedCommand) -> int:
     name_status = False
     decorate = False
     custom_template = None
+    use_reverse = False
+    use_first_parent = False
 
     i = 0
     while i < len(parsed.args):
@@ -231,6 +233,30 @@ def handle(parsed: ParsedCommand) -> int:
                 else:
                     custom_template = translate_format_placeholders(format_spec)
 
+        # LOG-15: --first-parent -> use revset approximation
+        elif arg == '--first-parent':
+            use_first_parent = True
+
+        # LOG-16: --reverse -> use revset with reverse()
+        elif arg == '--reverse':
+            use_reverse = True
+
+        # LOG-17: -S<string> (pickaxe) -> warning, not supported
+        elif arg.startswith('-S'):
+            search_term = arg[2:] if len(arg) > 2 else ''
+            if len(arg) == 2 and i + 1 < len(parsed.args):
+                i += 1
+                search_term = parsed.args[i]
+            print("Warning: -S pickaxe search not supported in Sapling.", file=sys.stderr)
+            print(f"Consider: sl log -p | grep '{search_term}'", file=sys.stderr)
+
+        # LOG-18: -G<regex> (regex pickaxe) -> warning, not supported
+        # Note: Must check after -G for graph since --graph is already handled
+        elif arg.startswith('-G') and len(arg) > 2:
+            search_pattern = arg[2:]
+            print("Warning: -G regex pickaxe search not supported in Sapling.", file=sys.stderr)
+            print(f"Consider: sl log -p | grep -E '{search_pattern}'", file=sys.stderr)
+
         # Everything else passes through
         else:
             remaining_args.append(arg)
@@ -264,6 +290,22 @@ def handle(parsed: ParsedCommand) -> int:
         sl_args.extend(['-d', f'>{since_date}'])
     elif until_date:
         sl_args.extend(['-d', f'<{until_date}'])
+
+    # Build revset for --reverse and --first-parent
+    # These use sl's revset language to approximate git behavior
+    if use_reverse or use_first_parent:
+        revset_parts = []
+        if use_first_parent:
+            # Approximate --first-parent by following only first parent in ancestry
+            # This is a simplification; exact git behavior is more complex
+            revset_parts.append("first(ancestors(.))")
+        if use_reverse:
+            # Wrap in reverse() to show oldest first
+            if revset_parts:
+                revset_parts = [f"reverse({revset_parts[0]})"]
+            else:
+                revset_parts.append("reverse(ancestors(.))")
+        sl_args.extend(['-r', revset_parts[0]])
 
     sl_args.extend(remaining_args)
 
