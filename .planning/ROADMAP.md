@@ -320,6 +320,12 @@ Plans:
 
 **Dependencies**: Phase 22 (log patterns inform diff/show)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 23-01-PLAN.md - Implement 20 diff/show flags (pass-through, templates, warnings)
+- [ ] 23-02-PLAN.md - E2E tests for all 20 DIFF/SHOW requirements
+
 **Requirements**:
 - DIFF-01: `--stat` passes through to `sl diff --stat`
 - DIFF-02: `-w/--ignore-all-space` passes through to `sl diff -w`
@@ -586,7 +592,7 @@ Phases execute in numeric order.
 | 20. Critical Safety Fixes | v1.3 | 1/1 | Complete | 2026-01-20 |
 | 21. Rev-Parse Expansion | v1.3 | 1/1 | Complete | 2026-01-21 |
 | 22. Log Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
-| 23. Diff and Show Flags | v1.3 | 0/? | Pending | — |
+| 23. Diff and Show Flags | v1.3 | 0/2 | Planned | — |
 | 24. Status and Add Flags | v1.3 | 0/? | Pending | — |
 | 25. Commit and Branch Flags | v1.3 | 0/? | Pending | — |
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 0/? | Pending | — |
