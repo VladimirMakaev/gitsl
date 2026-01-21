@@ -193,3 +193,114 @@ class TestLogDisplayFlags:
         result = run_gitsl(["log", "-p", "-1"], cwd=sl_repo_with_commit)
         assert result.exit_code == 0
         assert "@@" in result.stdout or "diff" in result.stdout.lower()
+
+
+class TestLogFilterFlags:
+    """Tests for LOG-04, LOG-05 filter flags."""
+
+    def test_author_flag_equals_syntax(self, sl_repo_with_commits: Path):
+        """LOG-04: --author=pattern filters by author."""
+        # Get the author name from sl config
+        result = run_gitsl(
+            ["log", "--author=test", "-1", "--oneline"], cwd=sl_repo_with_commits
+        )
+        # Should succeed (may or may not find matches depending on author)
+        assert result.exit_code == 0
+
+    def test_author_flag_space_syntax(self, sl_repo_with_commits: Path):
+        """LOG-04: --author pattern with space syntax."""
+        result = run_gitsl(
+            ["log", "--author", "test", "-1", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+
+    def test_grep_flag_equals_syntax(self, sl_repo_with_commits: Path):
+        """LOG-05: --grep=pattern searches commit messages."""
+        # Search for "Commit" which is in the test commit messages
+        result = run_gitsl(
+            ["log", "--grep=Commit", "-3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+
+    def test_grep_flag_space_syntax(self, sl_repo_with_commits: Path):
+        """LOG-05: --grep pattern with space syntax."""
+        result = run_gitsl(
+            ["log", "--grep", "Commit", "-3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+
+
+class TestLogBehaviorFlags:
+    """Tests for LOG-06, LOG-07, LOG-08 behavior flags."""
+
+    def test_no_merges_flag(self, sl_repo_with_commits: Path):
+        """LOG-06: --no-merges excludes merge commits."""
+        result = run_gitsl(
+            ["log", "--no-merges", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        # Should return some commits (test repo has no merges)
+        assert result.stdout.strip() != ""
+
+    def test_all_flag(self, sl_repo_with_commits: Path):
+        """LOG-07: --all shows all branches."""
+        result = run_gitsl(
+            ["log", "--all", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) >= 1
+
+    def test_follow_flag(self, sl_repo_with_commit: Path):
+        """LOG-08: --follow follows file renames."""
+        # Create a file, commit, then check log with --follow
+        result = run_gitsl(
+            ["log", "--follow", "-1", "--oneline", "README.md"], cwd=sl_repo_with_commit
+        )
+        # Should succeed - README.md exists in the test repo
+        assert result.exit_code == 0
+
+
+class TestLogDateFlags:
+    """Tests for LOG-09, LOG-10 date flags."""
+
+    def test_since_flag_equals_syntax(self, sl_repo_with_commits: Path):
+        """LOG-09: --since filters commits after date."""
+        result = run_gitsl(
+            ["log", "--since=2020-01-01", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        # Should find commits (all test commits are recent)
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) >= 1
+
+    def test_after_flag(self, sl_repo_with_commits: Path):
+        """LOG-09: --after is alias for --since."""
+        result = run_gitsl(
+            ["log", "--after=2020-01-01", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+
+    def test_until_flag_equals_syntax(self, sl_repo_with_commits: Path):
+        """LOG-10: --until filters commits before date."""
+        result = run_gitsl(
+            ["log", "--until=2099-12-31", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) >= 1
+
+    def test_before_flag(self, sl_repo_with_commits: Path):
+        """LOG-10: --before is alias for --until."""
+        result = run_gitsl(
+            ["log", "--before=2099-12-31", "-5", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+
+    def test_since_and_until_combined(self, sl_repo_with_commits: Path):
+        """LOG-09/LOG-10: Combined date range."""
+        result = run_gitsl(
+            ["log", "--since=2020-01-01", "--until=2099-12-31", "-5", "--oneline"],
+            cwd=sl_repo_with_commits,
+        )
+        assert result.exit_code == 0
