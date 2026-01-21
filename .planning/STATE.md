@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 24 (Status and Add Flags)
+**Current focus:** v1.3 Flag Compatibility — Phase 24 complete
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 24 - Status and Add Flags
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-01-21 — Completed 24-01-PLAN.md
+Phase: 24 - Status and Add Flags (complete)
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-01-21 — Completed 24-02-PLAN.md
 
-Progress: [####......] 4/10 phases
+Progress: [#####.....] 5/10 phases
 
 ## Milestones
 
@@ -27,9 +27,9 @@ Progress: [####......] 4/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 37 (13 v1.0 + 7 v1.1 + 10 v1.2 + 7 v1.3)
-- Total phases completed: 23
-- Total requirements validated: 184 (21 v1.0 + 26 v1.1 + 40 v1.2 + 97 v1.3)
+- Total plans completed: 38 (13 v1.0 + 7 v1.1 + 10 v1.2 + 8 v1.3)
+- Total phases completed: 24
+- Total requirements validated: 194 (21 v1.0 + 26 v1.1 + 40 v1.2 + 107 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [####......] 4/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 4 | 7 | — |
+| v1.3 Flags | 5 | 8 | — |
 
 ## Accumulated Context
 
@@ -76,9 +76,13 @@ All marked as "Good" during milestone completions.
 - Print note for -v/--verbose since Sapling -v has different meaning
 - Print warning for -f/--force since Sapling cannot force-add ignored files
 
+**Phase 24-02 Decisions:**
+- Test -v/--verbose by verifying files get added, not by checking output (sl add has no verbose output)
+- Use sl_repo_with_ignored and sl_repo_with_bookmark fixtures for specialized test scenarios
+
 ### Pending Todos
 
-None — ready for Phase 24-02 tests.
+None — ready for Phase 25.
 
 ### Blockers/Concerns
 
@@ -87,5 +91,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 24-01-PLAN.md
-Resume with: `/gsd:execute-phase` to continue with 24-02-PLAN.md (tests)
+Stopped at: Completed 24-02-PLAN.md (Phase 24 complete)
+Resume with: `/gsd:execute-phase` to continue with Phase 25
