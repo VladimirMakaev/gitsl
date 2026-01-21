@@ -72,14 +72,14 @@ Git status flag support.
 
 Git commit flag support.
 
-- [ ] **COMM-01**: `--amend` translates to `sl amend` command
-- [ ] **COMM-02**: `--no-edit` combined with amend uses existing message
-- [ ] **COMM-03**: `-F <file>/--file=<file>` translates to `sl commit -l <file>`
-- [ ] **COMM-04**: `--author=<author>` translates to `sl commit -u <author>`
-- [ ] **COMM-05**: `--date=<date>` translates to `sl commit -d <date>`
-- [ ] **COMM-06**: `-v/--verbose` shows diff in commit message editor
-- [ ] **COMM-07**: `-s/--signoff` adds Signed-off-by trailer
-- [ ] **COMM-08**: `-n/--no-verify` bypasses pre-commit hooks
+- [x] **COMM-01**: `--amend` translates to `sl amend` command
+- [x] **COMM-02**: `--no-edit` combined with amend uses existing message
+- [x] **COMM-03**: `-F <file>/--file=<file>` translates to `sl commit -l <file>`
+- [x] **COMM-04**: `--author=<author>` translates to `sl commit -u <author>`
+- [x] **COMM-05**: `--date=<date>` translates to `sl commit -d <date>`
+- [x] **COMM-06**: `-v/--verbose` shows diff in commit message editor
+- [x] **COMM-07**: `-s/--signoff` adds Signed-off-by trailer
+- [x] **COMM-08**: `-n/--no-verify` bypasses pre-commit hooks
 
 ### Stash Flags
 
@@ -100,15 +100,15 @@ Git stash flag support.
 
 Git branch flag support.
 
-- [ ] **BRAN-01**: `-m <old> <new>` translates to `sl bookmark -m <old> <new>`
-- [ ] **BRAN-02**: `-a/--all` shows all bookmarks including remote
-- [ ] **BRAN-03**: `-r/--remotes` shows remote bookmarks only
-- [ ] **BRAN-04**: `-v/--verbose` shows commit info with each branch
-- [ ] **BRAN-05**: `-l/--list` lists branches matching pattern
-- [ ] **BRAN-06**: `--show-current` shows current branch name
-- [ ] **BRAN-07**: `-t/--track` sets up upstream tracking
-- [ ] **BRAN-08**: `-f/--force` forces branch operations
-- [ ] **BRAN-09**: `-c/--copy` copies a branch
+- [x] **BRAN-01**: `-m <old> <new>` translates to `sl bookmark -m <old> <new>`
+- [x] **BRAN-02**: `-a/--all` shows all bookmarks including remote
+- [x] **BRAN-03**: `-r/--remotes` shows remote bookmarks only
+- [x] **BRAN-04**: `-v/--verbose` shows commit info with each branch
+- [x] **BRAN-05**: `-l/--list` lists branches matching pattern
+- [x] **BRAN-06**: `--show-current` shows current branch name
+- [x] **BRAN-07**: `-t/--track` sets up upstream tracking
+- [x] **BRAN-08**: `-f/--force` forces branch operations
+- [x] **BRAN-09**: `-c/--copy` copies a branch
 
 ### Checkout/Switch/Restore Flags
 
@@ -353,23 +353,23 @@ Deferred to future releases.
 | ADD-03 | 24 | Complete |
 | ADD-04 | 24 | Complete |
 | ADD-05 | 24 | Complete |
-| COMM-01 | 25 | Pending |
-| COMM-02 | 25 | Pending |
-| COMM-03 | 25 | Pending |
-| COMM-04 | 25 | Pending |
-| COMM-05 | 25 | Pending |
-| COMM-06 | 25 | Pending |
-| COMM-07 | 25 | Pending |
-| COMM-08 | 25 | Pending |
-| BRAN-01 | 25 | Pending |
-| BRAN-02 | 25 | Pending |
-| BRAN-03 | 25 | Pending |
-| BRAN-04 | 25 | Pending |
-| BRAN-05 | 25 | Pending |
-| BRAN-06 | 25 | Pending |
-| BRAN-07 | 25 | Pending |
-| BRAN-08 | 25 | Pending |
-| BRAN-09 | 25 | Pending |
+| COMM-01 | 25 | Complete |
+| COMM-02 | 25 | Complete |
+| COMM-03 | 25 | Complete |
+| COMM-04 | 25 | Complete |
+| COMM-05 | 25 | Complete |
+| COMM-06 | 25 | Complete |
+| COMM-07 | 25 | Complete |
+| COMM-08 | 25 | Complete |
+| BRAN-01 | 25 | Complete |
+| BRAN-02 | 25 | Complete |
+| BRAN-03 | 25 | Complete |
+| BRAN-04 | 25 | Complete |
+| BRAN-05 | 25 | Complete |
+| BRAN-06 | 25 | Complete |
+| BRAN-07 | 25 | Complete |
+| BRAN-08 | 25 | Complete |
+| BRAN-09 | 25 | Complete |
 | STSH-01 | 26 | Pending |
 | STSH-02 | 26 | Pending |
 | STSH-03 | 26 | Pending |

@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 25 complete, ready for Phase 26
+**Current focus:** v1.3 Flag Compatibility — Phase 26 (Stash and Checkout/Switch/Restore Flags)
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 25 of 29 (Commit and Branch Flags) - COMPLETE
-Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-01-21 — Completed 25-02-PLAN.md
+Phase: 26 - Stash and Checkout/Switch/Restore Flags
+Plan: Not started
+Status: Ready for planning
+Last activity: 2026-01-21 — Phase 25 verified and complete
 
 Progress: [######....] 6/10 phases
 
@@ -102,5 +102,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 25-02-PLAN.md (Phase 25 complete)
-Resume with: Phase 26 research and planning
+Stopped at: Phase 25 verified and complete
+Resume with: `/gsd:plan-phase 26` to plan Stash and Checkout/Switch/Restore Flags phase

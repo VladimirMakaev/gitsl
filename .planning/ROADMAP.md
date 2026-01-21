@@ -399,8 +399,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 25-01-PLAN.md - Extend cmd_commit.py and cmd_branch.py with flag support
-- [ ] 25-02-PLAN.md - E2E tests for all 17 commit and branch requirements
+- [x] 25-01-PLAN.md - Extend cmd_commit.py and cmd_branch.py with flag support
+- [x] 25-02-PLAN.md - E2E tests for all 17 commit and branch requirements
 
 **Requirements**:
 - COMM-01: `--amend` translates to `sl amend` command
@@ -606,7 +606,7 @@ Phases execute in numeric order.
 | 22. Log Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 23. Diff and Show Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 24. Status and Add Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
-| 25. Commit and Branch Flags | v1.3 | 0/2 | Planned | — |
+| 25. Commit and Branch Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 0/? | Pending | — |
 | 27. Grep and Blame Flags | v1.3 | 0/? | Pending | — |
 | 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 0/? | Pending | — |
