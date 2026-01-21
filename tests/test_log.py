@@ -160,3 +160,36 @@ class TestLogNoFlags:
 
         # Output should be substantial (multiple commits)
         assert len(result.stdout) > 100
+
+
+class TestLogDisplayFlags:
+    """Tests for LOG-01, LOG-02, LOG-03 display flags."""
+
+    def test_graph_flag(self, sl_repo_with_commits: Path):
+        """LOG-01: --graph shows ASCII commit graph."""
+        result = run_gitsl(["log", "--graph", "-3"], cwd=sl_repo_with_commits)
+        assert result.exit_code == 0
+        # Graph output contains special characters (|, *, /, \)
+        # At minimum, should have some non-alphanumeric graph chars
+        assert any(c in result.stdout for c in ["|", "*", "@"])
+
+    def test_stat_flag(self, sl_repo_with_commit: Path):
+        """LOG-02: --stat shows diffstat with each commit."""
+        result = run_gitsl(["log", "--stat", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        # Stat output typically contains file changes like:
+        # filename | N +++---
+        assert "|" in result.stdout or "file" in result.stdout.lower()
+
+    def test_patch_flag(self, sl_repo_with_commit: Path):
+        """LOG-03: --patch shows diff content."""
+        result = run_gitsl(["log", "--patch", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        # Patch output contains diff markers
+        assert "@@" in result.stdout or "diff" in result.stdout.lower()
+
+    def test_patch_short_flag(self, sl_repo_with_commit: Path):
+        """LOG-03: -p is alias for --patch."""
+        result = run_gitsl(["log", "-p", "-1"], cwd=sl_repo_with_commit)
+        assert result.exit_code == 0
+        assert "@@" in result.stdout or "diff" in result.stdout.lower()
