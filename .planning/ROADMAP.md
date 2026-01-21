@@ -363,6 +363,12 @@ Plans:
 
 **Dependencies**: Phase 23 (diff patterns apply to status output)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 24-01-PLAN.md - Extend cmd_status.py and cmd_add.py with new flag support
+- [ ] 24-02-PLAN.md - E2E tests for all 10 STAT/ADD requirements
+
 **Requirements**:
 - STAT-01: `--ignored` translates to `sl status -i`
 - STAT-02: `-b/--branch` adds branch info to output
@@ -593,7 +599,7 @@ Phases execute in numeric order.
 | 21. Rev-Parse Expansion | v1.3 | 1/1 | Complete | 2026-01-21 |
 | 22. Log Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 23. Diff and Show Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
-| 24. Status and Add Flags | v1.3 | 0/? | Pending | — |
+| 24. Status and Add Flags | v1.3 | 0/2 | Planned | — |
 | 25. Commit and Branch Flags | v1.3 | 0/? | Pending | — |
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 0/? | Pending | — |
 | 27. Grep and Blame Flags | v1.3 | 0/? | Pending | — |
