@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 Milestone: v1.3 Flag Compatibility
 Phase: 23 - Diff and Show Flags
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-21 — Phase 22 verified and complete
+Plan: 01 of 2 (in phase)
+Status: Plan 01 complete, ready for Plan 02 (tests)
+Last activity: 2026-01-21 — Completed 23-01-PLAN.md
 
 Progress: [###.......] 3/10 phases
 
@@ -27,9 +27,9 @@ Progress: [###.......] 3/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 34 (13 v1.0 + 7 v1.1 + 10 v1.2 + 4 v1.3)
+- Total plans completed: 35 (13 v1.0 + 7 v1.1 + 10 v1.2 + 5 v1.3)
 - Total phases completed: 22
-- Total requirements validated: 136 (21 v1.0 + 26 v1.1 + 40 v1.2 + 49 v1.3)
+- Total requirements validated: 156 (21 v1.0 + 26 v1.1 + 40 v1.2 + 69 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [###.......] 3/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 3 | 4 | — |
+| v1.3 Flags | 3 | 5 | — |
 
 ## Accumulated Context
 
@@ -62,9 +62,14 @@ All marked as "Good" during milestone completions.
 - Use revset approximations for --first-parent and --reverse
 - Template priority: custom_template > name_status > name_only > decorate > oneline
 
+**Phase 23-01 Decisions:**
+- Use sl status -mard for diff --name-only/--name-status in working directory
+- Print warnings for staging area flags (--staged/--cached) since Sapling has no staging
+- Reuse PRETTY_PRESETS and GIT_TO_SL_PLACEHOLDERS pattern from cmd_log.py
+
 ### Pending Todos
 
-None — ready for Phase 23.
+None — ready for Phase 23-02.
 
 ### Blockers/Concerns
 
@@ -73,5 +78,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Phase 22 verified and complete
-Resume with: `/gsd:plan-phase 23` to plan Diff and Show Flags phase
+Stopped at: Completed 23-01-PLAN.md
+Resume with: Execute 23-02-PLAN.md for Diff and Show Flags tests
