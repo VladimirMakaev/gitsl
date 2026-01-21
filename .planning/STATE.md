@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 23 (Diff and Show Flags)
+**Current focus:** v1.3 Flag Compatibility — Phase 23 Complete
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 23 - Diff and Show Flags
-Plan: 01 of 2 (in phase)
-Status: Plan 01 complete, ready for Plan 02 (tests)
-Last activity: 2026-01-21 — Completed 23-01-PLAN.md
+Phase: 23 - Diff and Show Flags (complete)
+Plan: 02 of 2 (in phase) - complete
+Status: Phase 23 complete, ready for Phase 24
+Last activity: 2026-01-21 — Completed 23-02-PLAN.md
 
 Progress: [###.......] 3/10 phases
 
@@ -27,9 +27,9 @@ Progress: [###.......] 3/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 35 (13 v1.0 + 7 v1.1 + 10 v1.2 + 5 v1.3)
+- Total plans completed: 36 (13 v1.0 + 7 v1.1 + 10 v1.2 + 6 v1.3)
 - Total phases completed: 22
-- Total requirements validated: 156 (21 v1.0 + 26 v1.1 + 40 v1.2 + 69 v1.3)
+- Total requirements validated: 176 (21 v1.0 + 26 v1.1 + 40 v1.2 + 89 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [###.......] 3/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 3 | 5 | — |
+| v1.3 Flags | 3 | 6 | — |
 
 ## Accumulated Context
 
@@ -67,9 +67,13 @@ All marked as "Good" during milestone completions.
 - Print warnings for staging area flags (--staged/--cached) since Sapling has no staging
 - Reuse PRETTY_PRESETS and GIT_TO_SL_PLACEHOLDERS pattern from cmd_log.py
 
+**Phase 23-02 Decisions:**
+- Test sl show template behavior as-is (templates format header, diff appended by sl)
+- Verify warning presence in stderr rather than exact message text
+
 ### Pending Todos
 
-None — ready for Phase 23-02.
+None — ready for Phase 24.
 
 ### Blockers/Concerns
 
@@ -78,5 +82,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Completed 23-01-PLAN.md
-Resume with: Execute 23-02-PLAN.md for Diff and Show Flags tests
+Stopped at: Completed 23-02-PLAN.md
+Resume with: Execute Phase 24 for next v1.3 Flag Compatibility work
