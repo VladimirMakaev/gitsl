@@ -11,9 +11,9 @@ See: .planning/PROJECT.md (updated 2026-01-20)
 
 Milestone: v1.3 Flag Compatibility
 Phase: 24 - Status and Add Flags
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-21 — Phase 23 verified and complete
+Plan: 01 of 02 complete
+Status: In progress
+Last activity: 2026-01-21 — Completed 24-01-PLAN.md
 
 Progress: [####......] 4/10 phases
 
@@ -27,9 +27,9 @@ Progress: [####......] 4/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 36 (13 v1.0 + 7 v1.1 + 10 v1.2 + 6 v1.3)
+- Total plans completed: 37 (13 v1.0 + 7 v1.1 + 10 v1.2 + 7 v1.3)
 - Total phases completed: 23
-- Total requirements validated: 176 (21 v1.0 + 26 v1.1 + 40 v1.2 + 89 v1.3)
+- Total requirements validated: 184 (21 v1.0 + 26 v1.1 + 40 v1.2 + 97 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [####......] 4/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 4 | 6 | — |
+| v1.3 Flags | 4 | 7 | — |
 
 ## Accumulated Context
 
@@ -71,9 +71,14 @@ All marked as "Good" during milestone completions.
 - Test sl show template behavior as-is (templates format header, diff appended by sl)
 - Verify warning presence in stderr rather than exact message text
 
+**Phase 24-01 Decisions:**
+- Use sl log template for branch header in status -b output
+- Print note for -v/--verbose since Sapling -v has different meaning
+- Print warning for -f/--force since Sapling cannot force-add ignored files
+
 ### Pending Todos
 
-None — ready for Phase 24.
+None — ready for Phase 24-02 tests.
 
 ### Blockers/Concerns
 
@@ -82,5 +87,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-21
-Stopped at: Phase 23 verified and complete
-Resume with: `/gsd:plan-phase 24` to plan Status and Add Flags phase
+Stopped at: Completed 24-01-PLAN.md
+Resume with: `/gsd:execute-phase` to continue with 24-02-PLAN.md (tests)
