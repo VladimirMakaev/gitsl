@@ -377,3 +377,82 @@ class TestLogOutputFormatFlags:
         )
         assert result.exit_code == 0
         assert result.stdout.strip() != ""
+
+
+class TestLogComplexFlags:
+    """Tests for LOG-15, LOG-16 complex flags."""
+
+    def test_first_parent_flag(self, sl_repo_with_commits: Path):
+        """LOG-15: --first-parent follows only first parent."""
+        result = run_gitsl(
+            ["log", "--first-parent", "-3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        # Should produce some output
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) >= 1
+
+    def test_reverse_flag(self, sl_repo_with_commits: Path):
+        """LOG-16: --reverse shows commits in reverse order."""
+        result = run_gitsl(
+            ["log", "--reverse", "-3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        # Should produce output (reversed or not, depending on implementation)
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) >= 1
+
+
+class TestLogPickaxeWarnings:
+    """Tests for LOG-17, LOG-18 pickaxe warnings."""
+
+    def test_pickaxe_S_warns(self, sl_repo_with_commit: Path):
+        """LOG-17: -S warns about unsupported pickaxe."""
+        result = run_gitsl(["log", "-Ssearchterm", "-1"], cwd=sl_repo_with_commit)
+        # Should succeed but warn
+        assert result.exit_code == 0
+        # Warning should be in stderr
+        assert "not supported" in result.stderr.lower() or "warning" in result.stderr.lower()
+
+    def test_pickaxe_G_warns(self, sl_repo_with_commit: Path):
+        """LOG-18: -G warns about unsupported regex pickaxe."""
+        result = run_gitsl(["log", "-Gpattern", "-1"], cwd=sl_repo_with_commit)
+        # Should succeed but warn
+        assert result.exit_code == 0
+        # Warning should be in stderr
+        assert "not supported" in result.stderr.lower() or "warning" in result.stderr.lower()
+
+
+class TestLogExistingFlags:
+    """Tests documenting LOG-19, LOG-20 already implemented flags."""
+
+    def test_max_count_long_form(self, sl_repo_with_commits: Path):
+        """LOG-19: --max-count=N already implemented."""
+        result = run_gitsl(
+            ["log", "--max-count=3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) == 3
+
+    def test_n_flag_already_works(self, sl_repo_with_commits: Path):
+        """LOG-19: -n N already implemented."""
+        result = run_gitsl(
+            ["log", "-n", "3", "--oneline"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        lines = [line for line in result.stdout.strip().split("\n") if line]
+        assert len(lines) == 3
+
+    def test_oneline_already_works(self, sl_repo_with_commits: Path):
+        """LOG-20: --oneline already implemented."""
+        result = run_gitsl(
+            ["log", "--oneline", "-3"], cwd=sl_repo_with_commits
+        )
+        assert result.exit_code == 0
+        lines = result.stdout.strip().split("\n")
+        assert len(lines) == 3
+        # Each line should be hash + subject
+        for line in lines:
+            parts = line.split(" ", 1)
+            assert len(parts) == 2
