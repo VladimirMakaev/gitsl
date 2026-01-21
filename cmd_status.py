@@ -1,4 +1,12 @@
-"""Handler for 'git status' command."""
+"""Handler for 'git status' command.
+
+Supported flags:
+- STAT-01: --ignored -> -i (show ignored files)
+- STAT-02: -b/--branch -> prepend branch header
+- STAT-03: -v/--verbose -> warning (different meaning in Sapling)
+- STAT-04: --porcelain/--short/-s -> transform output (existing)
+- STAT-05: -u/--untracked-files[=<mode>] -> filter untracked files
+"""
 
 import subprocess
 import sys
@@ -76,6 +84,17 @@ def transform_to_porcelain(sl_output: str) -> str:
     return ''
 
 
+def get_branch_header() -> str:
+    """Get git-style branch header for status output."""
+    result = subprocess.run(
+        ['sl', 'log', '-r', '.', '--template', '{activebookmark}'],
+        capture_output=True,
+        text=True
+    )
+    branch = result.stdout.strip() or '(detached)'
+    return f"## {branch}\n"
+
+
 def handle(parsed: ParsedCommand) -> int:
     """
     Handle 'git status' command.
@@ -83,14 +102,71 @@ def handle(parsed: ParsedCommand) -> int:
     Special handling for --porcelain and --short flags to transform
     sl status output into git-compatible format.
     """
-    # Check for porcelain/short flags
-    needs_transform = '--porcelain' in parsed.args or '--short' in parsed.args or '-s' in parsed.args
+    sl_args = []
+    needs_transform = False
+    show_ignored = False
+    show_branch = False
+    verbose = False
+    untracked_mode = 'normal'  # Default
+
+    i = 0
+    while i < len(parsed.args):
+        arg = parsed.args[i]
+
+        # Check for porcelain/short flags
+        if arg in ('--porcelain', '--short', '-s'):
+            needs_transform = True
+
+        # STAT-01: --ignored -> sl status -i
+        elif arg == '--ignored':
+            show_ignored = True
+
+        # STAT-02: -b/--branch - show branch info
+        elif arg in ('-b', '--branch'):
+            show_branch = True
+
+        # STAT-03: -v/--verbose
+        elif arg in ('-v', '--verbose'):
+            verbose = True
+
+        # STAT-05: -u/--untracked-files[=<mode>]
+        elif arg.startswith('--untracked-files'):
+            if '=' in arg:
+                untracked_mode = arg.split('=', 1)[1]
+            else:
+                untracked_mode = 'all'  # git default when no value
+        elif arg == '-u':
+            # Check for separate value
+            if i + 1 < len(parsed.args) and parsed.args[i + 1] in ('no', 'normal', 'all'):
+                i += 1
+                untracked_mode = parsed.args[i]
+            else:
+                untracked_mode = 'all'
+        elif arg.startswith('-u') and len(arg) > 2:
+            # Attached value: -uno, -unormal, -uall
+            untracked_mode = arg[2:]
+
+        else:
+            sl_args.append(arg)
+
+        i += 1
+
+    # Build sl status command with appropriate flags
+    if show_ignored:
+        sl_args.append('-i')
+
+    # Handle untracked mode
+    if untracked_mode == 'no':
+        # Only tracked file changes: modified, added, removed, deleted
+        sl_args.append('-mard')
+
+    # Handle verbose flag (different meaning between git and sl)
+    if verbose:
+        print("Note: Sapling -v shows repo state info, not staged diffs. "
+              "Use 'sl diff' to see all uncommitted changes.",
+              file=sys.stderr)
 
     if needs_transform:
-        # Remove git-specific flags before calling sl
-        sl_args = [a for a in parsed.args
-                   if a not in ('--porcelain', '--short', '-s')]
-
         result = subprocess.run(
             ['sl', 'status'] + sl_args,
             capture_output=True,
@@ -98,12 +174,21 @@ def handle(parsed: ParsedCommand) -> int:
         )
 
         if result.returncode == 0:
-            transformed = transform_to_porcelain(result.stdout)
-            sys.stdout.write(transformed)
+            output = ''
+            # Add branch header if requested
+            if show_branch:
+                output += get_branch_header()
+            output += transform_to_porcelain(result.stdout)
+            sys.stdout.write(output)
         else:
             sys.stderr.write(result.stderr)
 
         return result.returncode
 
-    # Default: passthrough to sl status
-    return run_sl(['status'] + parsed.args)
+    # Non-porcelain mode
+    if show_branch:
+        # For normal status output with -b, prepend branch info
+        branch_header = get_branch_header()
+        sys.stdout.write(branch_header)
+
+    return run_sl(['status'] + sl_args)
