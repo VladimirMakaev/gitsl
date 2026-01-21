@@ -45,18 +45,18 @@ Git log flag support and translation.
 
 Git diff flag support.
 
-- [ ] **DIFF-01**: `--stat` passes through to `sl diff --stat`
-- [ ] **DIFF-02**: `-w/--ignore-all-space` passes through to `sl diff -w`
-- [ ] **DIFF-03**: `-b/--ignore-space-change` passes through to `sl diff -b`
-- [ ] **DIFF-04**: `-U<n>/--unified=<n>` passes through to `sl diff -U`
-- [ ] **DIFF-05**: `--name-only` produces filename-only output
-- [ ] **DIFF-06**: `--name-status` produces status+filename output
-- [ ] **DIFF-07**: `--staged/--cached` warns that Sapling has no staging area
-- [ ] **DIFF-08**: `--raw` produces raw format output
-- [ ] **DIFF-09**: `-M/--find-renames` enables rename detection
-- [ ] **DIFF-10**: `-C/--find-copies` enables copy detection
-- [ ] **DIFF-11**: `--word-diff` shows word-level differences
-- [ ] **DIFF-12**: `--color-moved` highlights moved lines
+- [x] **DIFF-01**: `--stat` passes through to `sl diff --stat`
+- [x] **DIFF-02**: `-w/--ignore-all-space` passes through to `sl diff -w`
+- [x] **DIFF-03**: `-b/--ignore-space-change` passes through to `sl diff -b`
+- [x] **DIFF-04**: `-U<n>/--unified=<n>` passes through to `sl diff -U`
+- [x] **DIFF-05**: `--name-only` produces filename-only output
+- [x] **DIFF-06**: `--name-status` produces status+filename output
+- [x] **DIFF-07**: `--staged/--cached` warns that Sapling has no staging area
+- [x] **DIFF-08**: `--raw` produces raw format output
+- [x] **DIFF-09**: `-M/--find-renames` enables rename detection
+- [x] **DIFF-10**: `-C/--find-copies` enables copy detection
+- [x] **DIFF-11**: `--word-diff` shows word-level differences
+- [x] **DIFF-12**: `--color-moved` highlights moved lines
 
 ### Status Flags
 
@@ -130,14 +130,14 @@ Git checkout, switch, and restore flag support.
 
 Git show flag support.
 
-- [ ] **SHOW-01**: `--stat` passes through to `sl show --stat`
-- [ ] **SHOW-02**: `-U<n>` passes through for context lines
-- [ ] **SHOW-03**: `-w` passes through to ignore whitespace
-- [ ] **SHOW-04**: `--name-only` produces filename-only output
-- [ ] **SHOW-05**: `--name-status` produces status+filename output
-- [ ] **SHOW-06**: `--pretty/--format` maps to template formatting
-- [ ] **SHOW-07**: `-s/--no-patch` suppresses diff output
-- [ ] **SHOW-08**: `--oneline` produces short format output
+- [x] **SHOW-01**: `--stat` passes through to `sl show --stat`
+- [x] **SHOW-02**: `-U<n>` passes through for context lines
+- [x] **SHOW-03**: `-w` passes through to ignore whitespace
+- [x] **SHOW-04**: `--name-only` produces filename-only output
+- [x] **SHOW-05**: `--name-status` produces status+filename output
+- [x] **SHOW-06**: `--pretty/--format` maps to template formatting
+- [x] **SHOW-07**: `-s/--no-patch` suppresses diff output
+- [x] **SHOW-08**: `--oneline` produces short format output
 
 ### Blame Flags
 
