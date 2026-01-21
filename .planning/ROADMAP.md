@@ -251,7 +251,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 21-01-PLAN.md - Implement rev-parse flag handlers and E2E tests
+- [x] 21-01-PLAN.md - Implement rev-parse flag handlers and E2E tests
 
 **Requirements**:
 - REVP-01: `--show-toplevel` translates to `sl root`
@@ -578,7 +578,7 @@ Phases execute in numeric order.
 | 18. Stash Operations | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 19. Checkout Command | v1.2 | 2/2 | Complete | 2026-01-20 |
 | 20. Critical Safety Fixes | v1.3 | 1/1 | Complete | 2026-01-20 |
-| 21. Rev-Parse Expansion | v1.3 | 0/1 | Pending | — |
+| 21. Rev-Parse Expansion | v1.3 | 1/1 | Complete | 2026-01-21 |
 | 22. Log Flags | v1.3 | 0/? | Pending | — |
 | 23. Diff and Show Flags | v1.3 | 0/? | Pending | — |
 | 24. Status and Add Flags | v1.3 | 0/? | Pending | — |

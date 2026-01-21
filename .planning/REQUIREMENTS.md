@@ -196,13 +196,13 @@ Git config flag support.
 
 Git rev-parse flag support.
 
-- [ ] **REVP-01**: `--show-toplevel` translates to `sl root`
-- [ ] **REVP-02**: `--git-dir` returns `.sl` directory path
-- [ ] **REVP-03**: `--is-inside-work-tree` returns true/false
-- [ ] **REVP-04**: `--abbrev-ref HEAD` returns current bookmark name
-- [ ] **REVP-05**: `--verify` validates object reference
-- [ ] **REVP-06**: `--symbolic` outputs in symbolic form
-- [ ] **REVP-07**: Document `--short HEAD` already implemented
+- [x] **REVP-01**: `--show-toplevel` translates to `sl root`
+- [x] **REVP-02**: `--git-dir` returns `.sl` directory path
+- [x] **REVP-03**: `--is-inside-work-tree` returns true/false
+- [x] **REVP-04**: `--abbrev-ref HEAD` returns current bookmark name
+- [x] **REVP-05**: `--verify` validates object reference
+- [x] **REVP-06**: `--symbolic` outputs in symbolic form
+- [x] **REVP-07**: Document `--short HEAD` already implemented
 
 ### Add Flags
 
@@ -292,17 +292,17 @@ Deferred to future releases.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SAFE-01 | 20 | Pending |
-| SAFE-02 | 20 | Pending |
-| SAFE-03 | 20 | Pending |
-| SAFE-04 | 20 | Pending |
-| REVP-01 | 21 | Pending |
-| REVP-02 | 21 | Pending |
-| REVP-03 | 21 | Pending |
-| REVP-04 | 21 | Pending |
-| REVP-05 | 21 | Pending |
-| REVP-06 | 21 | Pending |
-| REVP-07 | 21 | Pending |
+| SAFE-01 | 20 | Complete |
+| SAFE-02 | 20 | Complete |
+| SAFE-03 | 20 | Complete |
+| SAFE-04 | 20 | Complete |
+| REVP-01 | 21 | Complete |
+| REVP-02 | 21 | Complete |
+| REVP-03 | 21 | Complete |
+| REVP-04 | 21 | Complete |
+| REVP-05 | 21 | Complete |
+| REVP-06 | 21 | Complete |
+| REVP-07 | 21 | Complete |
 | LOG-01 | 22 | Pending |
 | LOG-02 | 22 | Pending |
 | LOG-03 | 22 | Pending |
