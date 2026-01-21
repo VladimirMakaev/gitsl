@@ -175,8 +175,10 @@ def handle(parsed: ParsedCommand) -> int:
     if amend:
         sl_args.append('amend')
         # sl amend reuses message by default (like git --no-edit)
-        # Add -e to match git's default (open editor) unless --no-edit is present
-        if not no_edit:
+        # Add -e to match git's default (open editor) unless:
+        # - --no-edit is present, OR
+        # - a message is provided via -m or -F (no editor needed)
+        if not no_edit and not message and not message_file:
             sl_args.append('-e')
     else:
         sl_args.append('commit')
