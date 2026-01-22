@@ -50,9 +50,12 @@ def handle(parsed: ParsedCommand) -> int:
         elif arg == '--get':
             pass  # Skip the flag, key will be in remaining_args
 
-        # CONF-02: --unset -> --delete
+        # CONF-02: --unset -> --delete (requires scope, defaults to --local)
         elif arg == '--unset':
             sl_args.append('--delete')
+            # sl config --delete requires a scope, default to --local
+            if not any(a in parsed.args for a in ('--global', '--local', '--system', '--user')):
+                sl_args.append('--local')
 
         # CONF-04: --global -> --user
         elif arg == '--global':
