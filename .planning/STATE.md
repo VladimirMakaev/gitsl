@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 26 complete, ready for Phase 27
+**Current focus:** v1.3 Flag Compatibility — Phase 27 Plan 01 complete, ready for Plan 02
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
 Phase: 27 - Grep and Blame Flags
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-22 — Phase 26 verified and complete
+Plan: 01 of 02 complete
+Status: In progress
+Last activity: 2026-01-22 — Completed 27-01-PLAN.md
 
 Progress: [#######...] 7/10 phases
 
@@ -27,9 +27,9 @@ Progress: [#######...] 7/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 42 (13 v1.0 + 7 v1.1 + 10 v1.2 + 12 v1.3)
+- Total plans completed: 43 (13 v1.0 + 7 v1.1 + 10 v1.2 + 13 v1.3)
 - Total phases completed: 26
-- Total requirements validated: 232 (21 v1.0 + 26 v1.1 + 40 v1.2 + 145 v1.3)
+- Total requirements validated: 253 (21 v1.0 + 26 v1.1 + 40 v1.2 + 166 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [#######...] 7/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 7 | 12 | — |
+| v1.3 Flags | 7 | 13 | — |
 
 ## Accumulated Context
 
@@ -103,9 +103,15 @@ All marked as "Good" during milestone completions.
 - Verify warning messages by checking stderr contains relevant keywords
 - Test interactive mode (-p) by checking flag acceptance rather than behavior
 
+**Phase 27-01 Decisions:**
+- Translate git grep -v to sl grep -V (sl uses uppercase V for invert match)
+- Translate git blame -b to sl --ignore-space-change (sl -b means blank SHA1)
+- Do not pass through git blame -l (sl -l means line number, not long hash)
+- Do not pass through git grep -h (sl -h shows help, not filename suppression)
+
 ### Pending Todos
 
-None — Phase 26 complete, ready for Phase 27 (Grep and Blame Flags).
+None — Phase 27-01 complete, ready for Phase 27-02 (Grep and Blame Flags Tests).
 
 ### Blockers/Concerns
 
@@ -114,5 +120,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Phase 26 verified and complete
-Resume with: `/gsd:plan-phase 27` to plan Grep and Blame Flags phase
+Stopped at: Completed 27-01-PLAN.md
+Resume with: `/gsd:execute-plan .planning/phases/27-grep-and-blame-flags/27-02-PLAN.md` for tests
