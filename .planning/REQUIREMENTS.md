@@ -85,16 +85,16 @@ Git commit flag support.
 
 Git stash flag support.
 
-- [ ] **STSH-01**: `-u/--include-untracked` translates to `sl shelve -u`
-- [ ] **STSH-02**: `-m/--message` translates to `sl shelve -m`
-- [ ] **STSH-03**: `stash show --stat` displays shelve diff statistics
-- [ ] **STSH-04**: `stash@{n}` reference syntax maps to shelve names
-- [ ] **STSH-05**: `-p/--patch` interactive mode passes through to `sl shelve -i`
-- [ ] **STSH-06**: `-k/--keep-index` warns about no staging area
-- [ ] **STSH-07**: `-a/--all` stashes all files including ignored
-- [ ] **STSH-08**: `-q/--quiet` suppresses output
-- [ ] **STSH-09**: `stash push <pathspec>` supports selective file stashing
-- [ ] **STSH-10**: `stash branch <name>` creates branch from stash
+- [x] **STSH-01**: `-u/--include-untracked` translates to `sl shelve -u`
+- [x] **STSH-02**: `-m/--message` translates to `sl shelve -m`
+- [x] **STSH-03**: `stash show --stat` displays shelve diff statistics
+- [x] **STSH-04**: `stash@{n}` reference syntax maps to shelve names
+- [x] **STSH-05**: `-p/--patch` interactive mode passes through to `sl shelve -i`
+- [x] **STSH-06**: `-k/--keep-index` warns about no staging area
+- [x] **STSH-07**: `-a/--all` stashes all files including ignored
+- [x] **STSH-08**: `-q/--quiet` suppresses output
+- [x] **STSH-09**: `stash push <pathspec>` supports selective file stashing
+- [x] **STSH-10**: `stash branch <name>` creates branch from stash
 
 ### Branch Flags
 
@@ -114,17 +114,17 @@ Git branch flag support.
 
 Git checkout, switch, and restore flag support.
 
-- [ ] **CHKT-01**: `switch -c/--create` translates to `sl bookmark` + `sl goto`
-- [ ] **CHKT-02**: `switch -C/--force-create` force creates bookmark if exists
-- [ ] **CHKT-03**: `restore --source=<tree>/-s <tree>` translates to `sl revert -r <rev>`
-- [ ] **CHKT-04**: `restore --staged/-S` warns about no staging area
-- [ ] **CHKT-05**: `checkout --detach` passes through (sl doesn't have attached concept)
-- [ ] **CHKT-06**: `checkout -t/--track` sets up upstream tracking for new branch
-- [ ] **CHKT-07**: `switch -d/--detach` switches to commit without branch
-- [ ] **CHKT-08**: `switch -f/--force/--discard-changes` discards local changes
-- [ ] **CHKT-09**: `switch -m/--merge` merges local changes during switch
-- [ ] **CHKT-10**: `restore -q/--quiet` suppresses output
-- [ ] **CHKT-11**: `restore -W/--worktree` explicitly restores working tree
+- [x] **CHKT-01**: `switch -c/--create` translates to `sl bookmark` + `sl goto`
+- [x] **CHKT-02**: `switch -C/--force-create` force creates bookmark if exists
+- [x] **CHKT-03**: `restore --source=<tree>/-s <tree>` translates to `sl revert -r <rev>`
+- [x] **CHKT-04**: `restore --staged/-S` warns about no staging area
+- [x] **CHKT-05**: `checkout --detach` passes through (sl doesn't have attached concept)
+- [x] **CHKT-06**: `checkout -t/--track` sets up upstream tracking for new branch
+- [x] **CHKT-07**: `switch -d/--detach` switches to commit without branch
+- [x] **CHKT-08**: `switch -f/--force/--discard-changes` discards local changes
+- [x] **CHKT-09**: `switch -m/--merge` merges local changes during switch
+- [x] **CHKT-10**: `restore -q/--quiet` suppresses output
+- [x] **CHKT-11**: `restore -W/--worktree` explicitly restores working tree
 
 ### Show Flags
 
@@ -370,27 +370,27 @@ Deferred to future releases.
 | BRAN-07 | 25 | Complete |
 | BRAN-08 | 25 | Complete |
 | BRAN-09 | 25 | Complete |
-| STSH-01 | 26 | Pending |
-| STSH-02 | 26 | Pending |
-| STSH-03 | 26 | Pending |
-| STSH-04 | 26 | Pending |
-| STSH-05 | 26 | Pending |
-| STSH-06 | 26 | Pending |
-| STSH-07 | 26 | Pending |
-| STSH-08 | 26 | Pending |
-| STSH-09 | 26 | Pending |
-| STSH-10 | 26 | Pending |
-| CHKT-01 | 26 | Pending |
-| CHKT-02 | 26 | Pending |
-| CHKT-03 | 26 | Pending |
-| CHKT-04 | 26 | Pending |
-| CHKT-05 | 26 | Pending |
-| CHKT-06 | 26 | Pending |
-| CHKT-07 | 26 | Pending |
-| CHKT-08 | 26 | Pending |
-| CHKT-09 | 26 | Pending |
-| CHKT-10 | 26 | Pending |
-| CHKT-11 | 26 | Pending |
+| STSH-01 | 26 | Complete |
+| STSH-02 | 26 | Complete |
+| STSH-03 | 26 | Complete |
+| STSH-04 | 26 | Complete |
+| STSH-05 | 26 | Complete |
+| STSH-06 | 26 | Complete |
+| STSH-07 | 26 | Complete |
+| STSH-08 | 26 | Complete |
+| STSH-09 | 26 | Complete |
+| STSH-10 | 26 | Complete |
+| CHKT-01 | 26 | Complete |
+| CHKT-02 | 26 | Complete |
+| CHKT-03 | 26 | Complete |
+| CHKT-04 | 26 | Complete |
+| CHKT-05 | 26 | Complete |
+| CHKT-06 | 26 | Complete |
+| CHKT-07 | 26 | Complete |
+| CHKT-08 | 26 | Complete |
+| CHKT-09 | 26 | Complete |
+| CHKT-10 | 26 | Complete |
+| CHKT-11 | 26 | Complete |
 | GREP-01 | 27 | Pending |
 | GREP-02 | 27 | Pending |
 | GREP-03 | 27 | Pending |

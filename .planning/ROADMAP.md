@@ -439,8 +439,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 26-01-PLAN.md - Extend cmd_stash.py, cmd_switch.py, cmd_restore.py, cmd_checkout.py with flag support
-- [ ] 26-02-PLAN.md - E2E tests for all 21 stash and checkout/switch/restore requirements
+- [x] 26-01-PLAN.md - Extend cmd_stash.py, cmd_switch.py, cmd_restore.py, cmd_checkout.py with flag support
+- [x] 26-02-PLAN.md - E2E tests for all 21 stash and checkout/switch/restore requirements
 
 **Requirements**:
 - STSH-01: `-u/--include-untracked` translates to `sl shelve -u`
@@ -613,7 +613,7 @@ Phases execute in numeric order.
 | 23. Diff and Show Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 24. Status and Add Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 25. Commit and Branch Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
-| 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 0/2 | Planned | — |
+| 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 27. Grep and Blame Flags | v1.3 | 0/? | Pending | — |
 | 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 0/? | Pending | — |
 | 29. Documentation | v1.3 | 0/? | Pending | — |
