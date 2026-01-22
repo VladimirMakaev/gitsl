@@ -109,6 +109,8 @@ def handle(parsed: ParsedCommand) -> int:
     - git checkout <file>          -> sl revert <file>     (CHECKOUT-03)
     - git checkout -- <file>       -> sl revert <file>     (CHECKOUT-04)
     - git checkout -b <name>       -> sl bookmark + goto   (CHECKOUT-05)
+    - git checkout --detach        -> sl goto --inactive   (CHKT-05)
+    - git checkout -t/--track      -> note (tracking not fully emulated)
 
     Disambiguation (CHECKOUT-06):
     1. If -- present: after is files
@@ -123,6 +125,26 @@ def handle(parsed: ParsedCommand) -> int:
         print("error: you must specify a branch, commit, or file to checkout",
               file=sys.stderr)
         return 1
+
+    # Handle --detach and --track (CHKT-05, CHKT-06)
+    detach = False
+    track = False
+    filtered_args = []
+
+    for arg in args:
+        if arg == '--detach':
+            detach = True
+        elif arg in ('-t', '--track'):
+            track = True
+        else:
+            filtered_args.append(arg)
+
+    args = filtered_args
+
+    # Print note for track flag (CHKT-06)
+    if track:
+        print("Note: -t/--track is accepted but tracking configuration "
+              "is not fully emulated.", file=sys.stderr)
 
     # 1. Handle -b/-B flag first (CHECKOUT-05)
     if "-b" in args or "-B" in args:
@@ -139,6 +161,12 @@ def handle(parsed: ParsedCommand) -> int:
             return run_sl(["revert", "-r", before_sep[0]] + after_sep)
         # Just restore files from working parent
         return run_sl(["revert"] + after_sep)
+
+    # Handle empty args after flag extraction
+    if not args:
+        print("error: you must specify a branch, commit, or file to checkout",
+              file=sys.stderr)
+        return 1
 
     # 4. No --, no -b - need to disambiguate
     target = args[0]
@@ -159,7 +187,10 @@ def handle(parsed: ParsedCommand) -> int:
 
     # Valid revision - switch to it (CHECKOUT-01, CHECKOUT-02)
     if is_revision:
-        return run_sl(["goto"] + _translate_goto_flags(args))
+        goto_args = _translate_goto_flags(args)
+        if detach:
+            goto_args.insert(0, '--inactive')
+        return run_sl(['goto'] + goto_args)
 
     # File exists - restore it (CHECKOUT-03)
     if is_file:
@@ -167,4 +198,7 @@ def handle(parsed: ParsedCommand) -> int:
 
     # Neither valid revision nor existing file
     # Let sl goto handle the error (better error message about what's wrong)
-    return run_sl(["goto"] + _translate_goto_flags(args))
+    goto_args = _translate_goto_flags(args)
+    if detach:
+        goto_args.insert(0, '--inactive')
+    return run_sl(['goto'] + goto_args)
