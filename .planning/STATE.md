@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 26 (Stash and Checkout/Switch/Restore Flags)
+**Current focus:** v1.3 Flag Compatibility — Phase 26 complete, ready for Phase 27
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 26 - Stash and Checkout/Switch/Restore Flags
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-01-22 — Completed 26-01-PLAN.md (Stash and Checkout/Switch/Restore Flags implementation)
+Phase: 26 - Stash and Checkout/Switch/Restore Flags (complete)
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-01-22 — Completed 26-02-PLAN.md (E2E tests for stash and checkout/switch/restore flags)
 
-Progress: [######....] 6/10 phases (plan 1/2 in phase 26)
+Progress: [######....] 6/10 phases (phase 26 complete)
 
 ## Milestones
 
@@ -27,9 +27,9 @@ Progress: [######....] 6/10 phases (plan 1/2 in phase 26)
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 41 (13 v1.0 + 7 v1.1 + 10 v1.2 + 11 v1.3)
+- Total plans completed: 42 (13 v1.0 + 7 v1.1 + 10 v1.2 + 12 v1.3)
 - Total phases completed: 25
-- Total requirements validated: 211 (21 v1.0 + 26 v1.1 + 40 v1.2 + 124 v1.3)
+- Total requirements validated: 232 (21 v1.0 + 26 v1.1 + 40 v1.2 + 145 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [######....] 6/10 phases (plan 1/2 in phase 26)
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 6 | 11 | — |
+| v1.3 Flags | 6 | 12 | — |
 
 ## Accumulated Context
 
@@ -98,9 +98,14 @@ All marked as "Good" during milestone completions.
 - Translate --detach to --inactive for goto
 - Accept track flag with note about limited emulation
 
+**Phase 26-02 Decisions:**
+- Test stash@{n} by creating multiple stashes and verifying index-to-name translation
+- Verify warning messages by checking stderr contains relevant keywords
+- Test interactive mode (-p) by checking flag acceptance rather than behavior
+
 ### Pending Todos
 
-None — Phase 26-01 complete, ready for Phase 26-02 (E2E tests).
+None — Phase 26 complete, ready for Phase 27 (Push, Pull, Fetch, Remote Flags).
 
 ### Blockers/Concerns
 
@@ -109,5 +114,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 26-01-PLAN.md
-Resume with: Execute 26-02-PLAN.md for E2E tests
+Stopped at: Completed 26-02-PLAN.md
+Resume with: Execute 27-01-PLAN.md for push, pull, fetch, remote flags
