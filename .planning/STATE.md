@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 27 complete, ready for Phase 28
+**Current focus:** v1.3 Flag Compatibility — Phase 28 Plan 01 complete, ready for Plan 02
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
 Phase: 28 - Clone, Rm, Mv, Clean, Config Flags
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-22 — Phase 27 verified and complete
+Plan: 01 of 02 complete
+Status: In progress
+Last activity: 2026-01-22 — Completed 28-01-PLAN.md (flag implementations)
 
 Progress: [########..] 8/10 phases
 
@@ -27,7 +27,7 @@ Progress: [########..] 8/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 44 (13 v1.0 + 7 v1.1 + 10 v1.2 + 14 v1.3)
+- Total plans completed: 45 (13 v1.0 + 7 v1.1 + 10 v1.2 + 15 v1.3)
 - Total phases completed: 27
 - Total requirements validated: 274 (21 v1.0 + 26 v1.1 + 40 v1.2 + 187 v1.3)
 
@@ -38,7 +38,7 @@ Progress: [########..] 8/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 8 | 14 | — |
+| v1.3 Flags | 8 | 15 | — |
 
 ## Accumulated Context
 
@@ -112,9 +112,19 @@ All marked as "Good" during milestone completions.
 **Phase 27-02 Decisions:**
 - Mark -q/--quiet as unsupported with warning (sl grep lacks quiet mode)
 
+**Phase 28-01 Decisions:**
+- Translate git clone -b to sl clone -u (update to bookmark)
+- Translate git clone -n to sl clone -U (no update)
+- Translate git config --global to sl config --user
+- Translate git config --unset to sl config --delete
+- Translate git config --show-origin to sl config --debug
+- Translate git clean -x to sl purge --ignored
+- Translate git clean -e to sl purge -X (exclude pattern)
+- Print warnings for unsupported flags rather than failing
+
 ### Pending Todos
 
-None — Phase 27 complete, ready for Phase 28.
+None — 28-01 complete, ready for 28-02 testing.
 
 ### Blockers/Concerns
 
@@ -122,6 +132,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-22
-Stopped at: Phase 27 verified and complete
-Resume with: `/gsd:plan-phase 28` to plan Clone, Rm, Mv, Clean, Config Flags phase
+Last session: 2026-01-22T13:24:29Z
+Stopped at: Completed 28-01-PLAN.md
+Resume with: `/gsd:execute-phase 28-02` to run tests for Clone, Rm, Mv, Clean, Config Flags
