@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 27 Plan 01 complete, ready for Plan 02
+**Current focus:** v1.3 Flag Compatibility — Phase 27 complete, ready for Phase 28
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 27 - Grep and Blame Flags
-Plan: 01 of 02 complete
-Status: In progress
-Last activity: 2026-01-22 — Completed 27-01-PLAN.md
+Phase: 27 - Grep and Blame Flags (COMPLETE)
+Plan: 02 of 02 complete
+Status: Phase complete
+Last activity: 2026-01-22 — Completed 27-02-PLAN.md
 
-Progress: [#######...] 7/10 phases
+Progress: [########..] 8/10 phases
 
 ## Milestones
 
@@ -27,9 +27,9 @@ Progress: [#######...] 7/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 43 (13 v1.0 + 7 v1.1 + 10 v1.2 + 13 v1.3)
-- Total phases completed: 26
-- Total requirements validated: 253 (21 v1.0 + 26 v1.1 + 40 v1.2 + 166 v1.3)
+- Total plans completed: 44 (13 v1.0 + 7 v1.1 + 10 v1.2 + 14 v1.3)
+- Total phases completed: 27
+- Total requirements validated: 274 (21 v1.0 + 26 v1.1 + 40 v1.2 + 187 v1.3)
 
 **By Milestone:**
 
@@ -38,7 +38,7 @@ Progress: [#######...] 7/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 7 | 13 | — |
+| v1.3 Flags | 8 | 14 | — |
 
 ## Accumulated Context
 
@@ -109,9 +109,12 @@ All marked as "Good" during milestone completions.
 - Do not pass through git blame -l (sl -l means line number, not long hash)
 - Do not pass through git grep -h (sl -h shows help, not filename suppression)
 
+**Phase 27-02 Decisions:**
+- Mark -q/--quiet as unsupported with warning (sl grep lacks quiet mode)
+
 ### Pending Todos
 
-None — Phase 27-01 complete, ready for Phase 27-02 (Grep and Blame Flags Tests).
+None — Phase 27 complete, ready for Phase 28.
 
 ### Blockers/Concerns
 
@@ -120,5 +123,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-22
-Stopped at: Completed 27-01-PLAN.md
-Resume with: `/gsd:execute-plan .planning/phases/27-grep-and-blame-flags/27-02-PLAN.md` for tests
+Stopped at: Completed 27-02-PLAN.md
+Resume with: Plan Phase 28 or continue v1.3 milestone
