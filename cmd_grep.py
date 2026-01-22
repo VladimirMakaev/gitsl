@@ -13,7 +13,7 @@ Supported flags:
 - GREP-10: -h -> warning (shows help in sl, not suppress filename)
 - GREP-11: -H -> no-op (already default behavior)
 - GREP-12: -o/--only-matching -> warning (not supported)
-- GREP-13: -q/--quiet -> -q (quiet mode with exit codes)
+- GREP-13: -q/--quiet -> warning (not supported, use grep | wc -l to check)
 - GREP-14: -F/--fixed-strings -> -F (literal strings)
 """
 
@@ -36,12 +36,12 @@ def handle(parsed: ParsedCommand) -> int:
     - git grep -C5 <pattern> -> sl grep -C 5 <pattern>
     - git grep -w <pattern>  -> sl grep -w <pattern>
     - git grep -F <pattern>  -> sl grep -F <pattern>
-    - git grep -q <pattern>  -> sl grep -q <pattern>
 
     Unsupported (with warnings):
     - git grep -c  -> warning: use sl grep | wc -l
     - git grep -h  -> warning: cannot suppress filenames
     - git grep -o  -> warning: use sl grep | grep -o
+    - git grep -q  -> warning: use sl grep | wc -l (no quiet mode)
     - git grep -H  -> no-op (already default)
 
     All other arguments pass through unchanged.
@@ -124,9 +124,11 @@ def handle(parsed: ParsedCommand) -> int:
                   "Consider: sl grep <pattern> | grep -o <pattern>",
                   file=sys.stderr)
 
-        # GREP-13: -q/--quiet passes through
+        # GREP-13: -q/--quiet - not supported by sl grep, warn
         elif arg in ('-q', '--quiet'):
-            sl_args.append('-q')
+            print("Warning: -q/--quiet not supported by Sapling grep. "
+                  "Use exit code from: sl grep <pattern> | wc -l",
+                  file=sys.stderr)
 
         # GREP-14: -F/--fixed-strings passes through
         elif arg in ('-F', '--fixed-strings'):
