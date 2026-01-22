@@ -577,6 +577,12 @@ Plans:
 
 **Dependencies**: Phase 28 (all implementation complete, document final state)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 29-01-PLAN.md — Core structure, staging area section, log/diff/show/status/add/commit/branch/rev-parse flags
+- [ ] 29-02-PLAN.md — Stash/checkout/switch/restore/grep/blame/clone/rm/mv/clean/config flags and final polish
+
 **Requirements**:
 - DOC-01: Create comprehensive flag compatibility matrix in README
 - DOC-02: Document all staging-related flags as unsupported with explanation
@@ -628,4 +634,4 @@ Phases execute in numeric order.
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 27. Grep and Blame Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
-| 29. Documentation | v1.3 | 0/? | Pending | — |
+| 29. Documentation | v1.3 | 0/2 | Pending | — |
