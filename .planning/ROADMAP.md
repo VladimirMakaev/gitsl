@@ -480,6 +480,12 @@ Plans:
 
 **Dependencies**: Phase 26 (stash patterns complete, now content search)
 
+**Plans**: 2 plans
+
+Plans:
+- [ ] 27-01-PLAN.md — Extend cmd_grep.py and cmd_blame.py with flag support
+- [ ] 27-02-PLAN.md — E2E tests for all 21 grep and blame requirements
+
 **Requirements**:
 - GREP-01: `-n` passes through to `sl grep -n` (line numbers)
 - GREP-02: `-i` passes through to `sl grep -i` (case insensitive)
@@ -614,6 +620,6 @@ Phases execute in numeric order.
 | 24. Status and Add Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 25. Commit and Branch Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
-| 27. Grep and Blame Flags | v1.3 | 0/? | Pending | — |
+| 27. Grep and Blame Flags | v1.3 | 0/2 | Planned | — |
 | 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 0/? | Pending | — |
 | 29. Documentation | v1.3 | 0/? | Pending | — |
