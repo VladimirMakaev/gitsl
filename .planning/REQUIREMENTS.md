@@ -143,32 +143,32 @@ Git show flag support.
 
 Git blame flag support.
 
-- [ ] **BLAM-01**: `-w` passes through to `sl annotate -w` (ignore whitespace)
-- [ ] **BLAM-02**: `-b` passes through to `sl annotate -b` (ignore space changes)
-- [ ] **BLAM-03**: `-L <start>,<end>` line range support
-- [ ] **BLAM-04**: `-e/--show-email` shows author email
-- [ ] **BLAM-05**: `-p/--porcelain` produces machine-readable output
-- [ ] **BLAM-06**: `-l` shows long revision hash
-- [ ] **BLAM-07**: `-n/--show-number` shows original line numbers
+- [x] **BLAM-01**: `-w` passes through to `sl annotate -w` (ignore whitespace)
+- [x] **BLAM-02**: `-b` passes through to `sl annotate -b` (ignore space changes)
+- [x] **BLAM-03**: `-L <start>,<end>` line range support
+- [x] **BLAM-04**: `-e/--show-email` shows author email
+- [x] **BLAM-05**: `-p/--porcelain` produces machine-readable output
+- [x] **BLAM-06**: `-l` shows long revision hash
+- [x] **BLAM-07**: `-n/--show-number` shows original line numbers
 
 ### Grep Flags
 
 Git grep flag support.
 
-- [ ] **GREP-01**: `-n` passes through to `sl grep -n` (line numbers)
-- [ ] **GREP-02**: `-i` passes through to `sl grep -i` (case insensitive)
-- [ ] **GREP-03**: `-l` passes through to `sl grep -l` (files only)
-- [ ] **GREP-04**: `-c` passes through to `sl grep -c` (count)
-- [ ] **GREP-05**: `-w` passes through to `sl grep -w` (word match)
-- [ ] **GREP-06**: `-v` passes through for inverted match
-- [ ] **GREP-07**: `-A <num>` shows trailing context lines
-- [ ] **GREP-08**: `-B <num>` shows leading context lines
-- [ ] **GREP-09**: `-C <num>` shows both context lines
-- [ ] **GREP-10**: `-h` suppresses filename output
-- [ ] **GREP-11**: `-H` forces filename output
-- [ ] **GREP-12**: `-o/--only-matching` shows only matched parts
-- [ ] **GREP-13**: `-q/--quiet` suppresses output, exit status only
-- [ ] **GREP-14**: `-F/--fixed-strings` treats pattern as literal string
+- [x] **GREP-01**: `-n` passes through to `sl grep -n` (line numbers)
+- [x] **GREP-02**: `-i` passes through to `sl grep -i` (case insensitive)
+- [x] **GREP-03**: `-l` passes through to `sl grep -l` (files only)
+- [x] **GREP-04**: `-c` passes through to `sl grep -c` (count)
+- [x] **GREP-05**: `-w` passes through to `sl grep -w` (word match)
+- [x] **GREP-06**: `-v` passes through for inverted match
+- [x] **GREP-07**: `-A <num>` shows trailing context lines
+- [x] **GREP-08**: `-B <num>` shows leading context lines
+- [x] **GREP-09**: `-C <num>` shows both context lines
+- [x] **GREP-10**: `-h` suppresses filename output
+- [x] **GREP-11**: `-H` forces filename output
+- [x] **GREP-12**: `-o/--only-matching` shows only matched parts
+- [x] **GREP-13**: `-q/--quiet` suppresses output, exit status only
+- [x] **GREP-14**: `-F/--fixed-strings` treats pattern as literal string
 
 ### Clean Flags
 
