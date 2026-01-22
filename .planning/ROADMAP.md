@@ -527,8 +527,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 28-01-PLAN.md — Implement flag handlers for clone, rm, mv, clean, config
-- [ ] 28-02-PLAN.md — E2E tests for all 30 flag requirements
+- [x] 28-01-PLAN.md — Implement flag handlers for clone, rm, mv, clean, config
+- [x] 28-02-PLAN.md — E2E tests for all 30 flag requirements
 
 **Requirements**:
 - CLON-01: `-b <branch>/--branch` translates to `sl clone -u <bookmark>`
@@ -627,5 +627,5 @@ Phases execute in numeric order.
 | 25. Commit and Branch Flags | v1.3 | 2/2 | Complete | 2026-01-21 |
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 27. Grep and Blame Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
-| 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 0/2 | Planned | — |
+| 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 29. Documentation | v1.3 | 0/? | Pending | — |

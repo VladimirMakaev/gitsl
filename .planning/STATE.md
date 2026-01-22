@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 28 complete, ready for next phase
+**Current focus:** v1.3 Flag Compatibility — Phase 28 complete, ready for Phase 29
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
-Phase: 28 - Clone, Rm, Mv, Clean, Config Flags (COMPLETE)
-Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-01-22 — Completed 28-02-PLAN.md (E2E tests for all 30 flag requirements)
+Phase: 29 - Documentation
+Plan: Not started
+Status: Ready for planning
+Last activity: 2026-01-22 — Phase 28 verified and complete
 
 Progress: [#########.] 9/10 phases
 
@@ -136,6 +136,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-22T14:27:00Z
-Stopped at: Completed 28-02-PLAN.md
-Resume with: Next phase (Phase 29 or milestone completion)
+Last session: 2026-01-22
+Stopped at: Phase 28 verified and complete
+Resume with: `/gsd:plan-phase 29` to plan Documentation phase
