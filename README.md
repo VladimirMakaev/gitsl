@@ -137,13 +137,73 @@ Quick reference for key flag differences between git and Sapling:
 
 All flags passed through to sl equivalents unchanged.
 
-### git show, git clone, git grep
+### git show
 
-All flags passed through to sl equivalents unchanged.
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| (none) | Yes | `sl show` |
+| `--stat` | Yes | `sl show --stat` |
+| `-U<n>` | Yes | `sl show -U<n>` |
+| `-w` | Yes | `sl show -w` |
+| `--name-only` | Yes | Template output |
+| `--name-status` | Yes | Template output |
+| `--pretty/--format` | Yes | Template mapping |
+| `-s/--no-patch` | Yes | `sl show -s` |
+| `--oneline` | Yes | Template output |
+
+### git clone
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<url>` | Yes | `sl clone <url>` |
+| `-b/--branch <name>` | Yes | `sl clone -u <bookmark>` |
+| `-n/--no-checkout` | Yes | `sl clone -U` |
+| `--depth` | Warning | Use `--shallow` instead |
+| `--single-branch` | Warning | Limited support |
+| `-o/--origin` | Warning | Not supported |
+| `--recursive/--recurse-submodules` | Warning | Not supported |
+| `--no-tags` | Warning | Not supported |
+| `-q/--quiet` | Yes | `sl clone -q` |
+| `-v/--verbose` | Yes | `sl clone -v` |
+
+### git grep
+
+**Critical:** git grep `-v` (invert match) translates to sl grep `-V` (uppercase). The lowercase `-v` in Sapling means verbose.
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<pattern>` | Yes | `sl grep <pattern>` |
+| `-n/--line-number` | Yes | `sl grep -n` |
+| `-i/--ignore-case` | Yes | `sl grep -i` |
+| `-l/--files-with-matches` | Yes | `sl grep -l` |
+| `-w/--word-regexp` | Yes | `sl grep -w` |
+| `-v/--invert-match` | Yes | `sl grep -V` (**uppercase V**) |
+| `-A <num>` | Yes | `sl grep -A` |
+| `-B <num>` | Yes | `sl grep -B` |
+| `-C <num>` | Yes | `sl grep -C` |
+| `-F/--fixed-strings` | Yes | `sl grep -F` |
+| `-q/--quiet` | Yes | `sl grep -q` |
+| `-c/--count` | Warning | Not supported |
+| `-h` | Warning | Would show help (sl -h) |
+| `-H` | No-op | Already default behavior |
+| `-o/--only-matching` | Warning | Not supported |
 
 ### git blame
 
-Translates to `sl annotate`. All flags passed through.
+Translates to `sl annotate`.
+
+**Critical:** git blame `-b` does NOT pass through directly. Sapling `-b` shows blank SHA1; use `--ignore-space-change` instead.
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<file>` | Yes | `sl annotate <file>` |
+| `-w` | Yes | `sl annotate -w` (ignore whitespace) |
+| `-b` | Yes | `sl annotate --ignore-space-change` (**NOT -b**) |
+| `-n/--show-number` | Yes | `sl annotate -n` |
+| `-L <start>,<end>` | Warning | Not supported |
+| `-e/--show-email` | Warning | Not supported |
+| `-p/--porcelain` | Warning | Not supported |
+| `-l` | Warning | **Don't pass through** (sl -l means line number) |
 
 ### git rm
 
