@@ -178,10 +178,16 @@ Translates to `sl config`.
 
 ### git switch
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
+Modern replacement for branch-switching behavior of `git checkout`. Translates to `sl goto` / `sl bookmark`.
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | `<branch>` | Yes | `sl goto <branch>` |
-| `-c <name>` | Yes | `sl bookmark <name>` |
+| `-c/--create <name>` | Yes | `sl bookmark <name>` + `sl goto <name>` |
+| `-C/--force-create <name>` | Yes | `sl bookmark -f <name>` + `sl goto <name>` |
+| `-d/--detach` | Yes | `sl goto --inactive` |
+| `-f/--force/--discard-changes` | Yes | `sl goto -C` (discards local changes) |
+| `-m/--merge` | Yes | `sl goto -m` (merge local changes) |
 
 ### git branch
 
@@ -196,39 +202,59 @@ Translates to `sl bookmark`.
 
 ### git restore
 
-Translates to `sl revert`.
+Modern replacement for file-restoring behavior of `git checkout`. Translates to `sl revert`.
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | `<file>` | Yes | `sl revert <file>` |
 | `.` | Yes | `sl revert --all` |
+| `-s/--source=<tree>` | Yes | `sl revert -r <rev>` |
+| `--staged/-S` | Warning | No staging area - prints warning |
+| `-q/--quiet` | Yes | Suppresses output |
+| `-W/--worktree` | Default | No-op (worktree is default behavior) |
 
 ### git stash
 
 Translates to `sl shelve` / `sl unshelve`.
 
-| Subcommand | Supported | Translation |
-|------------|-----------|-------------|
+| Subcommand/Flag | Supported | Translation/Notes |
+|-----------------|-----------|-------------------|
 | (none) | Yes | `sl shelve` |
 | `push` | Yes | `sl shelve` |
-| `-m <msg>` | Yes | `sl shelve -m <msg>` |
+| `push <pathspec>` | Yes | `sl shelve <pathspec>` (selective file stashing) |
+| `-m/--message` | Yes | `sl shelve -m` |
+| `-u/--include-untracked` | Yes | `sl shelve -u` |
+| `-a/--all` | Yes | `sl shelve -u` (includes ignored with note) |
+| `-p/--patch` | Yes | `sl shelve -i` (interactive selection) |
+| `-k/--keep-index` | Warning | No staging area - prints warning |
+| `-q/--quiet` | Yes | Suppresses output |
 | `pop` | Yes | `sl unshelve` |
 | `apply` | Yes | `sl unshelve --keep` |
 | `list` | Yes | `sl shelve --list` |
+| `show` | Yes | `sl shelve --stat` |
+| `show --stat` | Yes | Displays diffstat |
+| `stash@{n}` | Yes | Maps to shelve name via `sl shelve --list` lookup |
 | `drop` | Yes | `sl shelve --delete <name>` |
+| `branch <name>` | Yes | Creates bookmark + unshelve |
+
+**Note:** `-p/--patch` translates to `sl shelve -i` for interactive selection. The `stash@{n}` syntax is translated by looking up the nth shelve name from `sl shelve --list`.
 
 ### git checkout
 
-Disambiguates between branches, files, and commits.
+Disambiguates between branches, files, and commits. Modern git recommends using `git switch` (for branches) and `git restore` (for files) instead.
 
-| Usage | Supported | Translation |
-|-------|-----------|-------------|
+| Usage/Flag | Supported | Translation/Notes |
+|------------|-----------|-------------------|
 | `<branch>` | Yes | `sl goto <branch>` |
 | `<commit>` | Yes | `sl goto <commit>` |
 | `<file>` | Yes | `sl revert <file>` |
 | `-- <file>` | Yes | `sl revert <file>` |
 | `-b <name>` | Yes | `sl bookmark <name>` + `sl goto <name>` |
 | `-B <name>` | Yes | `sl bookmark -f <name>` + `sl goto <name>` |
+| `--detach` | Yes | `sl goto --inactive` |
+| `-t/--track` | Note | Limited emulation - accepts flag |
+| `-f/--force` | Yes | `sl goto -C` (discards local changes) |
+| `-m/--merge` | Yes | `sl goto -m` (merge local changes) |
 
 ### git rev-parse
 
