@@ -5,30 +5,30 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 29 plan 02 complete
+**Current focus:** v1.3 Flag Compatibility — Phase 29 complete
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
 Phase: 29 - Documentation
 Plan: 02 of 02 complete
-Status: In progress (plan 01 may still be executing in parallel)
-Last activity: 2026-01-23 — Completed 29-02-PLAN.md
+Status: Phase complete
+Last activity: 2026-01-23 — Completed 29-01-PLAN.md
 
-Progress: [##########] 10/10 phases (pending 29-01 completion)
+Progress: [##########] 10/10 phases complete
 
 ## Milestones
 
 - v1.0 MVP - 9 phases, 13 plans (shipped 2026-01-18)
 - v1.1 Polish & Documentation - 5 phases, 7 plans (shipped 2026-01-19)
 - v1.2 More Commands Support - 5 phases, 10 plans (shipped 2026-01-20)
-- v1.3 Flag Compatibility - 10 phases (in progress)
+- v1.3 Flag Compatibility - 10 phases, 18 plans (complete)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 47 (13 v1.0 + 7 v1.1 + 10 v1.2 + 17 v1.3)
-- Total phases completed: 28 (29 pending completion)
+- Total plans completed: 48 (13 v1.0 + 7 v1.1 + 10 v1.2 + 18 v1.3)
+- Total phases completed: 29
 - Total requirements validated: 304 (21 v1.0 + 26 v1.1 + 40 v1.2 + 217 v1.3)
 
 **By Milestone:**
@@ -126,6 +126,11 @@ All marked as "Good" during milestone completions.
 - Skip tests that hang in environment (sl purge --dirs, sl config --system) rather than block test suite
 - Fix cmd_config.py --unset to add --local scope (sl config --delete requires scope)
 
+**Phase 29-01 Decisions:**
+- Document staging area limitations prominently for git users migrating to Sapling
+- Use consistent three-column table format (Flag | Supported | Translation/Notes)
+- Change rev-parse status from Partial to Full in Supported Commands table
+
 **Phase 29-02 Decisions:**
 - Document stash@{n} syntax with shelve name lookup explanation
 - Highlight critical translations (grep -v to -V, blame -b to --ignore-space-change) prominently
@@ -134,7 +139,7 @@ All marked as "Good" during milestone completions.
 
 ### Pending Todos
 
-None — Phase 29 plan 02 complete.
+None — Phase 29 complete, v1.3 Flag Compatibility milestone finished.
 
 ### Blockers/Concerns
 
@@ -143,5 +148,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 29-02-PLAN.md
-Resume with: Wait for 29-01 completion, then verify phase complete
+Stopped at: Completed 29-01-PLAN.md (Phase 29 complete)
+Resume with: v1.3 milestone is complete - ready for next milestone planning
