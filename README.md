@@ -42,7 +42,7 @@ gitsl translates these to equivalent Sapling commands automatically.
 | `diff` | Full | `sl diff` |
 | `add` | Full | `sl add` / `sl addremove` |
 | `commit` | Full | `sl commit` |
-| `rev-parse` | Partial | Only `--short HEAD` via `sl whereami` |
+| `rev-parse` | Full | `sl root` / `sl log` / `sl whereami` |
 | `show` | Full | `sl show` |
 | `blame` | Full | `sl annotate` |
 | `rm` | Full | `sl remove` |
@@ -207,34 +207,59 @@ Translates to `sl annotate`.
 
 ### git rm
 
-Translates to `sl remove`. The `-r` flag is filtered (sl remove is recursive by default).
+Translates to `sl remove`.
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<files>` | Yes | `sl remove <files>` |
+| `-f/--force` | Yes | `sl remove -f` |
+| `--cached` | Warning | No staging area - prints warning |
+| `-n/--dry-run` | Warning | Not supported |
+| `-q/--quiet` | Yes | Suppresses output |
+| `-r/--recursive` | Filtered | sl remove is recursive by default |
 
 ### git mv
 
-Translates to `sl rename`. All flags passed through.
+Translates to `sl rename`.
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<source> <dest>` | Yes | `sl rename <source> <dest>` |
+| `-f/--force` | Yes | `sl rename -f` |
+| `-k` | Warning | Not supported |
+| `-v/--verbose` | Yes | `sl rename -v` |
+| `-n/--dry-run` | Yes | `sl rename -n` |
 
 ### git clean
 
 Translates to `sl purge`. **Requires `-f` or `-n` flag** (safety validation).
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
-| `-f` | Yes | `sl purge` |
-| `-n` / `--dry-run` | Yes | `sl purge --print` |
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `-f` | Yes | `sl purge` (required for actual deletion) |
+| `-n/--dry-run` | Yes | `sl purge --print` |
 | `-d` | Yes | Included by default in sl purge |
 | `-fd` | Yes | `sl purge` |
+| `-x` | Yes | `sl purge --ignored` (removes ignored files too) |
+| `-X` | Warning | Use `--ignored` only |
+| `-e <pattern>` | Yes | `sl purge -X <pattern>` (exclude pattern) |
 
 ### git config
 
 Translates to `sl config`.
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
-| `<key>` | Yes | `sl config <key>` |
-| `<key> <value>` | Yes | `sl config --local <key> <value>` |
-| `--list` | Yes | `sl config` |
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<key>` | Yes | `sl config <key>` (get value) |
+| `<key> <value>` | Yes | `sl config --local <key> <value>` (set value) |
+| `--get` | Yes | Default behavior (no-op) |
+| `--unset` | Yes | `sl config --delete --local` |
+| `--list/-l` | Yes | `sl config` (no key = list all) |
 | `--global` | Yes | `sl config --user` |
 | `--local` | Yes | `sl config --local` |
+| `--system` | Yes | `sl config --system` |
+| `--show-origin` | Yes | `sl config --debug` |
+| `--all` | Warning | Not supported |
 
 ### git switch
 
@@ -318,10 +343,15 @@ Disambiguates between branches, files, and commits. Modern git recommends using 
 
 ### git rev-parse
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | `--short HEAD` | Yes | `sl whereami` (truncated to 7 chars) |
-| other variants | No | Returns error |
+| `--show-toplevel` | Yes | `sl root` |
+| `--git-dir` | Yes | Returns `.sl` or `.hg` directory |
+| `--is-inside-work-tree` | Yes | `sl root` check (always returns 0) |
+| `--abbrev-ref HEAD` | Yes | `sl log -r . --template {activebookmark}` |
+| `--verify <ref>` | Yes | `sl log -r <ref>` validation |
+| `--symbolic` | Yes | Echo back ref |
 
 ## Unsupported Commands
 
