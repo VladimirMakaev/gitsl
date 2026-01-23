@@ -5,17 +5,17 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 28 complete, ready for Phase 29
+**Current focus:** v1.3 Flag Compatibility — Phase 29 plan 02 complete
 
 ## Current Position
 
 Milestone: v1.3 Flag Compatibility
 Phase: 29 - Documentation
-Plan: Not started
-Status: Ready for planning
-Last activity: 2026-01-22 — Phase 28 verified and complete
+Plan: 02 of 02 complete
+Status: In progress (plan 01 may still be executing in parallel)
+Last activity: 2026-01-23 — Completed 29-02-PLAN.md
 
-Progress: [#########.] 9/10 phases
+Progress: [##########] 10/10 phases (pending 29-01 completion)
 
 ## Milestones
 
@@ -27,8 +27,8 @@ Progress: [#########.] 9/10 phases
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 46 (13 v1.0 + 7 v1.1 + 10 v1.2 + 16 v1.3)
-- Total phases completed: 28
+- Total plans completed: 47 (13 v1.0 + 7 v1.1 + 10 v1.2 + 17 v1.3)
+- Total phases completed: 28 (29 pending completion)
 - Total requirements validated: 304 (21 v1.0 + 26 v1.1 + 40 v1.2 + 217 v1.3)
 
 **By Milestone:**
@@ -38,7 +38,7 @@ Progress: [#########.] 9/10 phases
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 9 | 16 | — |
+| v1.3 Flags | 10 | 18 | — |
 
 ## Accumulated Context
 
@@ -126,9 +126,15 @@ All marked as "Good" during milestone completions.
 - Skip tests that hang in environment (sl purge --dirs, sl config --system) rather than block test suite
 - Fix cmd_config.py --unset to add --local scope (sl config --delete requires scope)
 
+**Phase 29-02 Decisions:**
+- Document stash@{n} syntax with shelve name lookup explanation
+- Highlight critical translations (grep -v to -V, blame -b to --ignore-space-change) prominently
+- Cross-reference checkout/switch/restore for users migrating from old git checkout
+- Mark rev-parse as Full status with 7 flags documented
+
 ### Pending Todos
 
-None — Phase 28 complete, ready for next phase.
+None — Phase 29 plan 02 complete.
 
 ### Blockers/Concerns
 
@@ -136,6 +142,6 @@ None.
 
 ## Session Continuity
 
-Last session: 2026-01-22
-Stopped at: Phase 28 verified and complete
-Resume with: `/gsd:plan-phase 29` to plan Documentation phase
+Last session: 2026-01-23
+Stopped at: Completed 29-02-PLAN.md
+Resume with: Wait for 29-01 completion, then verify phase complete
