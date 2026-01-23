@@ -61,6 +61,37 @@ Commands not listed are unsupported.
 
 ## Command Reference
 
+### Staging Area Limitations
+
+Sapling does not have a staging area (index). This affects several git flags:
+
+| Flag | Command | Behavior |
+|------|---------|----------|
+| `--staged/--cached` | diff | Prints warning (no staging area) |
+| `--staged/-S` | restore | Prints warning (no staging area) |
+| `--keep-index/-k` | stash | Prints warning (no staging area) |
+| `--cached` | rm | Prints warning (no staging area) |
+| `-a/--all` | commit | **Removed** (sl -A adds untracked files - safety risk) |
+
+**Sapling workflow:** Edit files directly (no staging step), then commit all changes with `sl commit`. Use `sl shelve` to set aside changes temporarily.
+
+### Common Flag Translations
+
+Quick reference for key flag differences between git and Sapling:
+
+| Git Flag | Sapling Equivalent | Commands | Notes |
+|----------|-------------------|----------|-------|
+| `--author=` | `-u` | log, commit | |
+| `-b <branch>` | `-u <bookmark>` | clone | |
+| `-d/--detach` | `--inactive` | switch, checkout | |
+| `-f/--force` | `-C` | checkout, switch | For goto paths |
+| `--global` | `--user` | config | |
+| `--graph` | `-G` | log | |
+| `-n` (limit) | `-l` | log | |
+| `--unset` | `--delete` | config | |
+| `-v` (invert) | `-V` | grep | **Critical: uppercase V** |
+| `-b` (blank SHA) | `--ignore-space-change` | blame | **Critical: sl -b differs** |
+
 ### git status
 
 | Flag | Supported | Behavior |
