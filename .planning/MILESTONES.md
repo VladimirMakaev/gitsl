@@ -1,5 +1,36 @@
 # Project Milestones: GitSL
 
+## v1.3 Flag Compatibility (Shipped: 2026-01-23)
+
+**Delivered:** Comprehensive flag compatibility for all 19 supported git commands with 191 flags translated, warnings for semantic differences, and complete documentation.
+
+**Phases completed:** 20-29 (18 plans total)
+
+**Key accomplishments:**
+
+- Critical safety fixes: commit -a flag removal (prevents untracked file addition), checkout -f/-m translation
+- Rev-parse expansion: 7 new flag handlers for --show-toplevel, --git-dir, --is-inside-work-tree, --abbrev-ref HEAD
+- Log flags: 20 flags including --graph, --stat, --author, --since/--until, --pretty/--format templates
+- Diff/show flags: 20 flags including --name-only, --name-status, warnings for --staged/--cached (no staging area)
+- Stash/checkout/switch/restore: 21 flags including stash@{n} syntax translation to shelve names
+- Grep/blame: 21 flags with critical translations (grep -v to -V, blame -b to --ignore-space-change)
+- Clone/rm/mv/clean/config: 30 flags including --branch, --depth, --unset, --show-origin
+- Complete README flag documentation with staging area limitations section and common translations table
+
+**Stats:**
+
+- 21 source files modified
+- 3,247 lines of Python (source), 7,169 lines of tests
+- 480 tests passing
+- 10 phases, 18 plans, 100 commits
+- 3 days from start to ship
+
+**Git range:** `160860c` (docs: complete v1.3 flag compatibility research) → `10d3524` (docs(29): complete phase 29 documentation)
+
+**What's next:** User feedback and v1.4 planning (potential: worktree support, remote operations)
+
+---
+
 ## v1.2 More Commands Support (Shipped: 2026-01-20)
 
 **Delivered:** Extended command support with 13 additional git commands translated to Sapling equivalents, including checkout disambiguation.

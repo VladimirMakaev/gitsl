@@ -15,10 +15,10 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 
 ## Current State
 
-**Shipped:** v1.2 (2026-01-20)
+**Shipped:** v1.3 (2026-01-23)
 **PyPI:** https://pypi.org/project/gitsl/
-**Lines of Code:** 4,282 Python
-**Tests:** 191 passing (parallel, cross-platform)
+**Lines of Code:** 3,247 Python (source), 7,169 tests
+**Tests:** 480 passing (parallel, cross-platform)
 
 ## Requirements
 
@@ -73,23 +73,30 @@ Git commands execute correctly against Sapling repos without the calling tool kn
 - ✓ `git branch -d/-D <name>` deletes bookmark safely (D→d translation) — v1.2
 - ✓ Checkout disambiguates between commit/branch/file correctly — v1.2
 
+**v1.3 Flag Compatibility:**
+- ✓ 191 flags implemented across 19 git commands — v1.3
+- ✓ Critical safety: commit -a removed, checkout -f→-C, checkout -m→-m — v1.3
+- ✓ Rev-parse expansion: --show-toplevel, --git-dir, --is-inside-work-tree, --abbrev-ref HEAD — v1.3
+- ✓ Log flags: --graph, --stat, --author, --since/--until, --pretty/--format, 20 flags total — v1.3
+- ✓ Diff/show flags: --name-only, --name-status, staging area warnings, 20 flags total — v1.3
+- ✓ Stash/checkout/switch/restore: stash@{n} syntax, 21 flags — v1.3
+- ✓ Grep/blame: -v→-V translation, -b→--ignore-space-change, 21 flags — v1.3
+- ✓ Clone/rm/mv/clean/config: --branch, --depth, --unset, 30 flags — v1.3
+- ✓ Complete README flag documentation with staging area limitations — v1.3
+
 ### Active
 
-**v1.3 Flag Compatibility:**
-- [ ] Complete flag audit for all 25 supported git commands
-- [ ] Document compatibility status for every git flag
-- [ ] Test coverage for each supported flag
-- [ ] Implement emulation where sl behavior differs from git
+**v1.4 Planning:**
+- [ ] User feedback and v1.4 planning (potential: worktree support, remote operations)
 
-## Current Milestone: v1.3 Flag Compatibility
+## Current Milestone: v1.4 (Planning)
 
-**Goal:** Exhaustive flag-by-flag compatibility for all 25 git commands — research, document, test, and implement/emulate where needed.
+**Goal:** User feedback and improvements based on v1.3 usage.
 
-**Target scope:**
-- Research all flags from official git documentation for each command
-- Document which flags are supported, pass-through, emulated, or unsupported
-- Add tests for each flag we claim to support
-- Implement emulation for flags where sl behavior differs from git
+**Potential scope:**
+- Worktree support
+- Remote operation improvements
+- User-requested features
 
 ### Out of Scope
 
@@ -188,6 +195,13 @@ curl -s "https://api.github.com/repos/VladimirMakaev/gitsl/actions/runs/<RUN_ID>
 | Subcommand dispatch for stash | Handle push/pop/apply/list/drop patterns | ✓ Good |
 | Checkout disambiguation via sl log -r | Use exit code to validate revision | ✓ Good |
 | Error on ambiguity (file=revision) | Explicit error better than silent priority | ✓ Good |
+| Remove -a/--all from commit | Semantic difference too dangerous (would add untracked) | ✓ Good |
+| Translate checkout -f to -C | Match sl goto -C semantics | ✓ Good |
+| Parse stash@{n} and lookup shelve name | Map git index notation to sl shelve names | ✓ Good |
+| Translate grep -v to -V | sl uses uppercase V for invert match | ✓ Good |
+| Translate blame -b to --ignore-space-change | sl -b means blank SHA1, not ignore blanks | ✓ Good |
+| Translate config --global to --user | sl uses --user for user-level config | ✓ Good |
+| Translate clone -b to -u | sl uses -u for checkout bookmark | ✓ Good |
 
 ---
-*Last updated: 2026-01-20 after v1.3 milestone started*
+*Last updated: 2026-01-23 after v1.3 milestone shipped*

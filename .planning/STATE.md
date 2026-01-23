@@ -2,20 +2,20 @@
 
 ## Project Reference
 
-See: .planning/PROJECT.md (updated 2026-01-20)
+See: .planning/PROJECT.md (updated 2026-01-23)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Milestone complete (shipped 2026-01-23)
+**Current focus:** v1.4 Planning — awaiting user feedback
 
 ## Current Position
 
-Milestone: v1.3 Flag Compatibility (shipped 2026-01-23)
-Phase: 29 - Documentation (final phase)
-Plan: 02 of 02 complete
-Status: Milestone complete
-Last activity: 2026-01-23 — Completed 29-02-PLAN.md, phase verified, milestone shipped
+Milestone: v1.4 (not started)
+Phase: None active
+Plan: None
+Status: Ready for v1.4 planning
+Last activity: 2026-01-23 — Completed v1.3 milestone archival
 
-Progress: [##########] 10/10 phases complete
+Progress: Ready for new milestone
 
 ## Milestones
 
@@ -38,7 +38,7 @@ Progress: [##########] 10/10 phases complete
 | v1.0 MVP | 9 | 13 | 1 |
 | v1.1 Polish | 5 | 7 | 1 |
 | v1.2 Commands | 5 | 10 | 2 |
-| v1.3 Flags | 10 | 18 | — |
+| v1.3 Flags | 10 | 18 | 3 |
 
 ## Accumulated Context
 
@@ -47,99 +47,18 @@ Progress: [##########] 10/10 phases complete
 All decisions logged in PROJECT.md Key Decisions table.
 All marked as "Good" during milestone completions.
 
-**Phase 20-01 Decisions:**
-- Remove -a/--all from commit entirely rather than translate (semantic difference too dangerous)
-- Translate -f/--force to -C for goto paths (matches sl goto -C semantics)
-- Pass through -m/--merge to -m for goto paths (same semantics in sl)
-
-**Phase 21-01 Decisions:**
-- Translate HEAD to . for Sapling revset compatibility in --verify handler
-- Return .sl or .hg directory for --git-dir based on which exists
-- Always return exit code 0 for --is-inside-work-tree (git behavior)
-
-**Phase 22-01 Decisions:**
-- Print warning for -S/-G pickaxe with grep alternative (no sl equivalent)
-- Use revset approximations for --first-parent and --reverse
-- Template priority: custom_template > name_status > name_only > decorate > oneline
-
-**Phase 23-01 Decisions:**
-- Use sl status -mard for diff --name-only/--name-status in working directory
-- Print warnings for staging area flags (--staged/--cached) since Sapling has no staging
-- Reuse PRETTY_PRESETS and GIT_TO_SL_PLACEHOLDERS pattern from cmd_log.py
-
-**Phase 23-02 Decisions:**
-- Test sl show template behavior as-is (templates format header, diff appended by sl)
-- Verify warning presence in stderr rather than exact message text
-
-**Phase 24-01 Decisions:**
-- Use sl log template for branch header in status -b output
-- Print note for -v/--verbose since Sapling -v has different meaning
-- Print warning for -f/--force since Sapling cannot force-add ignored files
-
-**Phase 24-02 Decisions:**
-- Test -v/--verbose by verifying files get added, not by checking output (sl add has no verbose output)
-- Use sl_repo_with_ignored and sl_repo_with_bookmark fixtures for specialized test scenarios
-
-**Phase 25-01 Decisions:**
-- sl amend defaults to no-edit, so add -e flag for git's default editor behavior
-- signoff implemented via custom trailer appending, not sl config
-- branch -c uses two-step: get commit hash, create new bookmark
-- verbose branch uses template instead of sl -v flag
-
-**Phase 25-02 Decisions:**
-- Skip -e flag when message provided via -m or -F with --amend (bug fix)
-- Test verbose by checking for colon in output (template format)
-- Test track flag by verifying command acceptance, not tracking behavior
-
-**Phase 26-01 Decisions:**
-- Parse stash@{n} syntax and lookup shelve name via sl shelve --list
-- Translate -p/--patch to -i for interactive shelving
-- Implement stash branch as bookmark creation + unshelve
-- Translate --detach to --inactive for goto
-- Accept track flag with note about limited emulation
-
-**Phase 26-02 Decisions:**
-- Test stash@{n} by creating multiple stashes and verifying index-to-name translation
-- Verify warning messages by checking stderr contains relevant keywords
-- Test interactive mode (-p) by checking flag acceptance rather than behavior
-
-**Phase 27-01 Decisions:**
-- Translate git grep -v to sl grep -V (sl uses uppercase V for invert match)
-- Translate git blame -b to sl --ignore-space-change (sl -b means blank SHA1)
-- Do not pass through git blame -l (sl -l means line number, not long hash)
-- Do not pass through git grep -h (sl -h shows help, not filename suppression)
-
-**Phase 27-02 Decisions:**
-- Mark -q/--quiet as unsupported with warning (sl grep lacks quiet mode)
-
-**Phase 28-01 Decisions:**
-- Translate git clone -b to sl clone -u (update to bookmark)
-- Translate git clone -n to sl clone -U (no update)
-- Translate git config --global to sl config --user
-- Translate git config --unset to sl config --delete
-- Translate git config --show-origin to sl config --debug
-- Translate git clean -x to sl purge --ignored
-- Translate git clean -e to sl purge -X (exclude pattern)
-- Print warnings for unsupported flags rather than failing
-
-**Phase 28-02 Decisions:**
-- Skip tests that hang in environment (sl purge --dirs, sl config --system) rather than block test suite
-- Fix cmd_config.py --unset to add --local scope (sl config --delete requires scope)
-
-**Phase 29-01 Decisions:**
-- Document staging area limitations prominently for git users migrating to Sapling
-- Use consistent three-column table format (Flag | Supported | Translation/Notes)
-- Change rev-parse status from Partial to Full in Supported Commands table
-
-**Phase 29-02 Decisions:**
-- Document stash@{n} syntax with shelve name lookup explanation
-- Highlight critical translations (grep -v to -V, blame -b to --ignore-space-change) prominently
-- Cross-reference checkout/switch/restore for users migrating from old git checkout
-- Mark rev-parse as Full status with 7 flags documented
+**v1.3 key decisions (archived in milestones/v1.3-REQUIREMENTS.md):**
+- Remove -a/--all from commit entirely (semantic difference too dangerous)
+- Translate checkout -f to -C for goto paths
+- Parse stash@{n} syntax and lookup shelve name
+- Translate grep -v to -V (sl uses uppercase V)
+- Translate blame -b to --ignore-space-change (sl -b means blank SHA1)
+- Translate config --global to --user, --unset to --delete
+- Translate clone -b to -u
 
 ### Pending Todos
 
-None — Phase 29 complete, v1.3 Flag Compatibility milestone finished.
+None — v1.3 milestone complete, awaiting v1.4 planning.
 
 ### Blockers/Concerns
 
@@ -148,5 +67,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: v1.3 milestone complete - all 29 phases shipped
-Resume with: Ready for v1.4 milestone planning or /gsd:complete-milestone
+Stopped at: v1.3 milestone archived and committed
+Resume with: /gsd:new-milestone for v1.4 or await user direction
