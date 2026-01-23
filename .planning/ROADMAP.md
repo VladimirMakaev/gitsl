@@ -5,7 +5,7 @@
 - **v1.0 MVP** - Phases 01-09 (shipped 2026-01-18)
 - **v1.1 Polish & Documentation** - Phases 10-14 (shipped 2026-01-19)
 - **v1.2 More Commands Support** - Phases 15-19 (shipped 2026-01-20)
-- **v1.3 Flag Compatibility** - Phases 20-29 (in progress)
+- **v1.3 Flag Compatibility** - Phases 20-29 (shipped 2026-01-23)
 
 ## Phases
 
@@ -214,8 +214,8 @@ Plans:
 
 </details>
 
-<details open>
-<summary>v1.3 Flag Compatibility (Phases 20-29) - IN PROGRESS</summary>
+<details>
+<summary>v1.3 Flag Compatibility (Phases 20-29) - SHIPPED 2026-01-23</summary>
 
 ### Phase 20: Critical Safety Fixes
 
@@ -580,8 +580,8 @@ Plans:
 **Plans**: 2 plans
 
 Plans:
-- [ ] 29-01-PLAN.md — Core structure, staging area section, log/diff/show/status/add/commit/branch/rev-parse flags
-- [ ] 29-02-PLAN.md — Stash/checkout/switch/restore/grep/blame/clone/rm/mv/clean/config flags and final polish
+- [x] 29-01-PLAN.md — Core structure, staging area section, log/diff/show/status/add/commit/branch/rev-parse flags
+- [x] 29-02-PLAN.md — Stash/checkout/switch/restore/grep/blame/clone/rm/mv/clean/config flags and final polish
 
 **Requirements**:
 - DOC-01: Create comprehensive flag compatibility matrix in README
@@ -634,4 +634,4 @@ Phases execute in numeric order.
 | 26. Stash and Checkout/Switch/Restore Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 27. Grep and Blame Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
 | 28. Clone, Rm, Mv, Clean, Config Flags | v1.3 | 2/2 | Complete | 2026-01-22 |
-| 29. Documentation | v1.3 | 0/2 | Pending | — |
+| 29. Documentation | v1.3 | 2/2 | Complete | 2026-01-23 |

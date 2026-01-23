@@ -5,15 +5,15 @@
 See: .planning/PROJECT.md (updated 2026-01-20)
 
 **Core value:** Git commands execute correctly against Sapling repos without the calling tool knowing the difference
-**Current focus:** v1.3 Flag Compatibility — Phase 29 complete
+**Current focus:** v1.3 Flag Compatibility — Milestone complete (shipped 2026-01-23)
 
 ## Current Position
 
-Milestone: v1.3 Flag Compatibility
-Phase: 29 - Documentation
+Milestone: v1.3 Flag Compatibility (shipped 2026-01-23)
+Phase: 29 - Documentation (final phase)
 Plan: 02 of 02 complete
-Status: Phase complete
-Last activity: 2026-01-23 — Completed 29-01-PLAN.md
+Status: Milestone complete
+Last activity: 2026-01-23 — Completed 29-02-PLAN.md, phase verified, milestone shipped
 
 Progress: [##########] 10/10 phases complete
 
@@ -22,7 +22,7 @@ Progress: [##########] 10/10 phases complete
 - v1.0 MVP - 9 phases, 13 plans (shipped 2026-01-18)
 - v1.1 Polish & Documentation - 5 phases, 7 plans (shipped 2026-01-19)
 - v1.2 More Commands Support - 5 phases, 10 plans (shipped 2026-01-20)
-- v1.3 Flag Compatibility - 10 phases, 18 plans (complete)
+- v1.3 Flag Compatibility - 10 phases, 18 plans (shipped 2026-01-23)
 
 ## Performance Metrics
 
@@ -148,5 +148,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-01-23
-Stopped at: Completed 29-01-PLAN.md (Phase 29 complete)
-Resume with: v1.3 milestone is complete - ready for next milestone planning
+Stopped at: v1.3 milestone complete - all 29 phases shipped
+Resume with: Ready for v1.4 milestone planning or /gsd:complete-milestone
