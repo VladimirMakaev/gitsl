@@ -42,7 +42,7 @@ gitsl translates these to equivalent Sapling commands automatically.
 | `diff` | Full | `sl diff` |
 | `add` | Full | `sl add` / `sl addremove` |
 | `commit` | Full | `sl commit` |
-| `rev-parse` | Full | `sl root` / `sl log` / `sl whereami` |
+| `rev-parse` | Full | Multiple flag support |
 | `show` | Full | `sl show` |
 | `blame` | Full | `sl annotate` |
 | `rm` | Full | `sl remove` |
@@ -94,12 +94,15 @@ Quick reference for key flag differences between git and Sapling:
 
 ### git status
 
-| Flag | Supported | Behavior |
-|------|-----------|----------|
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | (none) | Yes | Passthrough to `sl status` |
 | `--porcelain` | Yes | Output transformed to git XY format |
-| `--short` / `-s` | Yes | Output transformed to git XY format |
-| other flags | Partial | Passed through to sl |
+| `--short/-s` | Yes | Output transformed to git XY format |
+| `--ignored` | Yes | Translates to `-i` |
+| `-b/--branch` | Yes | Adds branch info header |
+| `-v/--verbose` | Note | sl -v has different meaning |
+| `-u/--untracked-files` | Yes | Controls untracked file display |
 
 **Status code translation:**
 
@@ -113,43 +116,87 @@ Quick reference for key flag differences between git and Sapling:
 
 ### git log
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | (none) | Yes | `sl log` |
-| `--oneline` | Yes | `sl log -T "{node\|short} {desc\|firstline}\n"` |
-| `-N` (e.g., `-5`) | Yes | `sl log -l N` |
-| `-n N` | Yes | `sl log -l N` |
-| `-nN` | Yes | `sl log -l N` |
-| `--max-count=N` | Yes | `sl log -l N` |
-| `--format` | No | Not implemented |
-| `--graph` | No | Not implemented |
+| `--oneline` | Yes | Uses template output |
+| `-n N`/`-N`/`--max-count=N` | Yes | Translates to `-l N` |
+| `--graph` | Yes | Translates to `-G` |
+| `--stat` | Yes | Passes through |
+| `--patch/-p` | Yes | Passes through |
+| `--author=<pattern>` | Yes | Translates to `-u <pattern>` |
+| `--grep=<pattern>` | Yes | Translates to `-k <pattern>` |
+| `--no-merges` | Yes | Passes through |
+| `--all` | Yes | Passes through |
+| `--follow` | Yes | Translates to `-f` |
+| `--since/--after` | Yes | Translates to `-d ">date"` |
+| `--until/--before` | Yes | Translates to `-d "<date"` |
+| `--name-only` | Yes | Uses template output |
+| `--name-status` | Yes | Uses template output |
+| `--decorate` | Yes | Uses template with bookmarks |
+| `--pretty/--format=` | Yes | Maps to `-T` template |
+| `--first-parent` | Yes | Revset approximation |
+| `--reverse` | Yes | Revset approximation |
+| `-S/-G` (pickaxe) | Warning | No sl equivalent (use `sl grep`) |
 
-### git add
+### git diff
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
-| `<files>` | Yes | `sl add <files>` |
-| `-A` / `--all` | Yes | `sl addremove` |
-| `-u` / `--update` | Yes | Marks deleted files with `sl remove --mark` |
-| `-p` / `--patch` | No | Not implemented |
-
-### git diff, git init, git commit
-
-All flags passed through to sl equivalents unchanged.
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| (none) | Yes | `sl diff` |
+| `--stat` | Yes | Passes through |
+| `-w/--ignore-all-space` | Yes | Passes through |
+| `-b/--ignore-space-change` | Yes | Passes through |
+| `-U<n>/--unified=<n>` | Yes | Passes through |
+| `--name-only` | Yes | Uses `sl status -mard` for working dir |
+| `--name-status` | Yes | Uses `sl status -mard` for working dir |
+| `--staged/--cached` | Warning | No staging area in Sapling |
+| `--raw` | Yes | Passes through |
+| `-M/--find-renames` | Yes | Passes through |
+| `-C/--find-copies` | Yes | Passes through |
+| `--word-diff` | Yes | Passes through |
+| `--color-moved` | Warning | Not supported in sl |
 
 ### git show
 
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
 | (none) | Yes | `sl show` |
-| `--stat` | Yes | `sl show --stat` |
-| `-U<n>` | Yes | `sl show -U<n>` |
-| `-w` | Yes | `sl show -w` |
-| `--name-only` | Yes | Template output |
-| `--name-status` | Yes | Template output |
-| `--pretty/--format` | Yes | Template mapping |
-| `-s/--no-patch` | Yes | `sl show -s` |
-| `--oneline` | Yes | Template output |
+| `--stat` | Yes | Passes through |
+| `-U<n>` | Yes | Passes through |
+| `-w` | Yes | Passes through |
+| `--name-only` | Yes | Uses template output |
+| `--name-status` | Yes | Uses template output |
+| `--pretty/--format=` | Yes | Maps to `-T` template |
+| `-s/--no-patch` | Yes | Passes through |
+| `--oneline` | Yes | Uses template output |
+
+### git add
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `<files>` | Yes | `sl add <files>` |
+| `-A/--all` | Yes | `sl addremove` |
+| `-u/--update` | Yes | Marks deleted files with `sl remove --mark` |
+| `--dry-run/-n` | Yes | Shows what would be added |
+| `-f/--force` | Warning | Cannot add ignored files in Sapling |
+| `-v/--verbose` | Yes | Passes through |
+| `-p/--patch` | No | Not implemented |
+
+### git commit
+
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
+| `-m <message>` | Yes | Passes through |
+| `--amend` | Yes | Translates to `sl amend` |
+| `--no-edit` | Yes | Omits `-e` flag (sl amend default) |
+| `-F/--file` | Yes | Translates to `-l` (logfile) |
+| `--author=` | Yes | Translates to `-u` |
+| `--date=` | Yes | Translates to `-d` |
+| `-v/--verbose` | Warning | Different semantics in sl |
+| `-s/--signoff` | Yes | Adds Signed-off-by trailer |
+| `-n/--no-verify` | Warning | Hook bypass not available |
+| `-a/--all` | **Removed** | Safety - sl -A adds untracked files |
 
 ### git clone
 
@@ -163,8 +210,8 @@ All flags passed through to sl equivalents unchanged.
 | `-o/--origin` | Warning | Not supported |
 | `--recursive/--recurse-submodules` | Warning | Not supported |
 | `--no-tags` | Warning | Not supported |
-| `-q/--quiet` | Yes | `sl clone -q` |
-| `-v/--verbose` | Yes | `sl clone -v` |
+| `-q/--quiet` | Yes | Passes through |
+| `-v/--verbose` | Yes | Passes through |
 
 ### git grep
 
@@ -173,16 +220,16 @@ All flags passed through to sl equivalents unchanged.
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
 | `<pattern>` | Yes | `sl grep <pattern>` |
-| `-n/--line-number` | Yes | `sl grep -n` |
-| `-i/--ignore-case` | Yes | `sl grep -i` |
-| `-l/--files-with-matches` | Yes | `sl grep -l` |
-| `-w/--word-regexp` | Yes | `sl grep -w` |
-| `-v/--invert-match` | Yes | `sl grep -V` (**uppercase V**) |
-| `-A <num>` | Yes | `sl grep -A` |
-| `-B <num>` | Yes | `sl grep -B` |
-| `-C <num>` | Yes | `sl grep -C` |
-| `-F/--fixed-strings` | Yes | `sl grep -F` |
-| `-q/--quiet` | Yes | `sl grep -q` |
+| `-n/--line-number` | Yes | Passes through |
+| `-i/--ignore-case` | Yes | Passes through |
+| `-l/--files-with-matches` | Yes | Passes through |
+| `-w/--word-regexp` | Yes | Passes through |
+| `-v/--invert-match` | Yes | Translates to `-V` (**uppercase V**) |
+| `-A <num>` | Yes | Passes through |
+| `-B <num>` | Yes | Passes through |
+| `-C <num>` | Yes | Passes through |
+| `-F/--fixed-strings` | Yes | Passes through |
+| `-q/--quiet` | Yes | Passes through |
 | `-c/--count` | Warning | Not supported |
 | `-h` | Warning | Would show help (sl -h) |
 | `-H` | No-op | Already default behavior |
@@ -197,9 +244,9 @@ Translates to `sl annotate`.
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
 | `<file>` | Yes | `sl annotate <file>` |
-| `-w` | Yes | `sl annotate -w` (ignore whitespace) |
-| `-b` | Yes | `sl annotate --ignore-space-change` (**NOT -b**) |
-| `-n/--show-number` | Yes | `sl annotate -n` |
+| `-w` | Yes | Passes through (ignore whitespace) |
+| `-b` | Yes | Translates to `--ignore-space-change` (**NOT -b**) |
+| `-n/--show-number` | Yes | Passes through |
 | `-L <start>,<end>` | Warning | Not supported |
 | `-e/--show-email` | Warning | Not supported |
 | `-p/--porcelain` | Warning | Not supported |
@@ -212,11 +259,11 @@ Translates to `sl remove`.
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
 | `<files>` | Yes | `sl remove <files>` |
-| `-f/--force` | Yes | `sl remove -f` |
-| `--cached` | Warning | No staging area - prints warning |
+| `-f/--force` | Yes | Passes through |
+| `--cached` | Warning | No staging area |
 | `-n/--dry-run` | Warning | Not supported |
 | `-q/--quiet` | Yes | Suppresses output |
-| `-r/--recursive` | Filtered | sl remove is recursive by default |
+| `-r` | Filtered | sl remove is recursive by default |
 
 ### git mv
 
@@ -225,10 +272,10 @@ Translates to `sl rename`.
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
 | `<source> <dest>` | Yes | `sl rename <source> <dest>` |
-| `-f/--force` | Yes | `sl rename -f` |
+| `-f/--force` | Yes | Passes through |
 | `-k` | Warning | Not supported |
-| `-v/--verbose` | Yes | `sl rename -v` |
-| `-n/--dry-run` | Yes | `sl rename -n` |
+| `-v/--verbose` | Yes | Passes through |
+| `-n/--dry-run` | Yes | Passes through |
 
 ### git clean
 
@@ -236,13 +283,12 @@ Translates to `sl purge`. **Requires `-f` or `-n` flag** (safety validation).
 
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
-| `-f` | Yes | `sl purge` (required for actual deletion) |
+| `-f` | Yes | `sl purge` |
 | `-n/--dry-run` | Yes | `sl purge --print` |
 | `-d` | Yes | Included by default in sl purge |
-| `-fd` | Yes | `sl purge` |
-| `-x` | Yes | `sl purge --ignored` (removes ignored files too) |
-| `-X` | Warning | Use `--ignored` only |
-| `-e <pattern>` | Yes | `sl purge -X <pattern>` (exclude pattern) |
+| `-x` | Yes | `sl purge --ignored` (remove ignored too) |
+| `-X` | Warning | Use `--ignored` only for ignored files |
+| `-e <pattern>` | Yes | Translates to `-X` (exclude pattern) |
 
 ### git config
 
@@ -250,15 +296,15 @@ Translates to `sl config`.
 
 | Flag | Supported | Translation/Notes |
 |------|-----------|-------------------|
-| `<key>` | Yes | `sl config <key>` (get value) |
-| `<key> <value>` | Yes | `sl config --local <key> <value>` (set value) |
-| `--get` | Yes | Default behavior (no-op) |
-| `--unset` | Yes | `sl config --delete --local` |
-| `--list/-l` | Yes | `sl config` (no key = list all) |
-| `--global` | Yes | `sl config --user` |
-| `--local` | Yes | `sl config --local` |
-| `--system` | Yes | `sl config --system` |
-| `--show-origin` | Yes | `sl config --debug` |
+| `<key>` | Yes | `sl config <key>` |
+| `<key> <value>` | Yes | `sl config --local <key> <value>` |
+| `--get` | No-op | Default behavior |
+| `--unset` | Yes | Translates to `--delete --local` |
+| `--list/-l` | Yes | `sl config` (no key) |
+| `--global` | Yes | Translates to `--user` |
+| `--local` | Yes | Passes through |
+| `--system` | Yes | Passes through |
+| `--show-origin` | Yes | Translates to `--debug` |
 | `--all` | Warning | Not supported |
 
 ### git switch
@@ -278,12 +324,21 @@ Modern replacement for branch-switching behavior of `git checkout`. Translates t
 
 Translates to `sl bookmark`.
 
-| Flag | Supported | Translation |
-|------|-----------|-------------|
+| Flag | Supported | Translation/Notes |
+|------|-----------|-------------------|
 | (none) | Yes | `sl bookmark` (list) |
 | `<name>` | Yes | `sl bookmark <name>` (create) |
 | `-d <name>` | Yes | `sl bookmark -d <name>` |
-| `-D <name>` | Yes | `sl bookmark -d <name>` (safety: -D is translated to -d) |
+| `-D <name>` | Yes | `sl bookmark -d` (safety: -D translated to -d) |
+| `-m <old> <new>` | Yes | Translates to `-m` |
+| `-a/--all` | Yes | Shows all including remote |
+| `-r/--remotes` | Yes | Shows remote only |
+| `-v/--verbose` | Yes | Uses template for commit info |
+| `-l/--list` | Yes | Filters output |
+| `--show-current` | Yes | Shows current branch name |
+| `-t/--track` | Yes | Passes through |
+| `-f/--force` | Yes | Passes through |
+| `-c/--copy` | Yes | Two-step (get hash + create) |
 
 ### git restore
 
@@ -347,11 +402,11 @@ Disambiguates between branches, files, and commits. Modern git recommends using 
 |------|-----------|-------------------|
 | `--short HEAD` | Yes | `sl whereami` (truncated to 7 chars) |
 | `--show-toplevel` | Yes | `sl root` |
-| `--git-dir` | Yes | Returns `.sl` or `.hg` directory |
-| `--is-inside-work-tree` | Yes | `sl root` check (always returns 0) |
-| `--abbrev-ref HEAD` | Yes | `sl log -r . --template {activebookmark}` |
-| `--verify <ref>` | Yes | `sl log -r <ref>` validation |
-| `--symbolic` | Yes | Echo back ref |
+| `--git-dir` | Yes | Returns `.sl` directory path |
+| `--is-inside-work-tree` | Yes | Returns true/false |
+| `--abbrev-ref HEAD` | Yes | Returns current bookmark |
+| `--verify` | Yes | Validates object reference |
+| `--symbolic` | Yes | Outputs in symbolic form |
 
 ## Unsupported Commands
 
